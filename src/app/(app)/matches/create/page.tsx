@@ -2,8 +2,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CreateMatchForm } from "@/components/create-match-form";
 import { InvitePlayers } from "@/components/invite-players";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, Circle, MoreVertical } from "lucide-react";
+import { ChevronLeft, MoreVertical } from "lucide-react";
 import Link from "next/link";
+import { MatchPlan } from "@/components/match-plan";
 
 export default function CreateMatchPage() {
   return (
@@ -20,7 +21,7 @@ export default function CreateMatchPage() {
         </div>
       </header>
       <main className="flex-1 overflow-y-auto">
-        <Tabs defaultValue="invites" className="w-full">
+        <Tabs defaultValue="plan" className="w-full">
             <TabsList className="grid w-full grid-cols-5 bg-transparent p-0 border-b">
                 <TabsTrigger value="event" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent text-orange-500 data-[state=active]:text-orange-500">Event</TabsTrigger>
                 <TabsTrigger value="invites" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Invites</TabsTrigger>
@@ -38,7 +39,7 @@ export default function CreateMatchPage() {
           </TabsContent>
 
           <TabsContent value="plan" className="p-4">
-            <p className="text-center text-muted-foreground">Planning features will be available here.</p>
+            <MatchPlan />
           </TabsContent>
           
           <TabsContent value="notes" className="p-4">
