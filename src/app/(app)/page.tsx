@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Search, Tv, MessageSquare, Bell, MapPin, ListFilter, ArrowUpDown, Plus } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
+import { SeriesMatchesList } from "@/components/series-matches-list";
 
 export default function MatchesHubPage() {
   const todaysMatches = matches;
@@ -48,7 +49,10 @@ export default function MatchesHubPage() {
             </div>
           </TabsContent>
            <TabsContent value="series">
-             <p className="text-center text-muted-foreground pt-8">Series view coming soon.</p>
+             <div className="pt-4 space-y-4">
+              <DateNavigator />
+              <SeriesMatchesList matches={todaysMatches} />
+            </div>
           </TabsContent>
            <TabsContent value="cup">
              <p className="text-center text-muted-foreground pt-8">Cup view coming soon.</p>
