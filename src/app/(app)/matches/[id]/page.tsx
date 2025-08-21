@@ -2,13 +2,14 @@ import { getMatchById } from "@/lib/data";
 import { notFound } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MatchHeader } from "@/components/match-header";
-import { MatchStats } from "@/components/match-stats";
 import { MatchLineups } from "@/components/match-lineups";
 import { MatchEvents } from "@/components/match-events";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Bot, ClipboardList } from "lucide-react";
+import { MatchFacts } from "@/components/match-facts";
+import { MatchFeed } from "@/components/match-feed";
 
 export default function MatchDetailPage({ params }: { params: { id: string } }) {
   const match = getMatchById(params.id);
@@ -21,39 +22,28 @@ export default function MatchDetailPage({ params }: { params: { id: string } }) 
     <div className="flex flex-col h-full">
       <MatchHeader match={match} />
       <main className="flex-1 overflow-y-auto p-4 space-y-4">
-        <Tabs defaultValue="stats" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="info">Info</TabsTrigger>
-            <TabsTrigger value="lineups">Lineups</TabsTrigger>
-            <TabsTrigger value="stats">Stats</TabsTrigger>
+        <Tabs defaultValue="facts" className="w-full">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="facts">Facts</TabsTrigger>
+            <TabsTrigger value="lineup">Line up</TabsTrigger>
+            <TabsTrigger value="feed">Feed</TabsTrigger>
             <TabsTrigger value="events">Events</TabsTrigger>
-            <TabsTrigger value="news">News</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="info">
-             <Card>
-              <CardHeader><CardTitle>Match Info</CardTitle></CardHeader>
-              <CardContent><p>Details about the stadium, referee, and head-to-head history will be shown here.</p></CardContent>
-             </Card>
+          <TabsContent value="facts">
+             <MatchFacts match={match} />
           </TabsContent>
           
-          <TabsContent value="lineups">
+          <TabsContent value="lineup">
             <MatchLineups />
           </TabsContent>
 
-          <TabsContent value="stats">
-            <MatchStats stats={match.stats} />
+          <TabsContent value="feed">
+            <MatchFeed />
           </TabsContent>
 
           <TabsContent value="events">
             <MatchEvents events={match.events} />
-          </TabsContent>
-
-          <TabsContent value="news">
-            <Card>
-              <CardHeader><CardTitle>News</CardTitle></CardHeader>
-              <CardContent><p>Related news articles will appear here.</p></CardContent>
-            </Card>
           </TabsContent>
         </Tabs>
 
