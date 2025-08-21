@@ -15,6 +15,7 @@ import { Separator } from "./ui/separator";
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { cn } from '@/lib/utils';
 import { ScrollArea, ScrollBar } from './ui/scroll-area';
+import { OpponentPlanPanel } from './opponent-plan-panel';
 
 const ZaiIcon = () => (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -135,7 +136,7 @@ export function PlanPanel() {
 
   return (
     <div className="space-y-6">
-      <Tabs defaultValue="lineup" className="w-full">
+      <Tabs defaultValue="opponent" className="w-full">
         <TabsList className="grid w-full grid-cols-5 bg-transparent p-0">
           <TabsTrigger value="opponent" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Opponent</TabsTrigger>
           <TabsTrigger value="lineup" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Line Up</TabsTrigger>
@@ -143,6 +144,9 @@ export function PlanPanel() {
           <TabsTrigger value="defense" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Defense</TabsTrigger>
           <TabsTrigger value="reviews" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Reviews</TabsTrigger>
         </TabsList>
+        <TabsContent value="opponent" className="pt-6">
+            <OpponentPlanPanel />
+        </TabsContent>
         <TabsContent value="lineup" className="pt-6 space-y-6">
             <Select defaultValue="new-plan">
                 <SelectTrigger>
@@ -315,5 +319,3 @@ export function PlanPanel() {
     </div>
   );
 }
-
-    
