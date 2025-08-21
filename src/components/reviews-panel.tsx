@@ -6,7 +6,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Star, ChevronRight, ChevronDown, Camera, Video, ListFilter } from "lucide-react";
+import { Star, Camera, Video, ListFilter } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "./ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
