@@ -16,6 +16,7 @@ import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { cn } from '@/lib/utils';
 import { ScrollArea, ScrollBar } from './ui/scroll-area';
 import { OpponentPlanPanel } from './opponent-plan-panel';
+import { OtherPlanPanel } from './other-plan-panel';
 
 const ZaiIcon = () => (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -137,11 +138,12 @@ export function PlanPanel() {
   return (
     <div className="space-y-6">
       <Tabs defaultValue="opponent" className="w-full">
-        <TabsList className="grid w-full grid-cols-5 bg-transparent p-0">
+        <TabsList className="grid w-full grid-cols-6 bg-transparent p-0">
           <TabsTrigger value="opponent" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Opponent</TabsTrigger>
           <TabsTrigger value="lineup" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Line Up</TabsTrigger>
           <TabsTrigger value="offense" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Offense</TabsTrigger>
           <TabsTrigger value="defense" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Defense</TabsTrigger>
+          <TabsTrigger value="other" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Other</TabsTrigger>
           <TabsTrigger value="reviews" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Reviews</TabsTrigger>
         </TabsList>
         <TabsContent value="opponent" className="pt-6">
@@ -314,6 +316,9 @@ export function PlanPanel() {
                 <Button className="w-full" size="lg">Save</Button>
             </div>
 
+        </TabsContent>
+        <TabsContent value="other" className="pt-6">
+            <OtherPlanPanel />
         </TabsContent>
       </Tabs>
     </div>

@@ -6,11 +6,12 @@ import { PlanPanel } from "./plan-panel";
 export function CreateMatchTabs() {
   return (
     <Tabs defaultValue="event" className="w-full">
-      <TabsList className="grid w-full grid-cols-4">
+      <TabsList className="grid w-full grid-cols-5">
         <TabsTrigger value="event">Event</TabsTrigger>
         <TabsTrigger value="invites">Invites</TabsTrigger>
         <TabsTrigger value="plan">Plan</TabsTrigger>
         <TabsTrigger value="notes">Notes</TabsTrigger>
+        <TabsTrigger value="reviews">Reviews</TabsTrigger>
       </TabsList>
       <TabsContent value="event">
         <div className="pt-6">
@@ -29,6 +30,9 @@ export function CreateMatchTabs() {
       </TabsContent>
       <TabsContent value="notes">
         <p className="text-muted-foreground text-center p-8">Add notes for the match here.</p>
+      </TabsContent>
+      <TabsContent value="reviews">
+        <p className="text-muted-foreground text-center p-8">Match reviews will appear here.</p>
       </TabsContent>
     </Tabs>
   );
