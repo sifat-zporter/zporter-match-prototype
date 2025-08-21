@@ -2,7 +2,6 @@
 
 import type { Match } from "@/lib/data";
 import { MatchCard } from "@/components/match-card";
-import { Separator } from "@/components/ui/separator";
 
 interface MatchesListProps {
   matches: Match[];

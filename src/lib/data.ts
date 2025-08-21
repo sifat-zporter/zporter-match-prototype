@@ -10,6 +10,12 @@ export type League = {
   logoUrl: string;
 };
 
+export type Player = {
+  id: string;
+  name: string;
+  avatarUrl: string;
+};
+
 export type MatchEvent = {
   time: number;
   type: 'Goal' | 'Yellow Card' | 'Red Card' | 'Substitution';
@@ -41,6 +47,7 @@ export type Match = {
   };
   events: MatchEvent[];
   stats: MatchStats;
+  featuredPlayers?: Player[];
 };
 
 const teams: Record<string, Team> = {
@@ -66,6 +73,14 @@ const leagues: Record<string, League> = {
   serieA: { id: 'serieA', name: 'Serie A', logoUrl: 'https://placehold.co/24x24.png' },
 };
 
+const players: Record<string, Player> = {
+  neoJonsson: { id: 'neoJonsson', name: 'Neo Jönsson', avatarUrl: 'https://placehold.co/40x40.png' },
+  philipPawlowski: { id: 'philipPawlowski', name: 'Philip Pawlowski', avatarUrl: 'https://placehold.co/40x40.png' },
+  erlingHaaland: { id: 'erlingHaaland', name: 'Erling Haaland', avatarUrl: 'https://placehold.co/40x40.png' },
+  kylianMbappe: { id: 'kylianMbappe', name: 'Kylian Mbappé', avatarUrl: 'https://placehold.co/40x40.png' },
+};
+
+
 export const matches: Match[] = [
   {
     id: '1',
@@ -89,6 +104,7 @@ export const matches: Match[] = [
       corners: { home: 3, away: 6 },
       offsides: { home: 1, away: 2 },
     },
+    featuredPlayers: [players.neoJonsson]
   },
   {
     id: '2',
@@ -101,6 +117,7 @@ export const matches: Match[] = [
     scores: { home: 0, away: 2 },
     events: [],
     stats: { possession: { home: 50, away: 50 }, shots: { home: 5, away: 7 }, shotsOnGoal: { home: 2, away: 4 }, fouls: { home: 8, away: 8 }, corners: { home: 4, away: 2 }, offsides: { home: 1, away: 0 } },
+    featuredPlayers: [players.philipPawlowski]
   },
   {
     id: '3',
@@ -112,6 +129,7 @@ export const matches: Match[] = [
     scores: { home: 0, away: 0 },
     events: [],
     stats: { possession: { home: 50, away: 50 }, shots: { home: 0, away: 0 }, shotsOnGoal: { home: 0, away: 0 }, fouls: { home: 0, away: 0 }, corners: { home: 0, away: 0 }, offsides: { home: 0, away: 0 } },
+    featuredPlayers: [players.erlingHaaland]
   },
   {
     id: '4',
@@ -123,6 +141,7 @@ export const matches: Match[] = [
     scores: { home: 0, away: 0 },
     events: [],
     stats: { possession: { home: 50, away: 50 }, shots: { home: 0, away: 0 }, shotsOnGoal: { home: 0, away: 0 }, fouls: { home: 0, away: 0 }, corners: { home: 0, away: 0 }, offsides: { home: 0, away: 0 } },
+    featuredPlayers: [players.kylianMbappe]
   },
    {
     id: '5',
