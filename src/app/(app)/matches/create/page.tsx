@@ -2,7 +2,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CreateMatchForm } from "@/components/create-match-form";
 import { InvitePlayers } from "@/components/invite-players";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Circle } from "lucide-react";
 import Link from "next/link";
 
 export default function CreateMatchPage() {
@@ -12,17 +12,20 @@ export default function CreateMatchPage() {
         <Button variant="ghost" size="icon" asChild>
           <Link href="/"><ChevronLeft className="w-5 h-5" /></Link>
         </Button>
-        <h1 className="text-2xl font-headline font-bold">Create Match</h1>
+        <div className="flex items-center gap-2">
+            <Circle className="w-3 h-3 text-green-500 fill-current" />
+            <h1 className="text-xl font-semibold">Create Match</h1>
+        </div>
       </header>
       <main className="flex-1 overflow-y-auto">
         <Tabs defaultValue="event" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="event">Event</TabsTrigger>
-            <TabsTrigger value="invites">Invites</TabsTrigger>
-            <TabsTrigger value="plan">Plan</TabsTrigger>
-            <TabsTrigger value="notes">Notes</TabsTrigger>
-            <TabsTrigger value="reviews">Reviews</TabsTrigger>
-          </TabsList>
+            <TabsList className="grid w-full grid-cols-5 bg-transparent p-0 border-b">
+                <TabsTrigger value="event" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent text-orange-500 data-[state=active]:text-orange-500">Event</TabsTrigger>
+                <TabsTrigger value="invites" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Invites</TabsTrigger>
+                <TabsTrigger value="plan" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Plan</TabsTrigger>
+                <TabsTrigger value="notes" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Notes</TabsTrigger>
+                <TabsTrigger value="reviews" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Reviews</TabsTrigger>
+            </TabsList>
           
           <TabsContent value="event" className="p-4">
             <CreateMatchForm />
