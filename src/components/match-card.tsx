@@ -4,7 +4,7 @@ import { useState } from "react";
 import type { Match } from "@/lib/data";
 import Link from "next/link";
 import Image from "next/image";
-import { Star } from "lucide-react";
+import { Star, Tv } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 
@@ -28,43 +28,12 @@ export function MatchCard({ match }: MatchCardProps) {
 
   return (
     <Link href={`/matches/${match.id}`} className="block">
-      <div className="flex items-stretch bg-card p-3 rounded-lg hover:bg-accent transition-colors duration-200">
-        <div className={cn("flex flex-col items-center justify-center w-16 text-sm font-medium", getStatusColor(match.status))}>
-          {match.status === 'scheduled' ? (
-            <span>{match.startTime}</span>
-          ) : (
-            <>
-              <span>{match.time}</span>
-              {match.status === 'live' && <div className="w-2 h-2 rounded-full bg-primary mt-1 animate-pulse"></div>}
-            </>
-          )}
+      <div className="flex items-center bg-card p-3 rounded-lg hover:bg-accent transition-colors duration-200">
+        <div className={cn("flex flex-col items-center justify-center w-12 text-sm font-medium", getStatusColor(match.status))}>
+            <span>{match.status === 'scheduled' ? match.startTime : match.time}</span>
         </div>
-
-        <Separator orientation="vertical" className="h-auto mx-3" />
         
-        <div className="flex-1 flex flex-col justify-center gap-2 text-sm">
-          <div className="flex items-center gap-2">
-            <Image src={match.homeTeam.logoUrl} alt={match.homeTeam.name} width={20} height={20} className="rounded-full" data-ai-hint="team logo" />
-            <span className="font-medium">{match.homeTeam.name}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Image src={match.awayTeam.logoUrl} alt={match.awayTeam.name} width={20} height={20} className="rounded-full" data-ai-hint="team logo" />
-            <span className="font-medium">{match.awayTeam.name}</span>
-          </div>
-          <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-             <Image src={match.league.logoUrl} alt={match.league.name} width={16} height={16} data-ai-hint="league logo" />
-             <span>{match.league.name}</span>
-          </div>
-        </div>
-
-        {match.status !== 'scheduled' && (
-          <div className="flex flex-col items-center justify-center w-12 text-lg font-bold">
-            <span>{match.scores.home}</span>
-            <span>{match.scores.away}</span>
-          </div>
-        )}
-        
-        <div className="flex items-center justify-center w-12">
+        <div className="flex items-center justify-center w-10">
           <button
             onClick={(e) => {
               e.preventDefault();
@@ -76,6 +45,25 @@ export function MatchCard({ match }: MatchCardProps) {
             <Star className={cn("w-5 h-5", isFavorite && "fill-yellow-400 text-yellow-400")} />
           </button>
         </div>
+        
+        <div className="flex-1 flex flex-col justify-center gap-2 text-sm">
+          <div className="flex items-center gap-2">
+            <Image src={match.homeTeam.logoUrl} alt={match.homeTeam.name} width={20} height={20} className="rounded-full" data-ai-hint="team logo" />
+            <span className="font-medium">{match.homeTeam.name}</span>
+            {match.status !== 'scheduled' && <span className="font-bold ml-auto">{match.scores.home}</span>}
+          </div>
+          <div className="flex items-center gap-2">
+            <Image src={match.awayTeam.logoUrl} alt={match.awayTeam.name} width={20} height={20} className="rounded-full" data-ai-hint="team logo" />
+            <span className="font-medium">{match.awayTeam.name}</span>
+            {match.status !== 'scheduled' && <span className="font-bold ml-auto">{match.scores.away}</span>}
+          </div>
+        </div>
+
+        {match.status === 'live' && (
+          <div className="flex items-center justify-center w-12">
+            <Tv className="w-5 h-5 text-primary" />
+          </div>
+        )}
       </div>
     </Link>
   );

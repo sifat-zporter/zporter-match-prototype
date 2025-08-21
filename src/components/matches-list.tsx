@@ -1,48 +1,56 @@
 "use client";
 
-import { useState } from "react";
 import type { Match } from "@/lib/data";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { MatchCard } from "@/components/match-card";
+import { Separator } from "@/components/ui/separator";
 
 interface MatchesListProps {
   matches: Match[];
 }
 
 export default function MatchesList({ matches }: MatchesListProps) {
-  const [filter, setFilter] = useState("all");
+  const followingMatches = matches.slice(0, 2);
+  const mostPopularMatches = matches.slice(2);
 
-  const filteredMatches = matches.filter((match) => {
-    if (filter === "all") return true;
-    if (filter === "live" && match.status === "live") return true;
-    if (filter === "finished" && match.status === "finished") return true;
-    if (filter === "scheduled" && match.status === "scheduled") return true;
-    // 'Following' filter would need user data
-    return false;
-  });
+  const groupedByLeague = mostPopularMatches.reduce((acc, match) => {
+    const leagueName = match.league.name;
+    if (!acc[leagueName]) {
+      acc[leagueName] = [];
+    }
+    acc[leagueName].push(match);
+    return acc;
+  }, {} as Record<string, Match[]>);
+
 
   return (
-    <Tabs defaultValue="all" onValueChange={setFilter} className="w-full">
-      <TabsList className="grid w-full grid-cols-5">
-        <TabsTrigger value="all">All</TabsTrigger>
-        <TabsTrigger value="following">Following</TabsTrigger>
-        <TabsTrigger value="live">Live</TabsTrigger>
-        <TabsTrigger value="finished">Finished</TabsTrigger>
-        <TabsTrigger value="scheduled">Scheduled</TabsTrigger>
-      </TabsList>
-      <TabsContent value={filter}>
-        {filteredMatches.length > 0 ? (
-          <div className="space-y-2">
-            {filteredMatches.map((match) => (
+    <div className="space-y-4">
+      {followingMatches.length > 0 && (
+        <div>
+          <h2 className="text-xs font-semibold uppercase text-muted-foreground px-3 py-2">Following</h2>
+          <div className="space-y-1">
+            {followingMatches.map((match) => (
               <MatchCard key={match.id} match={match} />
             ))}
           </div>
-        ) : (
-          <div className="text-center py-16 text-muted-foreground">
+        </div>
+      )}
+
+      {Object.entries(groupedByLeague).map(([leagueName, leagueMatches]) => (
+        <div key={leagueName}>
+          <h2 className="text-xs font-semibold uppercase text-muted-foreground px-3 py-2">{leagueName}</h2>
+          <div className="space-y-1">
+            {leagueMatches.map((match) => (
+              <MatchCard key={match.id} match={match} />
+            ))}
+          </div>
+        </div>
+      ))}
+
+      {matches.length === 0 && (
+         <div className="text-center py-16 text-muted-foreground">
             <p>No matches for this day.</p>
           </div>
-        )}
-      </TabsContent>
-    </Tabs>
+      )}
+    </div>
   );
 }
