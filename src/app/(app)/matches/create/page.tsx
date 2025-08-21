@@ -1,5 +1,4 @@
-import { CreateMatchForm } from "@/components/create-match-form";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { CreateMatchTabs } from "@/components/create-match-tabs";
 
 export default function CreateMatchPage() {
   return (
@@ -8,15 +7,9 @@ export default function CreateMatchPage() {
         <h1 className="text-2xl font-headline font-bold">Create Match</h1>
       </header>
       <main className="flex-1 overflow-y-auto p-4">
-        <Card className="max-w-2xl mx-auto">
-          <CardHeader>
-            <CardTitle>Match Details</CardTitle>
-            <CardDescription>Fill out the form to create a new match for your team.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <CreateMatchForm />
-          </CardContent>
-        </Card>
+        <div className="max-w-2xl mx-auto">
+          <CreateMatchTabs />
+        </div>
       </main>
     </div>
   );
