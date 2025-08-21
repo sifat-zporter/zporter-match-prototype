@@ -1,4 +1,5 @@
-import { matches } from "@/lib/data";
+
+import { matches, cups } from "@/lib/data";
 import { DateNavigator } from "@/components/date-navigator";
 import MatchesList from "@/components/matches-list";
 import { PlayerMatchesList } from "@/components/player-matches-list";
@@ -7,6 +8,7 @@ import { Search, Tv, MessageSquare, Bell, MapPin, ListFilter, ArrowUpDown, Plus 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { SeriesMatchesList } from "@/components/series-matches-list";
+import { CupMatchesList } from "@/components/cup-matches-list";
 
 export default function MatchesHubPage() {
   const todaysMatches = matches;
@@ -54,8 +56,17 @@ export default function MatchesHubPage() {
               <SeriesMatchesList matches={todaysMatches} />
             </div>
           </TabsContent>
-           <TabsContent value="cup">
-             <p className="text-center text-muted-foreground pt-8">Cup view coming soon.</p>
+           <TabsContent value="cup" className="pt-4 space-y-4">
+             <div className="flex items-center justify-between">
+                <p className="text-sm font-semibold">SE-Male-2007-Start time</p>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                    <MapPin className="w-4 h-4" />
+                    <ArrowUpDown className="w-4 h-4" />
+                    <ListFilter className="w-4 h-4" />
+                </div>
+             </div>
+              <DateNavigator />
+              <CupMatchesList cups={cups} />
           </TabsContent>
         </Tabs>
       </header>
