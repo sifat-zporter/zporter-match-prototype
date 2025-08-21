@@ -1,12 +1,12 @@
+
 "use client"
 
 import { useState } from "react";
 import type { Match } from "@/lib/data";
 import Link from "next/link";
 import Image from "next/image";
-import { Star, Tv } from "lucide-react";
+import { Star, Tv, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Separator } from "@/components/ui/separator";
 
 interface MatchCardProps {
   match: Match;
@@ -26,11 +26,16 @@ export function MatchCard({ match }: MatchCardProps) {
     }
   };
 
+  const isLive = match.status === 'live';
+
   return (
     <Link href={`/matches/${match.id}`} className="block">
       <div className="flex items-center bg-card p-3 rounded-lg hover:bg-accent transition-colors duration-200">
-        <div className={cn("flex flex-col items-center justify-center w-12 text-sm font-medium", getStatusColor(match.status))}>
-            <span>{match.status === 'scheduled' ? match.startTime : match.time}</span>
+        <div className="flex flex-col items-center justify-center w-12 text-sm text-muted-foreground">
+          <span>{match.date}</span>
+          <span className={cn("font-medium", getStatusColor(match.status))}>
+            {match.status === 'scheduled' ? match.startTime : match.time}
+          </span>
         </div>
         
         <div className="flex items-center justify-center w-10">
@@ -59,11 +64,18 @@ export function MatchCard({ match }: MatchCardProps) {
           </div>
         </div>
 
-        {match.status === 'live' && (
-          <div className="flex items-center justify-center w-12">
+        <div className="w-28 text-right text-xs text-muted-foreground ml-2">
+            <p>{match.league.name}</p>
+            <p>{match.stadium}</p>
+        </div>
+
+        <div className="flex items-center justify-center w-10">
+          {isLive ? (
             <Tv className="w-5 h-5 text-primary" />
-          </div>
-        )}
+          ) : (
+            <ChevronRight className="w-5 h-5 text-muted-foreground" />
+          )}
+        </div>
       </div>
     </Link>
   );
