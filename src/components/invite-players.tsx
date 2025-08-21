@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState } from "react";
@@ -11,6 +12,7 @@ import { Switch } from "./ui/switch";
 import { Separator } from "./ui/separator";
 import { Sheet, SheetTrigger } from "./ui/sheet";
 import { InviteFilterSheet } from "./invite-filter-sheet";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const players = [
     { id: '1', name: "John Lundstram", handle: "#JohLun123456", location: "SE/Stockholm", team: "Hammarby IF", role: "CDM", avatar: "https://placehold.co/40x40.png", invited: true },
