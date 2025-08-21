@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Bot, ClipboardList } from "lucide-react";
 import { MatchFacts } from "@/components/match-facts";
 import { MatchFeed } from "@/components/match-feed";
+import { MatchStats } from "@/components/match-stats";
 
 export default function MatchDetailPage({ params }: { params: { id: string } }) {
   const match = getMatchById(params.id);
@@ -20,19 +21,15 @@ export default function MatchDetailPage({ params }: { params: { id: string } }) 
 
   return (
     <div className="flex flex-col h-full">
-      <MatchHeader match={match} />
-      <main className="flex-1 overflow-y-auto p-4 space-y-4">
-        <Tabs defaultValue="facts" className="w-full">
+      <MatchHeader match={match} title="Highlights and Notes"/>
+      <main className="flex-1 overflow-y-auto">
+        <Tabs defaultValue="events" className="w-full">
           <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="facts">Facts</TabsTrigger>
             <TabsTrigger value="lineup">Line up</TabsTrigger>
             <TabsTrigger value="feed">Feed</TabsTrigger>
             <TabsTrigger value="events">Events</TabsTrigger>
+            <TabsTrigger value="stats">Stats</TabsTrigger>
           </TabsList>
-          
-          <TabsContent value="facts">
-             <MatchFacts match={match} />
-          </TabsContent>
           
           <TabsContent value="lineup">
             <MatchLineups />
@@ -42,40 +39,14 @@ export default function MatchDetailPage({ params }: { params: { id: string } }) 
             <MatchFeed />
           </TabsContent>
 
-          <TabsContent value="events">
+          <TabsContent value="events" className="p-0">
             <MatchEvents events={match.events} />
           </TabsContent>
-        </Tabs>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-           <Card>
-            <CardHeader>
-              <CardTitle>Coach Tools</CardTitle>
-            </CardHeader>
-            <CardContent className="flex gap-4">
-              <Button asChild className="flex-1">
-                <Link href={`/matches/${match.id}/log`}>
-                  <ClipboardList className="mr-2 h-4 w-4"/>
-                  Live Log
-                </Link>
-              </Button>
-              <Button asChild variant="secondary" className="flex-1">
-                <Link href={`/matches/${match.id}/suggestions`}>
-                  <Bot className="mr-2 h-4 w-4" />
-                  AI Suggestions
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-           <Card>
-            <CardHeader>
-              <CardTitle>Ztar of the Match</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">Voting will be available after the match.</p>
-            </CardContent>
-          </Card>
-        </div>
+          <TabsContent value="stats" className="p-4">
+            <MatchStats stats={match.stats} />
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );

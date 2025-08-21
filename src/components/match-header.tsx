@@ -8,9 +8,10 @@ import Link from "next/link";
 
 interface MatchHeaderProps {
   match: Match;
+  title?: string;
 }
 
-export function MatchHeader({ match }: MatchHeaderProps) {
+export function MatchHeader({ match, title }: MatchHeaderProps) {
   return (
     <header className="p-4 border-b border-border sticky top-0 bg-background/95 backdrop-blur-sm z-10 space-y-4">
       <div className="flex justify-between items-center">
@@ -19,10 +20,13 @@ export function MatchHeader({ match }: MatchHeaderProps) {
         </Button>
         <div className="text-center">
             <div className="flex items-center gap-2 justify-center">
-                <ZporterLogo className="w-5 h-5 text-primary" />
-                <h1 className="font-semibold">{match.league.name}</h1>
+                <h1 className="font-semibold">{title ? title : match.league.name}</h1>
             </div>
-            <p className="text-xs text-muted-foreground">{match.stadium}</p>
+            {title ? (
+                 <p className="text-xs text-muted-foreground">{match.league.name}, {match.stadium}</p>
+            ) : (
+                 <p className="text-xs text-muted-foreground">{match.stadium}</p>
+            )}
         </div>
         <Button variant="ghost" size="icon">
           <Share2 className="w-5 h-5" />

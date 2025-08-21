@@ -1,6 +1,9 @@
 import type { MatchEvent } from "@/lib/data";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeftRight, RectangleVertical } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { ArrowLeftRight, ChevronLeft, ChevronRight, Plus, RectangleVertical } from "lucide-react";
+import Image from "next/image";
+import { Button } from "./ui/button";
+import { players } from "@/lib/data";
 
 interface MatchEventsProps {
   events: MatchEvent[];
@@ -35,52 +38,89 @@ const SoccerBallIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
-
-const eventIcons = {
+const eventIcons: Record<MatchEvent['type'], React.ReactNode> = {
   'Goal': <SoccerBallIcon className="w-5 h-5 text-primary" />,
   'Yellow Card': <RectangleVertical className="w-5 h-5 text-yellow-400 fill-yellow-400" />,
   'Red Card': <RectangleVertical className="w-5 h-5 text-red-500 fill-red-500" />,
   'Substitution': <ArrowLeftRight className="w-5 h-5 text-blue-400" />,
 };
 
+const EventRow = ({ event }: { event: MatchEvent }) => {
+  const isHomeEvent = event.team === 'home';
+  const player = players.find(p => p.name === event.player) || players[0];
+
+  const content = (
+    <>
+      <div className="w-1/4 flex justify-end items-center gap-2">
+        {isHomeEvent && (
+          <>
+            <ChevronLeft className="w-5 h-5 text-muted-foreground" />
+            <span className="font-semibold">{player.number}</span>
+          </>
+        )}
+      </div>
+      <div className="w-1/4 text-right">
+        {isHomeEvent && <span className="text-muted-foreground text-sm">{event.type}</span>}
+      </div>
+      <div className="w-16 text-center font-mono text-sm">{event.time}'</div>
+      <div className="w-1/4 text-left">
+        {!isHomeEvent && <span className="text-muted-foreground text-sm">{event.type}</span>}
+      </div>
+       <div className="w-1/4 flex justify-start items-center gap-2">
+        {!isHomeEvent && (
+          <>
+            <span className="font-semibold">{player.number}</span>
+            <ChevronRight className="w-5 h-5 text-muted-foreground" />
+          </>
+        )}
+      </div>
+    </>
+  );
+
+  return <div className="flex items-center w-full h-10">{content}</div>
+}
+
 export function MatchEvents({ events }: MatchEventsProps) {
-  if (events.length === 0) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Events</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">No events recorded for this match yet.</p>
-        </CardContent>
-      </Card>
-    )
-  }
+  const sortedEvents = [...events].sort((a, b) => b.time - a.time);
+  const featuredPlayer = players[0];
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Events</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="relative pl-6">
-          <div className="absolute left-0 top-0 h-full w-0.5 bg-border -translate-x-1/2 ml-3"></div>
-          {events.map((event, index) => (
-            <div key={index} className="relative flex items-start gap-4 mb-6">
-              <div className="absolute left-0 top-1 w-6 h-6 bg-background border-2 border-border rounded-full flex items-center justify-center -translate-x-1/2">
-                {eventIcons[event.type]}
-              </div>
-              <div className="pl-6 flex-1 flex justify-between items-center pt-1">
-                <div>
-                  <p className="font-semibold">{event.player}</p>
-                  <p className="text-sm text-muted-foreground">{event.type}</p>
-                </div>
-                <p className="font-mono text-sm">{event.time}'</p>
-              </div>
-            </div>
+    <div className="relative h-full flex flex-col">
+      <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex items-center justify-between text-xs text-muted-foreground uppercase font-semibold px-2 mb-2">
+          <span>Nr</span>
+          <span>Event</span>
+          <span>Min</span>
+          <span>Event</span>
+          <span>Nr</span>
+        </div>
+        
+        <div className="space-y-1">
+          {sortedEvents.map((event, index) => (
+            <EventRow key={index} event={event} />
           ))}
         </div>
-      </CardContent>
-    </Card>
+        
+        <p className="text-center text-sm text-muted-foreground mt-4">Match started 10:01</p>
+      </div>
+      
+      <div className="sticky bottom-0 left-0 right-0 p-4 bg-background border-t border-border">
+          <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                  <Image src={featuredPlayer.avatarUrl} alt={featuredPlayer.name} width={48} height={48} className="rounded-md" data-ai-hint="player avatar" />
+                  <div className="grid grid-cols-2 items-center text-xs gap-x-3 gap-y-1">
+                      <p className="font-semibold col-span-2 text-sm">{featuredPlayer.name}</p>
+                      <p className="text-muted-foreground">{featuredPlayer.zporterId}</p>
+                      <p className="text-foreground">{featuredPlayer.role}</p>
+                      <p className="text-muted-foreground">{featuredPlayer.location}</p>
+                      <p className="text-foreground">{featuredPlayer.team}</p>
+                  </div>
+              </div>
+               <Button className="h-14 w-14 rounded-full shadow-lg shrink-0">
+                  <Plus className="w-8 h-8" />
+                </Button>
+          </div>
+      </div>
+    </div>
   )
 }
