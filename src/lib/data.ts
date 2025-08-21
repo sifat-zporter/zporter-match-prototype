@@ -36,12 +36,22 @@ export type MatchEvent = {
 };
 
 export type MatchStats = {
-  possession: { home: number; away: number };
+  goals: { home: number; away: number };
   shots: { home: number; away: number };
   shotsOnGoal: { home: number; away: number };
-  fouls: { home: number; away: number };
+  penalties: { home: number; away: number };
   corners: { home: number; away: number };
+  freeKicks: { home: number; away: number };
+  throwIns: { home: number; away: number };
   offsides: { home: number; away: number };
+  yellowCards: { home: number; away: number };
+  redCards: { home: number; away: number };
+  possession: { home: number; away: number };
+  possessionMinutes: { home: number; away: number };
+  passesOn: { home: number; away: number };
+  passesOff: { home: number; away: number };
+  wonBalls: { home: number; away: number };
+  fouls: { home: number; away: number };
 };
 
 export type TeamForm = 'W' | 'D' | 'L';
@@ -194,6 +204,25 @@ const featuredPlayers = [
   { ...players[3], id: 'kylianMbappe', name: 'Kylian Mbappé' },
 ];
 
+const matchStatsTemplate: MatchStats = {
+  goals: { home: 1, away: 1 },
+  shots: { home: 12, away: 5 },
+  shotsOnGoal: { home: 8, away: 4 },
+  penalties: { home: 1, away: 0 },
+  corners: { home: 8, away: 4 },
+  freeKicks: { home: 4, away: 5 },
+  throwIns: { home: 3, away: 1 },
+  offsides: { home: 8, away: 4 },
+  yellowCards: { home: 5, away: 2 },
+  redCards: { home: 3, away: 1 },
+  possession: { home: 60, away: 40 },
+  possessionMinutes: { home: 54, away: 36 },
+  passesOn: { home: 223, away: 177 },
+  passesOff: { home: 60, away: 40 },
+  wonBalls: { home: 40, away: 60 },
+  fouls: { home: 14, away: 10 },
+};
+
 export const matches: Match[] = [
   {
     id: '1',
@@ -206,20 +235,13 @@ export const matches: Match[] = [
     awayTeam: teams.fcBarcelona,
     league: leagues.zporterCup,
     stadium: 'Stockholm, Sollentuna, Norrvikens IP',
-    scores: { home: 0, away: 3 },
+    scores: { home: 1, away: 1 },
     events: [
       { time: 23, type: 'Goal', player: 'L. Yamal', team: 'away' },
       { time: 45, type: 'Yellow Card', player: 'P. Cubarsi', team: 'away' },
-      { time: 55, type: 'Goal', player: 'F. Lopez', team: 'away' },
+      { time: 55, type: 'Goal', player: 'F. Lopez', team: 'home' },
     ],
-    stats: {
-      possession: { home: 42, away: 58 },
-      shots: { home: 8, away: 12 },
-      shotsOnGoal: { home: 3, away: 5 },
-      fouls: { home: 14, away: 10 },
-      corners: { home: 3, away: 6 },
-      offsides: { home: 1, away: 2 },
-    },
+    stats: matchStatsTemplate,
     featuredPlayers: [featuredPlayers[0]],
     teamForm: {
         home: ['L', 'D', 'W', 'W', 'W'],
@@ -270,7 +292,7 @@ export const matches: Match[] = [
     stadium: 'KB Arena',
     scores: { home: 2, away: 0 },
     events: [],
-    stats: { possession: { home: 50, away: 50 }, shots: { home: 5, away: 7 }, shotsOnGoal: { home: 2, away: 4 }, fouls: { home: 8, away: 8 }, corners: { home: 4, away: 2 }, offsides: { home: 1, away: 0 } },
+    stats: matchStatsTemplate,
     featuredPlayers: [featuredPlayers[1]]
   },
   {
@@ -285,7 +307,7 @@ export const matches: Match[] = [
     stadium: 'Santiago Bernabéu',
     scores: { home: 0, away: 0 },
     events: [],
-    stats: { possession: { home: 50, away: 50 }, shots: { home: 0, away: 0 }, shotsOnGoal: { home: 0, away: 0 }, fouls: { home: 0, away: 0 }, corners: { home: 0, away: 0 }, offsides: { home: 0, away: 0 } },
+    stats: matchStatsTemplate,
     featuredPlayers: [featuredPlayers[2]]
   },
   {
@@ -300,7 +322,7 @@ export const matches: Match[] = [
     stadium: 'Old Trafford',
     scores: { home: 0, away: 0 },
     events: [],
-    stats: { possession: { home: 50, away: 50 }, shots: { home: 0, away: 0 }, shotsOnGoal: { home: 0, away: 0 }, fouls: { home: 0, away: 0 }, corners: { home: 0, away: 0 }, offsides: { home: 0, away: 0 } },
+    stats: matchStatsTemplate,
     featuredPlayers: [featuredPlayers[3]]
   },
    {
@@ -315,7 +337,7 @@ export const matches: Match[] = [
     stadium: 'Stadio del Alpi',
     scores: { home: 0, away: 0 },
     events: [],
-    stats: { possession: { home: 50, away: 50 }, shots: { home: 0, away: 0 }, shotsOnGoal: { home: 0, away: 0 }, fouls: { home: 0, away: 0 }, corners: { home: 0, away: 0 }, offsides: { home: 0, away: 0 } },
+    stats: matchStatsTemplate,
   },
   {
     id: '6',
@@ -330,7 +352,7 @@ export const matches: Match[] = [
     stadium: 'Stamford Bridge',
     scores: { home: 2, away: 1 },
     events: [],
-    stats: { possession: { home: 65, away: 35 }, shots: { home: 15, away: 6 }, shotsOnGoal: { home: 7, away: 2 }, fouls: { home: 9, away: 12 }, corners: { home: 8, away: 2 }, offsides: { home: 3, away: 1 } },
+    stats: matchStatsTemplate,
   },
   {
     id: '7',
@@ -345,7 +367,7 @@ export const matches: Match[] = [
     stadium: 'Emirates Arena',
     scores: { home: 3, away: 1 },
     events: [],
-    stats: { possession: { home: 60, away: 40 }, shots: { home: 20, away: 8 }, shotsOnGoal: { home: 10, away: 3 }, fouls: { home: 11, away: 14 }, corners: { home: 9, away: 3 }, offsides: { home: 2, away: 2 } },
+    stats: matchStatsTemplate,
   },
 ];
 
@@ -356,8 +378,8 @@ export const cups: Cup[] = [
         logoUrl: 'https://placehold.co/24x24.png',
         metadata: 'SE, Male, 2007, Elite, A',
         matches: [
-            { id: 'cup-1-1', status: 'finished', date: '16/12', fullDate: '2022-12-16T10:00:00', startTime: '10:00', time: 'FT', homeTeam: teams.majFC, awayTeam: teams.aikFFU16, league: leagues.zporterCup, stadium: 'Norrvikens IP, 1', scores: { home: 1, away: 0 }, round: 'R-1', events: [], stats: { possession: { home: 50, away: 50 }, shots: { home: 0, away: 0 }, shotsOnGoal: { home: 0, away: 0 }, fouls: { home: 0, away: 0 }, corners: { home: 0, away: 0 }, offsides: { home: 0, away: 0 } } },
-            { id: 'cup-1-2', status: 'finished', date: '16/12', fullDate: '2022-12-16T10:00:00', startTime: '10:00', time: 'FT', homeTeam: teams.majFC, awayTeam: teams.aikFFU16, league: leagues.zporterCup, stadium: 'Norrvikens IP, 1', scores: { home: 3, away: 2 }, round: 'R-1', events: [], stats: { possession: { home: 50, away: 50 }, shots: { home: 0, away: 0 }, shotsOnGoal: { home: 0, away: 0 }, fouls: { home: 0, away: 0 }, corners: { home: 0, away: 0 }, offsides: { home: 0, away: 0 } } }
+            { id: 'cup-1-1', status: 'finished', date: '16/12', fullDate: '2022-12-16T10:00:00', startTime: '10:00', time: 'FT', homeTeam: teams.majFC, awayTeam: teams.aikFFU16, league: leagues.zporterCup, stadium: 'Norrvikens IP, 1', scores: { home: 1, away: 0 }, round: 'R-1', events: [], stats: matchStatsTemplate },
+            { id: 'cup-1-2', status: 'finished', date: '16/12', fullDate: '2022-12-16T10:00:00', startTime: '10:00', time: 'FT', homeTeam: teams.majFC, awayTeam: teams.aikFFU16, league: leagues.zporterCup, stadium: 'Norrvikens IP, 1', scores: { home: 3, away: 2 }, round: 'R-1', events: [], stats: matchStatsTemplate }
         ]
     },
     {
@@ -366,9 +388,9 @@ export const cups: Cup[] = [
         logoUrl: 'https://placehold.co/24x24.png',
         metadata: 'SE, Male, 2007',
         matches: [
-            { id: 'cup-2-1', status: 'finished', date: '16/12', fullDate: '2022-12-16T10:00:00', startTime: '10:00', time: 'FT', homeTeam: teams.bpDFFU16, awayTeam: teams.borasGIF, league: leagues.luxcuper, stadium: 'Kristinehamns Arena', scores: { home: 1, away: 0 }, round: '1/2-Final', isLiveStreamed: true, events: [], stats: { possession: { home: 50, away: 50 }, shots: { home: 0, away: 0 }, shotsOnGoal: { home: 0, away: 0 }, fouls: { home: 0, away: 0 }, corners: { home: 0, away: 0 }, offsides: { home: 0, away: 0 } } },
-            { id: 'cup-2-2', status: 'finished', date: '16/12', fullDate: '2022-12-16T10:00:00', startTime: '10:00', time: 'FT', homeTeam: teams.djurgardensIF07A, awayTeam: teams.aikFFSvart, league: leagues.luxcuper, stadium: 'Kristinehamns Arena', scores: { home: 1, away: 1 }, penalties: {home: 3, away: 4}, round: '1/2-Final', isLiveStreamed: true, events: [], stats: { possession: { home: 50, away: 50 }, shots: { home: 0, away: 0 }, shotsOnGoal: { home: 0, away: 0 }, fouls: { home: 0, away: 0 }, corners: { home: 0, away: 0 }, offsides: { home: 0, away: 0 } } },
-            { id: 'cup-2-3', status: 'finished', date: '16/12', fullDate: '2022-12-16T16:00:00', startTime: '16:00', time: 'FT', homeTeam: teams.bpDFFU16, awayTeam: teams.aikFFSvart, league: leagues.luxcuper, stadium: 'Kristinehamns Arena', scores: { home: 3, away: 0 }, round: 'Final', isLiveStreamed: true, events: [], stats: { possession: { home: 50, away: 50 }, shots: { home: 0, away: 0 }, shotsOnGoal: { home: 0, away: 0 }, fouls: { home: 0, away: 0 }, corners: { home: 0, away: 0 }, offsides: { home: 0, away: 0 } } }
+            { id: 'cup-2-1', status: 'finished', date: '16/12', fullDate: '2022-12-16T10:00:00', startTime: '10:00', time: 'FT', homeTeam: teams.bpDFFU16, awayTeam: teams.borasGIF, league: leagues.luxcuper, stadium: 'Kristinehamns Arena', scores: { home: 1, away: 0 }, round: '1/2-Final', isLiveStreamed: true, events: [], stats: matchStatsTemplate },
+            { id: 'cup-2-2', status: 'finished', date: '16/12', fullDate: '2022-12-16T10:00:00', startTime: '10:00', time: 'FT', homeTeam: teams.djurgardensIF07A, awayTeam: teams.aikFFSvart, league: leagues.luxcuper, stadium: 'Kristinehamns Arena', scores: { home: 1, away: 1 }, penalties: {home: 3, away: 4}, round: '1/2-Final', isLiveStreamed: true, events: [], stats: matchStatsTemplate },
+            { id: 'cup-2-3', status: 'finished', date: '16/12', fullDate: '2022-12-16T16:00:00', startTime: '16:00', time: 'FT', homeTeam: teams.bpDFFU16, awayTeam: teams.aikFFSvart, league: leagues.luxcuper, stadium: 'Kristinehamns Arena', scores: { home: 3, away: 0 }, round: 'Final', isLiveStreamed: true, events: [], stats: matchStatsTemplate }
         ]
     },
     {
@@ -377,8 +399,8 @@ export const cups: Cup[] = [
         logoUrl: 'https://placehold.co/24x24.png',
         metadata: 'UEFA, Male, Adults',
         matches: [
-             { id: 'cup-3-1', status: 'finished', date: '16/12', fullDate: '2022-12-16T21:00:00', startTime: '21:00', time: 'FT', homeTeam: teams.manchesterCity, awayTeam: teams.bayernMunchen, league: leagues.championsLeague, stadium: 'Etihad Stadium', scores: { home: 1, away: 1 }, round: '23/24, Round-2', events: [], stats: { possession: { home: 50, away: 50 }, shots: { home: 0, away: 0 }, shotsOnGoal: { home: 0, away: 0 }, fouls: { home: 0, away: 0 }, corners: { home: 0, away: 0 }, offsides: { home: 0, away: 0 } } },
-             { id: 'cup-3-2', status: 'finished', date: '16/12', fullDate: '2022-12-16T21:00:00', startTime: '21:00', time: 'FT', homeTeam: teams.sevilla, awayTeam: teams.fcCopenhagen, league: leagues.championsLeague, stadium: 'Mestalla', scores: { home: 1, away: 3 }, round: '23/24, Round-2', events: [], stats: { possession: { home: 50, away: 50 }, shots: { home: 0, away: 0 }, shotsOnGoal: { home: 0, away: 0 }, fouls: { home: 0, away: 0 }, corners: { home: 0, away: 0 }, offsides: { home: 0, away: 0 } } },
+             { id: 'cup-3-1', status: 'finished', date: '16/12', fullDate: '2022-12-16T21:00:00', startTime: '21:00', time: 'FT', homeTeam: teams.manchesterCity, awayTeam: teams.bayernMunchen, league: leagues.championsLeague, stadium: 'Etihad Stadium', scores: { home: 1, away: 1 }, round: '23/24, Round-2', events: [], stats: matchStatsTemplate },
+             { id: 'cup-3-2', status: 'finished', date: '16/12', fullDate: '2022-12-16T21:00:00', startTime: '21:00', time: 'FT', homeTeam: teams.sevilla, awayTeam: teams.fcCopenhagen, league: leagues.championsLeague, stadium: 'Mestalla', scores: { home: 1, away: 3 }, round: '23/24, Round-2', events: [], stats: matchStatsTemplate },
         ]
     }
 ]
