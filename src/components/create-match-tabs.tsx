@@ -1,6 +1,6 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CreateMatchForm } from "./create-match-form";
-import { InvitePlayers } from "./invite-players";
+import { InvitesPanel } from "./invites-panel";
 
 export function CreateMatchTabs() {
   return (
@@ -18,7 +18,7 @@ export function CreateMatchTabs() {
       </TabsContent>
       <TabsContent value="invites">
         <div className="pt-6">
-            <InvitePlayers />
+            <InvitesPanel />
         </div>
       </TabsContent>
       <TabsContent value="plan">
