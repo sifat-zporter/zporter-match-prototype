@@ -15,9 +15,13 @@ export type Player = {
   id: string;
   name: string;
   avatarUrl: string;
+  zporterId: string;
+  location: string;
+  team: string;
+  role: string;
+  number: number;
   nationality?: string;
   year?: number;
-  number?: number;
   position?: string;
   goals?: number;
   assists?: number;
@@ -155,16 +159,40 @@ const leagues: Record<string, League> = {
   championsLeague: { id: 'championsLeague', name: 'Champions League', logoUrl: 'https://placehold.co/24x24.png' },
 };
 
-const players: Record<string, Player> = {
-  neoJonsson: { id: 'neoJonsson', name: 'Neo Jönsson', avatarUrl: 'https://placehold.co/40x40.png' },
-  philipPawlowski: { id: 'philipPawlowski', name: 'Philip Pawlowski', avatarUrl: 'https://placehold.co/40x40.png' },
-  erlingHaaland: { id: 'erlingHaaland', name: 'Erling Haaland', avatarUrl: 'https://placehold.co/40x40.png' },
-  kylianMbappe: { id: 'kylianMbappe', name: 'Kylian Mbappé', avatarUrl: 'https://placehold.co/40x40.png' },
-  tiamNobari: { id: 'tiamNobari1', name: 'Tiam Nobari', avatarUrl: 'https://placehold.co/40x40.png', nationality: 'SE', year: 2007, number: 10, position: 'FW' },
-  tiamNobari2: { id: 'tiamNobari2', name: 'Tiam Nobari', avatarUrl: 'https://placehold.co/40x40.png', nationality: 'SE', year: 2007, number: 11, position: 'S' },
-  tiamNobari3: { id: 'tiamNobari3', name: 'Tiam Nobari', avatarUrl: 'https://placehold.co/40x40.png', nationality: 'SE', year: 2007, number: 8, position: 'CM' },
-};
+const initialPlayers: Omit<Player, 'id'>[] = [
+    { number: 1, name: 'John Lundstram', zporterId: '#JohLun123456', role: 'CDM', location: 'SE/Stockholm', team: 'Hammarby IF', avatarUrl: 'https://placehold.co/48x48.png' },
+    { number: 2, name: 'John Lundstram', zporterId: '#JohLun123456', role: 'CDM', location: 'SE/Stockholm', team: 'Hammarby IF', avatarUrl: 'https://placehold.co/48x48.png' },
+    { number: 3, name: 'John Lundstram', zporterId: '#JohLun123456', role: 'CDM', location: 'SE/Stockholm', team: 'Hammarby IF', avatarUrl: 'https://placehold.co/48x48.png' },
+    { number: 4, name: 'John Lundstram', zporterId: '#JohLun123456', role: 'CDM', location: 'SE/Stockholm', team: 'Hammarby IF', avatarUrl: 'https://placehold.co/48x48.png' },
+    { number: 5, name: 'John Lundstram', zporterId: '#JohLun123456', role: 'CDM', location: 'SE/Stockholm', team: 'Hammarby IF', avatarUrl: 'https://placehold.co/48x48.png' },
+    { number: 6, name: 'John Lundstram', zporterId: '#JohLun123456', role: 'CDM', location: 'SE/Stockholm', team: 'Hammarby IF', avatarUrl: 'https://placehold.co/48x48.png' },
+    { number: 7, name: 'John Lundstram', zporterId: '#JohLun123456', role: 'CDM', location: 'SE/Stockholm', team: 'Hammarby IF', avatarUrl: 'https://placehold.co/48x48.png' },
+    { number: 8, name: 'John Lundstram', zporterId: '#JohLun123456', role: 'CDM', location: 'SE/Stockholm', team: 'Hammarby IF', avatarUrl: 'https://placehold.co/48x48.png' },
+    { number: 9, name: 'John Lundstram', zporterId: '#JohLun123456', role: 'CDM', location: 'SE/Stockholm', team: 'Hammarby IF', avatarUrl: 'https://placehold.co/48x48.png' },
+    { number: 10, name: 'John Lundstram', zporterId: '#JohLun123456', role: 'CDM', location: 'SE/Stockholm', team: 'Hammarby IF', avatarUrl: 'https://placehold.co/48x48.png' },
+    { number: 11, name: 'John Lundstram', zporterId: '#JohLun123456', role: 'CDM', location: 'SE/Stockholm', team: 'Hammarby IF', avatarUrl: 'https://placehold.co/48x48.png' },
+    { number: 13, name: 'John Lundstram', zporterId: '#JohLun123456', role: 'CDM', location: 'SE/Stockholm', team: 'Hammarby IF', avatarUrl: 'https://placehold.co/48x48.png' },
+    { number: 14, name: 'John Lundstram', zporterId: '#JohLun123456', role: 'CDM', location: 'SE/Stockholm', team: 'Hammarby IF', avatarUrl: 'https://placehold.co/48x48.png' },
+    { number: 15, name: 'John Lundstram', zporterId: '#JohLun123456', role: 'CDM', location: 'SE/Stockholm', team: 'Hammarby IF', avatarUrl: 'https://placehold.co/48x48.png' },
+    { number: 17, name: 'John Lundstram', zporterId: '#JohLun123456', role: 'CDM', location: 'SE/Stockholm', team: 'Hammarby IF', avatarUrl: 'https://placehold.co/48x48.png' },
+    { number: 18, name: 'John Lundstram', zporterId: '#JohLun123456', role: 'CDM', location: 'SE/Stockholm', team: 'Hammarby IF', avatarUrl: 'https://placehold.co/48x48.png' },
+    { number: 7, name: 'John Lundstram', zporterId: '#JohLun123456', role: 'Head Coach', location: 'SE/Stockholm', team: 'Hammarby IF', avatarUrl: 'https://placehold.co/48x48.png' },
+    { number: 8, name: 'John Lundstram', zporterId: '#JohLun123456', role: 'Ass. Coach', location: 'SE/Stockholm', team: 'Hammarby IF', avatarUrl: 'https://placehold.co/48x48.png' },
+    { number: 9, name: 'John Lundstram', zporterId: '#JohLun123456', role: 'Head Coach', location: 'SE/Stockholm', team: 'Hammarby IF', avatarUrl: 'https://placehold.co/48x48.png' },
+    { number: 10, name: 'John Lundstram', zporterId: '#JohLun123456', role: 'Ass. Coach', location: 'SE/Stockholm', team: 'Hammarby IF', avatarUrl: 'https://placehold.co/48x48.png' },
+    { number: 11, name: 'John Lundstram', zporterId: '#JohLun123456', role: 'Head Coach', location: 'SE/Stockholm', team: 'Hammarby IF', avatarUrl: 'https://placehold.co/48x48.png' },
+    
+];
 
+export const players: Player[] = initialPlayers.map((p, index) => ({...p, id: `player-${index + 1}`}));
+
+
+const featuredPlayers = [
+  { ...players[0], id: 'neoJonsson', name: 'Neo Jönsson' },
+  { ...players[1], id: 'philipPawlowski', name: 'Philip Pawlowski' },
+  { ...players[2], id: 'erlingHaaland', name: 'Erling Haaland' },
+  { ...players[3], id: 'kylianMbappe', name: 'Kylian Mbappé' },
+];
 
 export const matches: Match[] = [
   {
@@ -192,7 +220,7 @@ export const matches: Match[] = [
       corners: { home: 3, away: 6 },
       offsides: { home: 1, away: 2 },
     },
-    featuredPlayers: [players.neoJonsson],
+    featuredPlayers: [featuredPlayers[0]],
     teamForm: {
         home: ['L', 'D', 'W', 'W', 'W'],
         away: ['L', 'D', 'W', 'W', 'W'],
@@ -205,12 +233,12 @@ export const matches: Match[] = [
         { id: 'pm5', date: '31/1/2021', homeTeam: 'Maj FC', awayTeam: 'FC Barcelona', homeScore: 2, awayScore: 1, league: 'La Liga', stadium: 'Norrvikens IP' },
     ],
     topGoalscorers: {
-        home: [players.tiamNobari, players.tiamNobari2, players.tiamNobari3],
-        away: [players.tiamNobari, players.tiamNobari2, players.tiamNobari3]
+        home: [players[4], players[5], players[6]],
+        away: [players[7], players[8], players[9]]
     },
     topAssists: {
-        home: [players.tiamNobari, players.tiamNobari2, players.tiamNobari3],
-        away: [players.tiamNobari, players.tiamNobari2, players.tiamNobari3]
+        home: [players[4], players[5], players[6]],
+        away: [players[7], players[8], players[9]]
     },
     averageStats: {
         goals: { home: 2.1, away: 1.8 },
@@ -243,7 +271,7 @@ export const matches: Match[] = [
     scores: { home: 2, away: 0 },
     events: [],
     stats: { possession: { home: 50, away: 50 }, shots: { home: 5, away: 7 }, shotsOnGoal: { home: 2, away: 4 }, fouls: { home: 8, away: 8 }, corners: { home: 4, away: 2 }, offsides: { home: 1, away: 0 } },
-    featuredPlayers: [players.philipPawlowski]
+    featuredPlayers: [featuredPlayers[1]]
   },
   {
     id: '3',
@@ -258,7 +286,7 @@ export const matches: Match[] = [
     scores: { home: 0, away: 0 },
     events: [],
     stats: { possession: { home: 50, away: 50 }, shots: { home: 0, away: 0 }, shotsOnGoal: { home: 0, away: 0 }, fouls: { home: 0, away: 0 }, corners: { home: 0, away: 0 }, offsides: { home: 0, away: 0 } },
-    featuredPlayers: [players.erlingHaaland]
+    featuredPlayers: [featuredPlayers[2]]
   },
   {
     id: '4',
@@ -273,7 +301,7 @@ export const matches: Match[] = [
     scores: { home: 0, away: 0 },
     events: [],
     stats: { possession: { home: 50, away: 50 }, shots: { home: 0, away: 0 }, shotsOnGoal: { home: 0, away: 0 }, fouls: { home: 0, away: 0 }, corners: { home: 0, away: 0 }, offsides: { home: 0, away: 0 } },
-    featuredPlayers: [players.kylianMbappe]
+    featuredPlayers: [featuredPlayers[3]]
   },
    {
     id: '5',

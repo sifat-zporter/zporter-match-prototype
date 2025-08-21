@@ -1,65 +1,51 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FootballPitchIcon } from "@/components/icons";
-import { UserCircle } from "lucide-react";
-
-const PlayerList = ({ title, players }: { title: string, players: string[] }) => (
-  <div>
-    <h4 className="font-semibold mb-2">{title}</h4>
-    <ul className="space-y-2 text-sm text-muted-foreground">
-      {players.map(player => (
-        <li key={player} className="flex items-center gap-2">
-          <UserCircle className="w-4 h-4" />
-          {player}
-        </li>
-      ))}
-    </ul>
-  </div>
-);
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { players as allPlayers } from "@/lib/data";
+import { PlayerListItem } from "./player-list-item";
+import { Button } from "./ui/button";
+import { Plus } from "lucide-react";
 
 export function MatchLineups() {
-  const homeStarters = ["GK: A. Becker", "DF: T. Alexander-Arnold", "DF: V. van Dijk", "MF: Fabinho", "FW: M. Salah"];
-  const awayStarters = ["GK: E. Mendy", "DF: R. James", "DF: T. Silva", "MF: N. Kanté", "FW: R. Lukaku"];
-  const substitutes = ["Player 1", "Player 2", "Player 3"];
+  const squad = allPlayers.slice(0, 18);
+  const leaders = allPlayers.slice(18);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Lineups</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div>
-          <h3 className="text-center font-bold font-headline text-lg mb-4">Starting XI</h3>
-          <div className="relative text-foreground/80">
-            <FootballPitchIcon className="w-full h-auto" />
-            {/* Mock player positions - in a real app these would be dynamic */}
-            <div className="absolute top-[45%] left-[8%]" title={homeStarters[0]}>GK</div>
-            <div className="absolute top-[20%] left-[20%]" title={homeStarters[1]}>DF</div>
-            <div className="absolute top-[70%] left-[20%]" title={homeStarters[2]}>DF</div>
-            <div className="absolute top-[45%] left-[35%]" title={homeStarters[3]}>MF</div>
-            <div className="absolute top-[45%] left-[48%]" title={homeStarters[4]}>FW</div>
-            
-            <div className="absolute top-[45%] right-[8%]" title={awayStarters[0]}>GK</div>
-            <div className="absolute top-[20%] right-[20%]" title={awayStarters[1]}>DF</div>
-            <div className="absolute top-[70%] right-[20%]" title={awayStarters[2]}>DF</div>
-            <div className="absolute top-[45%] right-[35%]" title={awayStarters[3]}>MF</div>
-            <div className="absolute top-[45%] right-[48%]" title={awayStarters[4]}>FW</div>
+    <div className="relative">
+      <Tabs defaultValue="home" className="w-full">
+        <TabsList className="grid w-full grid-cols-3 bg-transparent p-0">
+          <TabsTrigger value="home" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Home</TabsTrigger>
+          <TabsTrigger value="ref-org" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Ref & Org</TabsTrigger>
+          <TabsTrigger value="away" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Away</TabsTrigger>
+        </TabsList>
+        <TabsContent value="home" className="pt-4">
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-xs font-semibold uppercase text-muted-foreground px-2 py-1">Squad</h3>
+              <div className="space-y-1">
+                {squad.map((player) => (
+                  <PlayerListItem key={player.id} player={player} />
+                ))}
+              </div>
+            </div>
+             <div>
+              <h3 className="text-xs font-semibold uppercase text-muted-foreground px-2 py-1">Leaders</h3>
+              <div className="space-y-1">
+                {leaders.map((player) => (
+                  <PlayerListItem key={player.id} player={player} />
+                ))}
+              </div>
+            </div>
           </div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <PlayerList title="Substitutes (Home)" players={substitutes} />
-          <PlayerList title="Substitutes (Away)" players={substitutes} />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-           <div>
-            <h4 className="font-semibold mb-2">Coach</h4>
-             <p className="text-sm text-muted-foreground flex items-center gap-2"><UserCircle className="w-4 h-4" /> J. Klopp</p>
-           </div>
-           <div>
-            <h4 className="font-semibold mb-2">Coach</h4>
-             <p className="text-sm text-muted-foreground flex items-center gap-2"><UserCircle className="w-4 h-4" /> T. Tuchel</p>
-           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </TabsContent>
+         <TabsContent value="ref-org">
+           <p className="text-muted-foreground text-center p-8">Referees and Organization will be listed here.</p>
+        </TabsContent>
+         <TabsContent value="away">
+           <p className="text-muted-foreground text-center p-8">The away team's squad will be listed here.</p>
+        </TabsContent>
+      </Tabs>
+       <Button className="absolute bottom-6 right-6 h-14 w-14 rounded-full shadow-lg">
+        <Plus className="w-8 h-8" />
+      </Button>
+    </div>
   );
 }
