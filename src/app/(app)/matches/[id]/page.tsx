@@ -8,6 +8,7 @@ import { MatchFacts } from "@/components/match-facts";
 import { MatchFeed } from "@/components/match-feed";
 import { MatchStats } from "@/components/match-stats";
 import { MatchNotes } from "@/components/match-notes";
+import { MatchFans } from "@/components/match-fans";
 
 export default function MatchDetailPage({ params }: { params: { id: string } }) {
   const match = getMatchById(params.id);
@@ -49,8 +50,8 @@ export default function MatchDetailPage({ params }: { params: { id: string } }) 
           <TabsContent value="reviews" className="p-4">
             <p className="text-center text-muted-foreground">Reviews will be shown here.</p>
           </TabsContent>
-          <TabsContent value="fans" className="p-4">
-            <p className="text-center text-muted-foreground">Fan content will be shown here.</p>
+          <TabsContent value="fans" className="p-0">
+            <MatchFans />
           </TabsContent>
           <TabsContent value="notes" className="p-0">
             <MatchNotes />
