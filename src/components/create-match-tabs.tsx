@@ -3,6 +3,7 @@ import { CreateMatchForm } from "./create-match-form";
 import { InvitesPanel } from "./invites-panel";
 import { PlanPanel } from "./plan-panel";
 import { NotesPanel } from "./notes-panel";
+import { ReviewsPanel } from "./reviews-panel";
 
 export function CreateMatchTabs() {
   return (
@@ -35,7 +36,9 @@ export function CreateMatchTabs() {
         </div>
       </TabsContent>
       <TabsContent value="reviews">
-        <p className="text-muted-foreground text-center p-8">Match reviews will appear here.</p>
+        <div className="pt-6">
+          <ReviewsPanel />
+        </div>
       </TabsContent>
     </Tabs>
   );
