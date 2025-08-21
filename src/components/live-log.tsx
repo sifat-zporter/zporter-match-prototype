@@ -3,13 +3,42 @@
 import type { Match } from "@/lib/data";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Minus, Plus, Futbol, RectangleVertical, ArrowLeftRight } from "lucide-react";
+import { Minus, Plus, RectangleVertical, ArrowLeftRight } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 interface LiveLogProps {
   match: Match;
 }
+
+const SoccerBallIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <circle cx="12" cy="12" r="10" />
+    <path d="M12 2a10 10 0 0 0-5 18.3" />
+    <path d="M17 5.7a10 10 0 0 0-10 0" />
+    <path d="M12 22a10 10 0 0 0 5-18.3" />
+    <path d="M7 5.7a10 10 0 0 0 10 0" />
+    <path d="m14.5 4.5 1.9 2.5" />
+    <path d="m9.5 4.5-1.9 2.5" />
+    <path d="M7.6 9 5.3 11" />
+    <path d="m16.4 9 2.3 2" />
+    <path d="m7.6 15 2.3-2" />
+    <path d="m16.4 15-2.3-2" />
+    <path d="m9.5 19.5 1.9-2.5" />
+    <path d="m14.5 19.5-1.9-2.5" />
+  </svg>
+);
 
 const StatCounter = ({ name }: { name: string }) => {
   const [count, setCount] = useState(0);
@@ -48,14 +77,14 @@ export function LiveLog({ match }: LiveLogProps) {
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <h3 className="font-semibold text-center">{match.homeTeam.name}</h3>
-            <Button className="w-full" onClick={() => logEvent('Home', 'Goal')}><Futbol className="mr-2" /> Goal</Button>
+            <Button className="w-full" onClick={() => logEvent('Home', 'Goal')}><SoccerBallIcon className="mr-2" /> Goal</Button>
             <Button className="w-full" onClick={() => logEvent('Home', 'Yellow Card')} variant="secondary"><RectangleVertical className="mr-2 text-yellow-400" /> Yellow Card</Button>
             <Button className="w-full" onClick={() => logEvent('Home', 'Red Card')} variant="secondary"><RectangleVertical className="mr-2 text-red-500" /> Red Card</Button>
             <Button className="w-full" onClick={() => logEvent('Home', 'Substitution')} variant="secondary"><ArrowLeftRight className="mr-2" /> Substitution</Button>
           </div>
           <div className="space-y-2">
             <h3 className="font-semibold text-center">{match.awayTeam.name}</h3>
-            <Button className="w-full" onClick={() => logEvent('Away', 'Goal')}><Futbol className="mr-2" /> Goal</Button>
+            <Button className="w-full" onClick={() => logEvent('Away', 'Goal')}><SoccerBallIcon className="mr-2" /> Goal</Button>
             <Button className="w-full" onClick={() => logEvent('Away', 'Yellow Card')} variant="secondary"><RectangleVertical className="mr-2 text-yellow-400" /> Yellow Card</Button>
             <Button className="w-full" onClick={() => logEvent('Away', 'Red Card')} variant="secondary"><RectangleVertical className="mr-2 text-red-500" /> Red Card</Button>
             <Button className="w-full" onClick={() => logEvent('Away', 'Substitution')} variant="secondary"><ArrowLeftRight className="mr-2" /> Substitution</Button>
