@@ -1,4 +1,4 @@
-import { CreateMatchTabs } from "@/components/create-match-tabs";
+import { CreateMatchForm } from "@/components/create-match-form";
 
 export default function CreateMatchPage() {
   return (
@@ -8,7 +8,7 @@ export default function CreateMatchPage() {
       </header>
       <main className="flex-1 overflow-y-auto p-4">
         <div className="max-w-2xl mx-auto">
-          <CreateMatchTabs />
+          <CreateMatchForm />
         </div>
       </main>
     </div>

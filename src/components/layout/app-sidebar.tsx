@@ -42,7 +42,7 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={pathname === '/matches/create'}>
+            <SidebarMenuButton asChild isActive={pathname.startsWith('/matches/create')}>
               <Link href="/matches/create">
                 <PlusCircle />
                 Create Match
