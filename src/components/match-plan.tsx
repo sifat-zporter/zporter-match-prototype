@@ -500,6 +500,15 @@ const DefensePlan = () => {
                     </div>
 
                 </TabsContent>
+                <TabsContent value="high-block">
+                    <p className="text-muted-foreground text-center p-8">High Block plan will be available here.</p>
+                </TabsContent>
+                <TabsContent value="mid-block">
+                    <p className="text-muted-foreground text-center p-8">Mid Block plan will be available here.</p>
+                </TabsContent>
+                <TabsContent value="low-block">
+                    <p className="text-muted-foreground text-center p-8">Low Block plan will be available here.</p>
+                </TabsContent>
             </Tabs>
         </div>
     )
@@ -618,6 +627,42 @@ const OpponentPlan = () => {
     )
 }
 
+const OtherPlan = () => {
+    return (
+        <div className="pt-4 space-y-4">
+            <Select>
+                <SelectTrigger>
+                    <SelectValue placeholder="New Plan" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="plan-a">Plan A</SelectItem>
+                    <SelectItem value="plan-b">Plan B</SelectItem>
+                </SelectContent>
+            </Select>
+            <div className="space-y-2">
+                <label className="text-sm font-medium">Tactics summary</label>
+                <Textarea rows={3} />
+            </div>
+            <div className="flex items-center gap-2">
+                <Button type="button" variant="outline" size="icon"><Camera className="w-4 h-4" /></Button>
+                <Button type="button" variant="outline" size="icon"><Video className="w-4 h-4" /></Button>
+                <Button type="button" variant="outline" size="icon"><Plus className="w-4 h-4" /></Button>
+                <Button type="button" variant="outline" size="icon" className="text-yellow-400 font-bold">Zai</Button>
+            </div>
+            <div className="space-y-4 pt-2">
+                <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium">Line up</label>
+                    <Switch />
+                </div>
+                <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium">Set plays</label>
+                    <Switch />
+                </div>
+            </div>
+        </div>
+    )
+}
+
 
 export function MatchPlan() {
 
@@ -674,14 +719,13 @@ export function MatchPlan() {
                         <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">Save</Button>
                     </div>
                 </TabsContent>
-                <TabsContent value="other">
-                    <p className="text-muted-foreground text-center p-8">Other planning will be available here.</p>
+                <TabsContent value="other" className="pt-4 space-y-4">
+                    <OtherPlan />
+                     <div className="pt-4">
+                        <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">Save</Button>
+                    </div>
                 </TabsContent>
             </Tabs>
         </div>
     );
 }
-
-    
-
-    
