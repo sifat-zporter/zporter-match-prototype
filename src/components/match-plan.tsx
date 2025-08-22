@@ -505,13 +505,127 @@ const DefensePlan = () => {
     )
 }
 
+const OpponentPlan = () => {
+    const formationPlayers = {
+        attack: [
+            {...invitedPlayers[4], name: 'Sterling', number: 11},
+            {...invitedPlayers[0], name: 'Ronaldinho', number: 14},
+            {...invitedPlayers[1], name: 'Iniesta', number: 10},
+        ],
+        midfield: [
+            {...invitedPlayers[4], name: 'Sterling', number: 8},
+            {...invitedPlayers[1], name: 'Iniesta', number: 19},
+            {...invitedPlayers[0], name: 'Ronaldinho', number: 6},
+            {...invitedPlayers[4], name: 'Sterling', number: 3},
+        ],
+        defense: [
+            {...invitedPlayers[0], name: 'Ronaldinho', number: 5},
+            {...invitedPlayers[1], name: 'Iniesta', number: 4},
+            {...invitedPlayers[1], name: 'Iniesta', number: 2},
+        ],
+        goalie: [
+            {...invitedPlayers[0], name: 'Ronaldinho', number: 1},
+        ]
+    }
+    return (
+        <div className="pt-4 space-y-4">
+            <Select>
+                <SelectTrigger>
+                    <SelectValue placeholder="Choose Opponent review" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="plan-a">2022/10/17, 14:00 IF Brommapojkarna - IFK Norrköping</SelectItem>
+                    <SelectItem value="plan-b">Plan B</SelectItem>
+                </SelectContent>
+            </Select>
+            <Tabs defaultValue="general">
+                <TabsList className="grid w-full grid-cols-4 bg-transparent p-0">
+                    <TabsTrigger value="general" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent text-orange-500 data-[state=active]:text-orange-500">General</TabsTrigger>
+                    <TabsTrigger value="offense" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Offense</TabsTrigger>
+                    <TabsTrigger value="defense" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Defense</TabsTrigger>
+                    <TabsTrigger value="other" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Other</TabsTrigger>
+                </TabsList>
+                <TabsContent value="general" className="pt-4 space-y-4">
+                     <div className="space-y-2">
+                        <label className="text-sm font-medium">Tactics summary</label>
+                        <Textarea placeholder="General review from another match which a coach could use to create his own opponent analysis from." rows={3} />
+                    </div>
+                     <div className="grid grid-cols-2 gap-2">
+                        <div className="relative w-full aspect-square bg-card rounded-md flex items-center justify-center">
+                            <CheckSquare className="absolute top-2 right-2 w-6 h-6 text-primary fill-background" />
+                        </div>
+                        <div className="relative w-full aspect-square bg-card rounded-md flex items-center justify-center">
+                             <CheckSquare className="absolute top-2 right-2 w-6 h-6 text-primary fill-background" />
+                        </div>
+                    </div>
+                     <div className="flex items-center gap-2">
+                        <Button type="button" variant="outline" size="icon"><Camera className="w-4 h-4" /></Button>
+                        <Button type="button" variant="outline" size="icon"><Video className="w-4 h-4" /></Button>
+                        <Button type="button" variant="outline" size="icon"><Plus className="w-4 h-4" /></Button>
+                        <Button type="button" variant="outline" size="icon" className="text-yellow-400 font-bold">Zai</Button>
+                    </div>
+
+                     <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h3 className="font-semibold">Line up</h3>
+                            <Switch defaultChecked />
+                        </div>
+                         <Select>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Choose Opponent line up" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="plan-a">2022/10/17, 14:00 IF Brommapojkarna - IFK Norrköping</SelectItem>
+                                <SelectItem value="plan-b">Plan B</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <div className="relative bg-background rounded-lg p-4 space-y-8">
+                            <div className="flex justify-around items-center">
+                                {formationPlayers.attack.map(p => <PlayerOnPitch key={p.number} player={p} />)}
+                            </div>
+                            <div className="relative flex justify-around items-center">
+                                <div className="absolute border-t border-muted-foreground/30 rounded-full w-48 h-24 -top-8" />
+                                {formationPlayers.midfield.map(p => <PlayerOnPitch key={p.number} player={p} />)}
+                            </div>
+                            <div className="flex justify-around items-center">
+                                {formationPlayers.defense.map(p => <PlayerOnPitch key={p.number} player={p} />)}
+                            </div>
+                            <div className="flex justify-around items-center">
+                                {formationPlayers.goalie.map(p => <PlayerOnPitch key={p.number} player={p} />)}
+                            </div>
+                        </div>
+                    </div>
+
+                     <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h3 className="font-semibold">Set plays</h3>
+                            <Switch />
+                        </div>
+                    </div>
+
+                </TabsContent>
+                 <TabsContent value="offense">
+                     <p className="text-muted-foreground text-center p-8">Opponent offense plan will be available here.</p>
+                </TabsContent>
+                 <TabsContent value="defense">
+                     <p className="text-muted-foreground text-center p-8">Opponent defense plan will be available here.</p>
+                </TabsContent>
+                 <TabsContent value="other">
+                     <p className="text-muted-foreground text-center p-8">Other opponent plans will be available here.</p>
+                </TabsContent>
+            </Tabs>
+        </div>
+    )
+}
+
+
 export function MatchPlan() {
 
     return (
         <div className="space-y-4">
             <Tabs defaultValue="line-up">
                 <TabsList className="grid w-full grid-cols-5 bg-transparent p-0">
-                    <TabsTrigger value="opponent" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Opponent</TabsTrigger>
+                    <TabsTrigger value="opponent" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent text-orange-500 data-[state=active]:text-orange-500">Opponent</TabsTrigger>
                     <TabsTrigger value="line-up" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Line Up</TabsTrigger>
                     <TabsTrigger value="offense" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent text-orange-500 data-[state=active]:text-orange-500">Offense</TabsTrigger>
                     <TabsTrigger value="defense" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent text-orange-500 data-[state=active]:text-orange-500">Defense</TabsTrigger>
@@ -554,8 +668,11 @@ export function MatchPlan() {
                         <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">Save</Button>
                     </div>
                 </TabsContent>
-                <TabsContent value="opponent">
-                    <p className="text-muted-foreground text-center p-8">Opponent planning will be available here.</p>
+                <TabsContent value="opponent" className="pt-4 space-y-4">
+                    <OpponentPlan />
+                     <div className="pt-4">
+                        <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">Save</Button>
+                    </div>
                 </TabsContent>
                 <TabsContent value="other">
                     <p className="text-muted-foreground text-center p-8">Other planning will be available here.</p>
