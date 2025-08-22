@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Goal, Footprints, Shield } from "lucide-react";
@@ -13,7 +13,7 @@ export function LiveLogger() {
   const [timer, setTimer] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
     if (isRunning) {
       interval = setInterval(() => {
