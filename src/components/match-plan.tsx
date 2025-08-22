@@ -62,6 +62,46 @@ const TimeInput = () => {
   );
 };
 
+const formationPlayers = {
+    attack: [
+        {...invitedPlayers[4], name: 'Sterling', number: 8},
+        {...invitedPlayers[4], name: 'Sterling', number: 11},
+        {...invitedPlayers[0], name: 'Ronaldinho', number: 14},
+        {...invitedPlayers[1], name: 'Iniesta', number: 10},
+        {...invitedPlayers[1], name: 'Iniesta', number: 19},
+    ],
+    midfield: [
+        {...invitedPlayers[0], name: 'Ronaldinho', number: 5},
+        {...invitedPlayers[4], name: 'Sterling', number: 3},
+        {...invitedPlayers[0], name: 'Ronaldinho', number: 6},
+        {...invitedPlayers[1], name: 'Iniesta', number: 2},
+    ],
+    defense: [
+        {...invitedPlayers[1], name: 'Iniesta', number: 4},
+    ],
+    goalie: [
+        {...invitedPlayers[0], name: 'Ronaldinho', number: 1},
+    ]
+}
+
+const PlayerFormation = () => (
+     <div className="relative bg-background rounded-lg p-4 space-y-8">
+        <div className="flex justify-around items-center">
+            {formationPlayers.attack.map(p => <PlayerOnPitch key={p.number} player={p} />)}
+        </div>
+        <div className="relative flex justify-around items-center">
+            <div className="absolute border-t border-muted-foreground/30 rounded-full w-48 h-24 -top-8" />
+            {formationPlayers.midfield.map(p => <PlayerOnPitch key={p.number} player={p} />)}
+        </div>
+        <div className="flex justify-around items-center">
+            {formationPlayers.defense.map(p => <PlayerOnPitch key={p.number} player={p} />)}
+        </div>
+        <div className="flex justify-around items-center">
+            {formationPlayers.goalie.map(p => <PlayerOnPitch key={p.number} player={p} />)}
+        </div>
+    </div>
+);
+
 function LineUpPlan() {
     return (
         <div className="pt-4 space-y-4">
@@ -200,93 +240,150 @@ function LineUpPlan() {
     )
 }
 
-const OffensePlan = () => {
-    const formationPlayers = {
-        attack: [
-            {...invitedPlayers[4], number: 11},
-            {...invitedPlayers[0], number: 14},
-            {...invitedPlayers[1], number: 10},
-        ],
-        midfield: [
-            {...invitedPlayers[4], number: 8},
-            {...invitedPlayers[1], number: 19},
-        ],
-        defense: [
-            {...invitedPlayers[4], number: 3},
-            {...invitedPlayers[0], number: 6},
-            {...invitedPlayers[1], number: 2},
-            {...invitedPlayers[0], number: 5},
-            {...invitedPlayers[1], number: 4},
-        ],
-        goalie: [
-            {...invitedPlayers[0], number: 1},
-        ]
-    }
+const SetPiecesPlan = () => {
+    return (
+        <div className="pt-4 space-y-6">
+            <div className="space-y-2">
+                <h3 className="font-semibold text-sm">Penalties</h3>
+                <Textarea placeholder="-" rows={3} />
+                <div className="grid grid-cols-2 gap-2">
+                    <div className="relative w-full aspect-square bg-card rounded-md flex items-center justify-center">
+                        <CheckSquare className="absolute top-2 right-2 w-6 h-6 text-primary fill-background" />
+                    </div>
+                    <div className="relative w-full aspect-square bg-card rounded-md flex items-center justify-center">
+                        <CheckSquare className="absolute top-2 right-2 w-6 h-6 text-primary fill-background" />
+                    </div>
+                </div>
+                <div className="flex items-center gap-2">
+                    <Button type="button" variant="outline" size="icon"><Camera className="w-4 h-4" /></Button>
+                    <Button type="button" variant="outline" size="icon"><Video className="w-4 h-4" /></Button>
+                    <Button type="button" variant="outline" size="icon"><Plus className="w-4 h-4" /></Button>
+                    <Button type="button" variant="outline" size="icon" className="text-yellow-400 font-bold">Zai</Button>
+                </div>
+                <div className="flex items-center justify-between">
+                    <h3 className="font-semibold text-sm">Line up</h3>
+                    <Switch defaultChecked />
+                </div>
+                <PlayerFormation />
+            </div>
 
+            <Separator />
+
+            <div className="space-y-2">
+                <h3 className="font-semibold text-sm">Corners</h3>
+                <Textarea placeholder="-" rows={3} />
+                <div className="grid grid-cols-2 gap-2">
+                    <div className="relative w-full aspect-square bg-card rounded-md flex items-center justify-center">
+                        <CheckSquare className="absolute top-2 right-2 w-6 h-6 text-primary fill-background" />
+                    </div>
+                    <div className="relative w-full aspect-square bg-card rounded-md flex items-center justify-center">
+                        <CheckSquare className="absolute top-2 right-2 w-6 h-6 text-primary fill-background" />
+                    </div>
+                </div>
+                <div className="flex items-center gap-2">
+                    <Button type="button" variant="outline" size="icon"><Camera className="w-4 h-4" /></Button>
+                    <Button type="button" variant="outline" size="icon"><Video className="w-4 h-4" /></Button>
+                    <Button type="button" variant="outline" size="icon"><Plus className="w-4 h-4" /></Button>
+                    <Button type="button" variant="outline" size="icon" className="text-yellow-400 font-bold">Zai</Button>
+                </div>
+                 <div className="flex items-center justify-between">
+                    <h3 className="font-semibold text-sm">Line up</h3>
+                    <Switch />
+                </div>
+            </div>
+            
+            <Separator />
+
+             <div className="space-y-2">
+                <h3 className="font-semibold text-sm">Free kicks</h3>
+                <Textarea placeholder="-" rows={3} />
+                <div className="flex items-center gap-2">
+                    <Button type="button" variant="outline" size="icon"><Camera className="w-4 h-4" /></Button>
+                    <Button type="button" variant="outline" size="icon"><Video className="w-4 h-4" /></Button>
+                    <Button type="button" variant="outline" size="icon"><Plus className="w-4 h-4" /></Button>
+                    <Button type="button" variant="outline" size="icon" className="text-yellow-400 font-bold">Zai</Button>
+                </div>
+                 <div className="flex items-center justify-between">
+                    <h3 className="font-semibold text-sm">Line up</h3>
+                    <Switch />
+                </div>
+            </div>
+
+            <Separator />
+
+            <div className="space-y-2">
+                <h3 className="font-semibold text-sm">Throw ins</h3>
+                <Textarea placeholder="-" rows={3} />
+                <div className="flex items-center gap-2">
+                    <Button type="button" variant="outline" size="icon"><Camera className="w-4 h-4" /></Button>
+                    <Button type="button" variant="outline" size="icon"><Video className="w-4 h-4" /></Button>
+                    <Button type="button" variant="outline" size="icon"><Plus className="w-4 h-4" /></Button>
+                    <Button type="button" variant="outline" size="icon" className="text-yellow-400 font-bold">Zai</Button>
+                </div>
+                 <div className="flex items-center justify-between">
+                    <h3 className="font-semibold text-sm">Line up</h3>
+                    <Switch />
+                </div>
+            </div>
+
+            <Separator />
+
+            <div className="space-y-2">
+                <h3 className="font-semibold text-sm">Goal kicks</h3>
+                <Textarea placeholder="-" rows={3} />
+                <div className="flex items-center gap-2">
+                    <Button type="button" variant="outline" size="icon"><Camera className="w-4 h-4" /></Button>
+                    <Button type="button" variant="outline" size="icon"><Video className="w-4 h-4" /></Button>
+                    <Button type="button" variant="outline" size="icon"><Plus className="w-4 h-4" /></Button>
+                    <Button type="button" variant="outline" size="icon" className="text-yellow-400 font-bold">Zai</Button>
+                </div>
+                 <div className="flex items-center justify-between">
+                    <h3 className="font-semibold text-sm">Line up</h3>
+                    <Switch />
+                </div>
+            </div>
+
+            <Separator />
+
+             <div className="space-y-2">
+                <h3 className="font-semibold text-sm">Other</h3>
+                <Textarea placeholder="-" rows={3} />
+                <div className="flex items-center gap-2">
+                    <Button type="button" variant="outline" size="icon"><Camera className="w-4 h-4" /></Button>
+                    <Button type="button" variant="outline" size="icon"><Video className="w-4 h-4" /></Button>
+                    <Button type="button" variant="outline" size="icon"><Plus className="w-4 h-4" /></Button>
+                    <Button type="button" variant="outline" size="icon" className="text-yellow-400 font-bold">Zai</Button>
+                </div>
+                 <div className="flex items-center justify-between">
+                    <h3 className="font-semibold text-sm">Line up</h3>
+                    <Switch />
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const OffensePlan = () => {
     return (
         <div className="pt-4 space-y-4">
-            <Tabs defaultValue="general">
+            <Tabs defaultValue="set-pieces">
                 <TabsList className="grid w-full grid-cols-4 bg-transparent p-0">
-                    <TabsTrigger value="general" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent text-orange-500 data-[state=active]:text-orange-500">General</TabsTrigger>
-                    <TabsTrigger value="build-up" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Build up</TabsTrigger>
-                    <TabsTrigger value="attack" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Attack</TabsTrigger>
                     <TabsTrigger value="finish" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Finish</TabsTrigger>
+                    <TabsTrigger value="turnovers" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Turnovers</TabsTrigger>
+                    <TabsTrigger value="set-pieces" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent text-orange-500 data-[state=active]:text-orange-500">Set Pieces</TabsTrigger>
+                    <TabsTrigger value="other" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Other</TabsTrigger>
                 </TabsList>
-                <TabsContent value="general" className="pt-4 space-y-4">
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium">Tactics summary</label>
-                        <Textarea placeholder="Offense tactics from another match" rows={3} />
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                        <div className="relative w-full aspect-square bg-card rounded-md flex items-center justify-center">
-                            <CheckSquare className="absolute top-2 right-2 w-6 h-6 text-primary fill-background" />
-                        </div>
-                        <div className="relative w-full aspect-square bg-card rounded-md flex items-center justify-center">
-                             <CheckSquare className="absolute top-2 right-2 w-6 h-6 text-primary fill-background" />
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <Button type="button" variant="outline" size="icon"><Camera className="w-4 h-4" /></Button>
-                        <Button type="button" variant="outline" size="icon"><Video className="w-4 h-4" /></Button>
-                        <Button type="button" variant="outline" size="icon"><Plus className="w-4 h-4" /></Button>
-                        <Button type="button" variant="outline" size="icon" className="text-yellow-400 font-bold">Zai</Button>
-                    </div>
-
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                            <h3 className="font-semibold">Line up</h3>
-                            <Switch defaultChecked />
-                        </div>
-                        <div className="relative bg-background rounded-lg p-4 space-y-8">
-                            {/* Attack */}
-                            <div className="flex justify-around items-center">
-                                {formationPlayers.attack.map(p => <PlayerOnPitch key={p.number} player={p} />)}
-                            </div>
-                            {/* Midfield */}
-                            <div className="relative flex justify-around items-center">
-                                <div className="absolute border-t border-muted-foreground/30 rounded-full w-48 h-24 -top-8" />
-                                {formationPlayers.midfield.map(p => <PlayerOnPitch key={p.number} player={p} />)}
-                            </div>
-                             {/* Defense */}
-                            <div className="flex justify-around items-center">
-                                {formationPlayers.defense.slice(0,3).map(p => <PlayerOnPitch key={p.number} player={p} />)}
-                            </div>
-                             <div className="flex justify-around items-center">
-                                {formationPlayers.defense.slice(3).map(p => <PlayerOnPitch key={p.number} player={p} />)}
-                            </div>
-                             {/* Goalie */}
-                             <div className="flex justify-around items-center">
-                                {formationPlayers.goalie.map(p => <PlayerOnPitch key={p.number} player={p} />)}
-                            </div>
-                        </div>
-                    </div>
-                     <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                            <h3 className="font-semibold">Set plays</h3>
-                            <Switch />
-                        </div>
-                    </div>
-
+                <TabsContent value="set-pieces" className="pt-4 space-y-4">
+                   <SetPiecesPlan />
+                </TabsContent>
+                <TabsContent value="finish">
+                     <p className="text-muted-foreground text-center p-8">Finish plan will be available here.</p>
+                </TabsContent>
+                <TabsContent value="turnovers">
+                     <p className="text-muted-foreground text-center p-8">Turnovers plan will be available here.</p>
+                </TabsContent>
+                <TabsContent value="other">
+                     <p className="text-muted-foreground text-center p-8">Other offense plans will be available here.</p>
                 </TabsContent>
             </Tabs>
         </div>
@@ -467,5 +564,7 @@ export function MatchPlan() {
         </div>
     );
 }
+
+    
 
     
