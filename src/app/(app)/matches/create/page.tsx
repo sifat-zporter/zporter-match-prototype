@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, MoreVertical } from "lucide-react";
 import Link from "next/link";
 import { MatchPlan } from "@/components/match-plan";
+import { MatchNotes } from "@/components/match-notes";
 
 export default function CreateMatchPage() {
   return (
@@ -42,8 +43,8 @@ export default function CreateMatchPage() {
             <MatchPlan />
           </TabsContent>
           
-          <TabsContent value="notes" className="p-4">
-             <p className="text-center text-muted-foreground">Note-taking features will be available here.</p>
+          <TabsContent value="notes" className="p-0">
+             <MatchNotes />
           </TabsContent>
 
            <TabsContent value="reviews" className="p-4">
