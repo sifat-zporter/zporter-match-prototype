@@ -35,6 +35,13 @@ export type MatchEvent = {
   details?: string;
 };
 
+export type LoggedEvent = {
+    id: string;
+    time: number;
+    type: string;
+    details: string;
+}
+
 export type MatchStats = {
   goals: { home: number; away: number };
   shots: { home: number; away: number };

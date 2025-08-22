@@ -2,7 +2,7 @@ import type { Match } from "@/lib/data";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, Share2, Star, Play, Heart, MessageSquare } from "lucide-react";
+import { ChevronLeft, Share2, Star, Play, Heart, MessageSquare, FilePenLine } from "lucide-react";
 import Link from "next/link";
 
 interface MatchHeaderProps {
@@ -65,7 +65,10 @@ export function MatchHeader({ match, title }: MatchHeaderProps) {
        <div className="flex justify-center items-center gap-4">
             <Button variant="ghost" size="icon"><Play /></Button>
             <Button variant="ghost" asChild>
-              <Link href={`/matches/${match.id}/log`}>Live Log</Link>
+              <Link href={`/matches/${match.id}/log`}>
+                <FilePenLine className="mr-2 h-4 w-4" />
+                Live Log
+              </Link>
             </Button>
             <Button variant="ghost" size="icon"><Heart /></Button>
             <Button variant="ghost" size="icon"><MessageSquare /></Button>
