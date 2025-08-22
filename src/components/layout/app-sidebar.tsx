@@ -1,3 +1,4 @@
+
 "use client"
 
 import {
@@ -15,6 +16,7 @@ import {
   BarChart2,
   Settings,
   UserCircle,
+  FilePenLine,
 } from "lucide-react";
 import { ZporterLogo } from "@/components/icons";
 import Link from 'next/link';
@@ -46,6 +48,14 @@ export function AppSidebar() {
               <Link href="/matches/create">
                 <PlusCircle />
                 Create Match
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+           <SidebarMenuItem>
+            <SidebarMenuButton asChild isActive={pathname.startsWith('/matches/log')}>
+              <Link href="/matches/log/select">
+                <FilePenLine />
+                Create Match Log
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

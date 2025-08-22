@@ -91,29 +91,6 @@ export default function MatchesHubPage() {
         <main className="flex-1 overflow-y-auto p-4 space-y-4">
           {/* Main content is now inside TabsContent */}
         </main>
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button className="absolute bottom-6 right-6 h-14 w-14 rounded-full shadow-lg">
-                <Plus className="w-8 h-8" />
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-xs p-0 bg-transparent border-none shadow-none">
-            <div className="flex flex-col items-center gap-2">
-                <div className="w-full bg-card rounded-lg p-2 space-y-1">
-                    <Button variant="ghost" className="w-full justify-start">Create Contest</Button>
-                     <Button variant="ghost" className="w-full justify-start" asChild>
-                        <Link href="/matches/create">Create Match</Link>
-                    </Button>
-                    <Button variant="ghost" className="w-full justify-start" asChild>
-                        <Link href="/matches/log/select">Create Match Log</Link>
-                    </Button>
-                </div>
-                <DialogClose asChild>
-                    <Button type="button" variant="secondary" className="w-14 h-14 rounded-full text-lg font-bold">X</Button>
-                </DialogClose>
-            </div>
-          </DialogContent>
-        </Dialog>
       </div>
       <FilterSheet />
     </Sheet>
