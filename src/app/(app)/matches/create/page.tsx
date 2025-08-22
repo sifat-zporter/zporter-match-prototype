@@ -6,6 +6,7 @@ import { ChevronLeft, MoreVertical } from "lucide-react";
 import Link from "next/link";
 import { MatchPlan } from "@/components/match-plan";
 import { MatchNotes } from "@/components/match-notes";
+import { ReviewsPanel } from "@/components/reviews-panel";
 
 export default function CreateMatchPage() {
   return (
@@ -22,7 +23,7 @@ export default function CreateMatchPage() {
         </div>
       </header>
       <main className="flex-1 overflow-y-auto">
-        <Tabs defaultValue="plan" className="w-full">
+        <Tabs defaultValue="event" className="w-full">
             <TabsList className="grid w-full grid-cols-5 bg-transparent p-0 border-b">
                 <TabsTrigger value="event" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent text-orange-500 data-[state=active]:text-orange-500">Event</TabsTrigger>
                 <TabsTrigger value="invites" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Invites</TabsTrigger>
@@ -48,7 +49,7 @@ export default function CreateMatchPage() {
           </TabsContent>
 
            <TabsContent value="reviews" className="p-4">
-             <p className="text-center text-muted-foreground">Review features will be available here.</p>
+             <ReviewsPanel />
           </TabsContent>
         </Tabs>
       </main>
