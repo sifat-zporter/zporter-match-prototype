@@ -1,4 +1,5 @@
 
+
 export type Team = {
   id: string;
   name: string;
@@ -83,6 +84,7 @@ export type Standings = {
 
 export type Match = {
   id: string;
+  sportmonksId?: number; // Optional ID from the external API
   status: 'scheduled' | 'live' | 'finished';
   date: string;
   fullDate: string;
@@ -416,3 +418,5 @@ export const getMatchById = (id: string): Match | undefined => {
   const allMatches = [...matches, ...cups.flatMap(c => c.matches)];
   return allMatches.find((match) => match.id === id);
 };
+
+    
