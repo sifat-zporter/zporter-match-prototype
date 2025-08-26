@@ -1,5 +1,4 @@
 
-
 export type Team = {
   id: string;
   name: string;
@@ -129,6 +128,11 @@ export type Match = {
       starReviews: { home: number; away: number };
   };
   standings?: Standings[];
+  userGeneratedData?: {
+    tacticalPlan?: any;
+    notes?: any[];
+    reviews?: any[];
+  }
 };
 
 export type Cup = {
