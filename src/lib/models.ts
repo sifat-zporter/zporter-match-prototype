@@ -13,6 +13,20 @@ export type PlayerLineupInfo = {
   isStarter: boolean;
 };
 
+export type TacticalAttachment = {
+  id: string;
+  type: 'image' | 'video' | 'document';
+  url: string;
+};
+
+export type SetPiecePlan = {
+  summary: string;
+  attachments: TacticalAttachment[];
+  lineupEnabled: boolean;
+  lineup?: PlayerLineupInfo[];
+};
+
+
 // --- API Models for PATCH /api/matches/{id} ---
 
 /**
@@ -37,6 +51,8 @@ export type EventTabModel = {
     startDateTime: string; // ISO 8601 format
     endDateTime: string;   // ISO 8601 format
     isAllDay: boolean;
+    recurring: 'Once' | 'Daily' | 'Weekly' | 'Monthly';
+    recurringUntil?: string; // ISO 8601 date, optional
   };
   settings: {
     notificationMinutesBefore: number; // e.g., -60
@@ -74,39 +90,52 @@ export type PlanTabModel = {
     opponent?: {
       reviewId: string; // ID of a past review being used
       generalSummary: string;
-      lineup: PlayerLineupInfo[];
+      attachments: TacticalAttachment[];
+      lineupEnabled: boolean;
+      lineup?: PlayerLineupInfo[];
+      setPlaysEnabled: boolean;
+      setPlays?: SetPiecePlan[];
     };
     lineUp?: {
       planName: string;
       generalTacticsSummary: string;
+      attachments: TacticalAttachment[];
       formation: string; // e.g., '4-4-2'
       players: PlayerLineupInfo[];
+      plannedExchanges: {
+        enabled: boolean;
+        exchanges: Array<{
+          playerInId: string;
+          playerOutId: string;
+          timeInMinutes: number;
+        }>
+      },
       publishingSchedule: {
+        enabled: boolean;
         internalMinutesBefore: number;
         publicMinutesBefore: number;
       };
     };
     offense?: {
       planName: string;
-      generalSummary: string;
-      setPieces: {
-        penaltiesSummary: string;
-        cornersSummary: string;
-        freeKicksSummary: string;
-      };
-      lineup: PlayerLineupInfo[];
+      finish: SetPiecePlan;
+      turnovers: SetPiecePlan;
+      setPieces: SetPiecePlan;
+      other: SetPiecePlan;
     };
     defense?: {
       planName: string;
-      generalSummary: string;
-      highBlockFormation: string;
-      midBlockNotes: string;
-      lowBlockNotes: string;
-      lineup: PlayerLineupInfo[];
+      general: SetPiecePlan;
+      highBlock: SetPiecePlan;
+      midBlock: SetPiecePlan;
+      lowBlock: SetPiecePlan;
     };
     other?: {
       planName: string;
       summary: string;
+      attachments: TacticalAttachment[];
+      lineupEnabled: boolean;
+      setPlaysEnabled: boolean;
     };
   };
 };
@@ -130,10 +159,12 @@ export type ReviewCreateModel = {
   reviewType: 'HomeTeamCoach' | 'AwayTeamCoach' | 'Referee' | 'Fan';
   ztarOfTheMatchPlayerId: string;
   overallMatchReview: string;
+  attachments: TacticalAttachment[];
   teamRating: 1 | 2 | 3 | 4 | 5;
   playerReviews: Array<{
     playerId: string;
     rating: 1 | 2 | 3 | 4 | 5;
     comment: string;
+    attachments: TacticalAttachment[];
   }>;
 };
