@@ -81,14 +81,16 @@ export type Standings = {
     pts: number;
 }
 
+// This is the canonical data structure for a Match in the Zporter application.
+// It is designed to hold data from both user-generated content and synced from Sportmonks.
 export type Match = {
   id: string;
-  sportmonksId?: number; // Optional ID from the external API
-  status: 'scheduled' | 'live' | 'finished';
-  date: string;
-  fullDate: string;
-  startTime: string;
-  time?: string;
+  sportmonksId?: number; // The fixture ID from Sportmonks. Null for user-created matches.
+  status: 'draft' | 'scheduled' | 'live' | 'finished' | 'cancelled';
+  date: string; // e.g., "17/12"
+  fullDate: string; // ISO 8601 timestamp
+  startTime: string; // e.g., "16:00"
+  time?: string; // Live match time, e.g., "68'", "HT", "FT"
   homeTeam: Team;
   awayTeam: Team;
   league: League;
@@ -128,8 +130,9 @@ export type Match = {
       starReviews: { home: number; away: number };
   };
   standings?: Standings[];
+  // A dedicated object for user-created content to keep it separate from synced data.
   userGeneratedData?: {
-    tacticalPlan?: any;
+    tacticalPlan?: any; // To be defined with more detail later
     notes?: any[];
     reviews?: any[];
   }
@@ -142,6 +145,9 @@ export type Cup = {
     metadata: string;
     matches: Match[];
 };
+
+// MOCK DATA - This section provides sample data for UI development.
+// In the final application, this data will come from the backend API.
 
 const teams: Record<string, Team> = {
   majFC: { id: 'majFC', name: 'Maj FC-U15', logoUrl: 'https://placehold.co/40x40.png' },
@@ -167,7 +173,6 @@ const teams: Record<string, Team> = {
   bayernMunchen: { id: 'bayernMunchen', name: 'Bayern Munchen', logoUrl: 'https://placehold.co/40x40.png' },
   sevilla: { id: 'sevilla', name: 'Sevilla', logoUrl: 'https://placehold.co/40x40.png' },
   ifBrommapojkarna: { id: 'ifBrommapojkarna', name: 'IF Brommapojkarna - U15', logoUrl: 'https://placehold.co/40x40.png' },
-
 };
 
 const leagues: Record<string, League> = {
@@ -204,11 +209,9 @@ const initialPlayers: Omit<Player, 'id'>[] = [
     { number: 9, name: 'John Lundstram', zporterId: '#JohLun123456', role: 'Head Coach', location: 'SE/Stockholm', team: 'Hammarby IF', avatarUrl: 'https://placehold.co/48x48.png' },
     { number: 10, name: 'John Lundstram', zporterId: '#JohLun123456', role: 'Ass. Coach', location: 'SE/Stockholm', team: 'Hammarby IF', avatarUrl: 'https://placehold.co/48x48.png' },
     { number: 11, name: 'John Lundstram', zporterId: '#JohLun123456', role: 'Head Coach', location: 'SE/Stockholm', team: 'Hammarby IF', avatarUrl: 'https://placehold.co/48x48.png' },
-    
 ];
 
 export const players: Player[] = initialPlayers.map((p, index) => ({...p, id: `player-${index + 1}`}));
-
 
 const featuredPlayers = [
   { ...players[0], id: 'neoJonsson', name: 'Neo Jönsson' },
@@ -422,5 +425,3 @@ export const getMatchById = (id: string): Match | undefined => {
   const allMatches = [...matches, ...cups.flatMap(c => c.matches)];
   return allMatches.find((match) => match.id === id);
 };
-
-    
