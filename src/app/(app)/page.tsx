@@ -1,21 +1,50 @@
 
-import { matches, cups } from "@/lib/data";
 import { DateNavigator } from "@/components/date-navigator";
 import MatchesList from "@/components/matches-list";
 import { PlayerMatchesList } from "@/components/player-matches-list";
 import { Button } from "@/components/ui/button";
-import { Search, MessageSquare, Bell, MapPin, ListFilter, ArrowUpDown, Plus } from "lucide-react";
+import { Search, MessageSquare, Bell, MapPin, ListFilter, ArrowUpDown } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SeriesMatchesList } from "@/components/series-matches-list";
 import { CupMatchesList } from "@/components/cup-matches-list";
 import { Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle, SheetClose } from "@/components/ui/sheet";
 import { FilterSheet } from "@/components/filter-sheet";
-import { Dialog, DialogContent, DialogTrigger, DialogClose } from "@/components/ui/dialog";
-import Link from "next/link";
+import type { Match, Cup } from "@/lib/data";
+import { getAllMatches } from "@/lib/data";
+
+
+// NOTE: This is a placeholder for how cups might be fetched or structured.
+// The current API returns a flat list of matches.
+// For the UI to work as designed, the backend would ideally group cup matches.
+// For now, we'll create a dummy cup structure from the matches list.
+function groupMatchesIntoCups(matches: Match[]): Cup[] {
+  const cupMatches = matches.filter(m => m.league.name.toLowerCase().includes('cup'));
+  if (cupMatches.length === 0) return [];
+
+  const cups = cupMatches.reduce((acc, match) => {
+    if (!acc[match.league.id]) {
+      acc[match.league.id] = {
+        id: match.league.id,
+        name: match.league.name,
+        logoUrl: match.league.logoUrl,
+        metadata: 'SE, Male, 2007', // Placeholder metadata
+        matches: []
+      };
+    }
+    acc[match.league.id].matches.push(match);
+    return acc;
+  }, {} as Record<string, Cup>);
+
+  return Object.values(cups);
+}
+
 
 export default function MatchesHubPage() {
-  const todaysMatches = matches;
-  const playerMatches = matches.filter(m => m.featuredPlayers && m.featuredPlayers.length > 0);
+  // Fetch data from the mock data source instead of a live API
+  const todaysMatches = getAllMatches();
+  
+  const playerMatches = todaysMatches.filter(m => m.featuredPlayers && m.featuredPlayers.length > 0);
+  const cups = groupMatchesIntoCups(todaysMatches);
 
   return (
     <Sheet>

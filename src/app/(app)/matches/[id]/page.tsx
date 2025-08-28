@@ -1,4 +1,4 @@
-import { getMatchById } from "@/lib/data";
+
 import { notFound } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MatchHeader } from "@/components/match-header";
@@ -12,6 +12,8 @@ import { MatchFans } from "@/components/match-fans";
 import { ReviewsPanel } from "@/components/reviews-panel";
 import { MatchSummary } from "@/components/match-summary";
 import { MatchPlan } from "@/components/match-plan";
+import type { Match } from "@/lib/data";
+import { getMatchById } from "@/lib/data";
 
 export default function MatchDetailPage({ params }: { params: { id: string } }) {
   const match = getMatchById(params.id);
