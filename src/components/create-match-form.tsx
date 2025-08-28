@@ -3,9 +3,9 @@
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { format } from "date-fns";
+import { format, toDate } from "date-fns";
 import { Calendar as CalendarIcon, Clock, Search, MapPin, Camera, Video, Link as LinkIcon, RefreshCw } from "lucide-react";
-
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -34,6 +34,9 @@ import {
 import { Textarea } from "./ui/textarea";
 import { Switch } from "./ui/switch";
 import { Separator } from "./ui/separator";
+import { apiClient } from "@/lib/api-client";
+import type { UpdateMatchDraftDto } from "@/lib/models";
+import { useToast } from "@/hooks/use-toast";
 
 const createMatchSchema = z.object({
   category: z.string().default("Cup"),
@@ -43,10 +46,10 @@ const createMatchSchema = z.object({
   date: z.date(),
   start: z.string().default("16:00"),
   periods: z.string().default("2"),
-  periodTime: z.string().default("45 m"),
-  pauseTime: z.string().default("15 m"),
-  yourTeam: z.string().default("Maj FC - Boys U15"),
-  opponent: z.string().optional(),
+  periodTime: z.string().default("45"),
+  pauseTime: z.string().default("15"),
+  yourTeam: z.string().default("Maj FC - Boys U15"), // This will be mapped to homeTeamId
+  opponent: z.string().optional(), // This will be mapped to awayTeamId
   headline: z.string().default("Match Zporter Cup 2023, Home, 11v11"),
   description: z.string().default('Match against "Opponent" starts at 16.00, 2 Periods a 45 min with a 15 min paus.'),
   fromDate: z.date(),
@@ -64,6 +67,9 @@ const createMatchSchema = z.object({
 });
 
 export function CreateMatchForm() {
+  const router = useRouter();
+  const { toast } = useToast();
+  
   const form = useForm<z.infer<typeof createMatchSchema>>({
     resolver: zodResolver(createMatchSchema),
     defaultValues: {
@@ -94,8 +100,77 @@ export function CreateMatchForm() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof createMatchSchema>) {
-    console.log(values);
+  async function onSubmit(values: z.infer<typeof createMatchSchema>) {
+    try {
+      // 1. Combine date and time strings into full ISO strings
+      const startDateTime = toDate(values.date);
+      const [startHours, startMinutes] = values.start.split(':').map(Number);
+      startDateTime.setHours(startHours, startMinutes);
+
+      const gatheringDateTime = toDate(values.fromDate);
+      const [fromHours, fromMinutes] = values.fromTime.split(':').map(Number);
+      gatheringDateTime.setHours(fromHours, fromMinutes);
+
+      const endDateTime = toDate(values.toDate);
+      const [toHours, toMinutes] = values.toTime.split(':').map(Number);
+      endDateTime.setHours(toHours, toMinutes);
+
+      // 2. Map form data to the API DTO
+      const payload: UpdateMatchDraftDto = {
+        details: {
+          categoryId: values.category,
+          formatId: values.format,
+          contestId: values.evContest,
+          // In a real app, these would be IDs, not names.
+          homeTeamId: values.yourTeam, 
+          awayTeamId: values.opponent || 'TBD',
+          matchDate: startDateTime.toISOString(),
+          startTime: startDateTime.toISOString(),
+          numberOfPeriods: parseInt(values.periods),
+          periodTime: parseInt(values.periodTime),
+          pauseTime: parseInt(values.pauseTime),
+          venueType: values.location, // Assuming location is venue type
+          matchArena: values.matchArena,
+          homeOrAway: values.homeAway as 'Home' | 'Away',
+        },
+        content: {
+          headline: values.headline,
+          description: values.description,
+        },
+        logistics: {
+          gatheringTime: gatheringDateTime.toISOString(),
+          endTime: endDateTime.toISOString(),
+          isFullDay: values.allDay,
+          recurrenceRule: values.recurring,
+          gatheringLocation: values.location,
+          notificationReminder: parseInt(values.notification),
+          isOccupied: values.occupied,
+          isPrivate: values.private,
+        },
+      };
+
+      // 3. Call the API to create the match draft
+      const newMatch = await apiClient<{ matchId: string }>('/matches', {
+        method: 'POST',
+        body: payload,
+      });
+
+      toast({
+        title: "Match Draft Created!",
+        description: "Your new match has been successfully created as a draft.",
+      });
+
+      // 4. Redirect to the newly created match's detail page (or invites tab)
+      router.push(`/matches/${newMatch.matchId}`);
+
+    } catch (error) {
+      console.error("Failed to create match draft:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to create match draft. Please try again.",
+      });
+    }
   }
 
   return (
@@ -531,8 +606,9 @@ export function CreateMatchForm() {
             />
         </div>
 
-
-        <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white">Save</Button>
+        <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white" disabled={form.formState.isSubmitting}>
+          {form.formState.isSubmitting ? 'Saving...' : 'Save'}
+        </Button>
       </form>
     </Form>
   )

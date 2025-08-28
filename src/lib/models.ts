@@ -26,145 +26,159 @@ export type SetPiecePlan = {
   lineup?: PlayerLineupInfo[];
 };
 
+// --- API DTOs for Match Creation & Updates ---
 
-// --- API Models for PATCH /api/matches/{id} ---
+// MatchesModule DTOs (as per final documentation)
+
+export type MatchDetailsDto = {
+  categoryId: string;
+  formatId: string;
+  contestId?: string;
+  homeTeamId: string;
+  awayTeamId: string;
+  matchDate: string; // ISO 8601 string
+  startTime: string; // ISO 8601 string
+  numberOfPeriods: number;
+  periodTime: number;
+  pauseTime: number;
+  venueType: string;
+  matchArena: string;
+  homeOrAway?: 'Home' | 'Away';
+};
+
+export type MatchContentDto = {
+  headline?: string;
+  description?: string; // Rich text/HTML/Markdown
+  mediaLinks?: string[];
+};
+
+export type MatchLogisticsDto = {
+  gatheringTime: string; // ISO 8601 string
+  endTime: string; // ISO 8601 string
+  isFullDay: boolean;
+  recurrenceRule: string;
+  gatheringLocation: string;
+  notificationReminder: number;
+  isOccupied: boolean;
+  isPrivate: boolean;
+};
+
+export type InvitesTabModel = {
+  homeTeamPlayerIds?: string[];
+  refereeIds?: string[];
+  awayTeamContactIds?: string[];
+  hostIds?: string[];
+  invitationMessage?: string;
+};
+
+// PlanTabModel Nested DTOs
+export type TrainingSessionDto = {
+  name?: string;
+  date?: string; // ISO 8601 string
+  description?: string;
+};
+
+export type TacticalSummaryDto = {
+  summary?: string;
+  attachments?: string[]; // Array of attachment URLs
+};
+
+export type FormationDto = {
+  formationName?: string; // e.g., "4-3-3"
+  playerPositions?: string[]; // e.g., ["GK", "LB", "CB", ...] or player IDs
+};
+
+export type OpponentDto = {
+  tacticalSummary?: TacticalSummaryDto;
+  expectedFormation?: FormationDto;
+};
+
+export type LineUpDto = {
+  tacticalSummary?: TacticalSummaryDto;
+  plannedFormation?: FormationDto;
+};
+
+export type OffenseDto = {
+  tacticalSummary?: TacticalSummaryDto;
+  playTypes?: string[]; // e.g., "Counter Attack", "Possession"
+};
+
+export type DefenseDto = {
+  tacticalSummary?: TacticalSummaryDto;
+  strategies?: string[]; // e.g., "Man-marking", "Zonal"
+};
+
+export type PlanTabModel = {
+  strategyOverview?: string;
+  trainingSessions?: TrainingSessionDto[];
+  preMatchRoutine?: string;
+  opponent?: OpponentDto;
+  lineUp?: LineUpDto;
+  offense?: OffenseDto;
+  defense?: DefenseDto;
+};
+
 
 /**
- * @model EventTabModel
- * @description Corresponds to the "Event" tab in the Create Match UI.
- * Contains all the detailed information about the match event itself.
+ * @model UpdateMatchDraftDto
+ * @description The main DTO for creating (POST /matches) and updating (PATCH /matches/:id) a match draft.
+ * It contains all possible fields across all tabs.
  */
-export type EventTabModel = {
-  eventDetails: {
-    category: 'Cup' | 'League' | 'Friendly';
-    format: '11v11' | '9v9' | '7v7' | '5v5';
+export type UpdateMatchDraftDto = {
+  details?: MatchDetailsDto;
+  content?: MatchContentDto;
+  logistics?: MatchLogisticsDto;
+  invites?: InvitesTabModel;
+  plan?: PlanTabModel;
+};
+
+// --- API DTOs for other Endpoints ---
+
+/**
+ * @model CreateMatchLogDto
+ * @description Corresponds to the "Create Match Log" form.
+ */
+export type CreateMatchLogDto = {
     contestName: string;
-    homeOrAway: 'Home' | 'Away';
+    homeClub: string;
+    homeTeam: string;
+    awayClub: string;
+    awayTeam: string;
+    matchDate: string; // YYYY-MM-DD
+    startTime: string; // HH:MM
     periods: number;
     periodDurationMinutes: number;
     pauseDurationMinutes: number;
-    headline: string;
-    description: string;
-    arena: string;
-  };
-  scheduleDetails: {
-    startDateTime: string; // ISO 8601 format
-    endDateTime: string;   // ISO 8601 format
-    isAllDay: boolean;
-    recurring: 'Once' | 'Daily' | 'Weekly' | 'Monthly';
-    recurringUntil?: string; // ISO 8601 date, optional
-  };
-  settings: {
-    notificationMinutesBefore: number; // e.g., -60
-    isOccupied: boolean;
-    isPrivate: boolean;
-  };
-  status?: 'draft' | 'scheduled';
+    location: string;
 };
 
-/**
- * @model InvitesTabModel
- * @description Corresponds to the "Invites" tab and its sub-tabs (Home, Referees, Away, Hosts).
- */
-export type InvitesTabModel = {
-  invites: {
-    homeTeamPlayerIds: string[];
-    refereeIds: string[];
-    awayTeamContactIds: string[];
-    hostIds: string[];
-    inviteScheduling: {
-      enabled: boolean;
-      inviteSendDaysBefore: number;
-      reminderSendDaysBefore: number;
-    };
-  };
-};
 
 /**
- * @model PlanTabModel
- * @description Corresponds to the "Plan" tab and its deeply nested sub-tabs.
- * This is a comprehensive model for all tactical planning.
- */
-export type PlanTabModel = {
-  tacticalPlan: {
-    opponent?: {
-      reviewId: string; // ID of a past review being used
-      generalSummary: string;
-      attachments: TacticalAttachment[];
-      lineupEnabled: boolean;
-      lineup?: PlayerLineupInfo[];
-      setPlaysEnabled: boolean;
-      setPlays?: SetPiecePlan[];
-    };
-    lineUp?: {
-      planName: string;
-      generalTacticsSummary: string;
-      attachments: TacticalAttachment[];
-      formation: string; // e.g., '4-4-2'
-      players: PlayerLineupInfo[];
-      plannedExchanges: {
-        enabled: boolean;
-        exchanges: Array<{
-          playerInId: string;
-          playerOutId: string;
-          timeInMinutes: number;
-        }>
-      },
-      publishingSchedule: {
-        enabled: boolean;
-        internalMinutesBefore: number;
-        publicMinutesBefore: number;
-      };
-    };
-    offense?: {
-      planName: string;
-      finish: SetPiecePlan;
-      turnovers: SetPiecePlan;
-      setPieces: SetPiecePlan;
-      other: SetPiecePlan;
-    };
-    defense?: {
-      planName: string;
-      general: SetPiecePlan;
-      highBlock: SetPiecePlan;
-      midBlock: SetPiecePlan;
-      lowBlock: SetPiecePlan;
-    };
-    other?: {
-      planName: string;
-      summary: string;
-      attachments: TacticalAttachment[];
-      lineupEnabled: boolean;
-      setPlaysEnabled: boolean;
-    };
-  };
-};
-
-// --- API Models for other Endpoints ---
-
-/**
- * @model NoteCreateModel
+ * @model CreateMatchNoteDto
  * @description Corresponds to the "Notes" tab. Used for the body of `POST /api/matches/{id}/notes`.
  */
-export type NoteCreateModel = {
-  text: string;
+export type CreateMatchNoteDto = {
+  note: string;
+};
+
+
+/**
+ * @model PlayerReviewDto
+ * @description Represents a review for a single player within a match review.
+ */
+export type PlayerReviewDto = {
+    playerId: string;
+    rating: number; // 1-5
+    comment?: string;
 };
 
 /**
- * @model ReviewCreateModel
+ * @model CreateMatchReviewDto
  * @description Corresponds to the "Reviews" tab. Used for the body of `POST /api/matches/{id}/reviews`.
  */
-export type ReviewCreateModel = {
-  authorId: string;
-  reviewType: 'HomeTeamCoach' | 'AwayTeamCoach' | 'Referee' | 'Fan';
-  ztarOfTheMatchPlayerId: string;
-  overallMatchReview: string;
-  attachments: TacticalAttachment[];
-  teamRating: 1 | 2 | 3 | 4 | 5;
-  playerReviews: Array<{
-    playerId: string;
-    rating: 1 | 2 | 3 | 4 | 5;
-    comment: string;
-    attachments: TacticalAttachment[];
-  }>;
+export type CreateMatchReviewDto = {
+  review?: string;
+  rating?: number; // 1-5
+  ztarOfTheMatchPlayerId?: string;
+  playerReviews?: PlayerReviewDto[];
 };
