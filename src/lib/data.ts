@@ -91,8 +91,8 @@ export type Match = {
   fullDate: string; // ISO 8601 timestamp
   startTime: string; // e.g., "16:00"
   time?: string; // Live match time, e.g., "68'", "HT", "FT"
-  homeTeam: Team;
-  awayTeam: Team;
+  homeTeam: Team & { players?: Player[] };
+  awayTeam: Team & { players?: Player[] };
   league: League;
   stadium: string;
   scores: {
@@ -145,65 +145,3 @@ export type Cup = {
     metadata: string;
     matches: Match[];
 };
-
-export const players: Player[] = [
-  { id: 'player-1', name: 'John Lundstram', avatarUrl: 'https://placehold.co/48x48.png', zporterId: '#JohLun123456', location: 'SE/Stockholm', team: 'Hammarby IF', role: 'CDM', number: 10 },
-  { id: 'player-2', name: 'Devendra Banhart', avatarUrl: 'https://placehold.co/48x48.png', zporterId: '#DevBan987654', location: 'SE/Stockholm', team: 'Maj FC', role: 'CAM', number: 8 },
-  { id: 'player-3', name: 'Lord Soyothu', avatarUrl: 'https://placehold.co/48x48.png', zporterId: '#LorSoy123456', location: 'SE/Stockholm', team: 'Hammarby IF', role: 'ST', number: 9 },
-  { id: 'player-4', name: 'Mark Hamill', avatarUrl: 'https://placehold.co/48x48.png', zporterId: '#MarHam345678', location: 'SE/Stockholm', team: 'Wework AB', role: 'Agent', number: 1 },
-  { id: 'player-5', name: 'John Lundstram', avatarUrl: 'https://placehold.co/48x48.png', zporterId: '#JohLun432567', location: 'SE/Stockholm', team: 'Hammarby IF', role: 'Coach', number: 0 },
-];
-
-const matches: Match[] = [
-  {
-    id: '1',
-    status: 'live',
-    date: '17/12',
-    fullDate: '2023-12-17T10:00:00Z',
-    startTime: '10:00',
-    time: "68'",
-    homeTeam: { id: 'ht1', name: 'Maj BP-U15', logoUrl: 'https://placehold.co/40x40.png' },
-    awayTeam: { id: 'at1', name: 'FC Barcelona - U15', logoUrl: 'https://placehold.co/40x40.png' },
-    league: { id: 'l1', name: 'Zporter Cup 2023', logoUrl: 'https://placehold.co/24x24.png' },
-    stadium: 'Norrvikens IP, 1',
-    scores: { home: 1, away: 1 },
-    featuredPlayers: [players[1]],
-    isLiveStreamed: true,
-    events: [
-      { time: 15, type: 'Goal', player: 'Devendra Banhart', team: 'home' },
-      { time: 30, type: 'Yellow Card', player: 'Lord Soyothu', team: 'away' },
-      { time: 55, type: 'Goal', player: 'Lord Soyothu', team: 'away' },
-    ],
-    stats: { 
-        goals: { home: 1, away: 1 },
-        shots: { home: 10, away: 8 },
-        shotsOnGoal: { home: 4, away: 3 },
-        penalties: { home: 0, away: 0 },
-        corners: { home: 5, away: 3 },
-        freeKicks: { home: 12, away: 15 },
-        throwIns: { home: 20, away: 18 },
-        offsides: { home: 2, away: 1 },
-        yellowCards: { home: 1, away: 2 },
-        redCards: { home: 0, away: 0 },
-        possession: { home: 55, away: 45 },
-        possessionMinutes: { home: 37, away: 31 },
-        passesOn: { home: 350, away: 280 },
-        passesOff: { home: 50, away: 40 },
-        wonBalls: { home: 60, away: 55 },
-        fouls: { home: 10, away: 12 },
-    },
-  },
-  // Add more mock matches here
-];
-
-export function getAllMatches(): Match[] {
-  // In a real app, this would fetch from an API.
-  // For now, we return the mock data.
-  return matches;
-}
-
-export function getMatchById(id: string): Match | undefined {
-  // In a real app, this would fetch from an API.
-  // For now, we find it in the mock data.
-  return matches.find(match => match.id === id);
-}

@@ -10,8 +10,20 @@ import { CupMatchesList } from "@/components/cup-matches-list";
 import { Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle, SheetClose } from "@/components/ui/sheet";
 import { FilterSheet } from "@/components/filter-sheet";
 import type { Match, Cup } from "@/lib/data";
-import { getAllMatches } from "@/lib/data";
+import { apiClient } from "@/lib/api-client";
+import { format } from "date-fns";
 
+async function getTodaysMatches(): Promise<Match[]> {
+  try {
+    const today = format(new Date(), 'yyyy-MM-dd');
+    const response = await apiClient<{ matches: Match[] }>(`/matches?date=${today}&limit=50`);
+    return response.matches || [];
+  } catch (error) {
+    console.error("Failed to fetch matches:", error);
+    // Return empty array on error to prevent crashing the page
+    return [];
+  }
+}
 
 // NOTE: This is a placeholder for how cups might be fetched or structured.
 // The current API returns a flat list of matches.
@@ -39,9 +51,8 @@ function groupMatchesIntoCups(matches: Match[]): Cup[] {
 }
 
 
-export default function MatchesHubPage() {
-  // Fetch data from the mock data source instead of a live API
-  const todaysMatches = getAllMatches();
+export default async function MatchesHubPage() {
+  const todaysMatches = await getTodaysMatches();
   
   const playerMatches = todaysMatches.filter(m => m.featuredPlayers && m.featuredPlayers.length > 0);
   const cups = groupMatchesIntoCups(todaysMatches);

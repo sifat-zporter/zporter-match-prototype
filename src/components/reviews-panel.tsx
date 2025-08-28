@@ -12,14 +12,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { apiClient } from "@/lib/api-client";
 import { useToast } from "@/hooks/use-toast";
-import type { CreateMatchReviewDto, PlayerReviewDto } from "@/lib/models";
-
-const players = [
-    { id: 'player-1', name: "#ZporterID", role: "Role", avatar: "https://placehold.co/40x40.png" },
-    { id: 'player-2', name: "#Johnlund10", role: "CAM", avatar: "https://placehold.co/40x40.png" },
-    { id: 'player-3', name: "#Johnlund10", role: "CAM", avatar: "https://placehold.co/40x40.png" },
-    { id: 'player-4', name: "#Johnlund10", role: "CAM", avatar: "https://placehold.co/40x40.png" },
-];
+import type { CreateMatchReviewDto, PlayerReviewDto, Match, Player } from "@/lib/models";
 
 const StarRating = ({ rating, setRating }: { rating: number, setRating: (rating: number) => void }) => {
     return (
@@ -44,7 +37,7 @@ const StarRating = ({ rating, setRating }: { rating: number, setRating: (rating:
     );
 };
 
-const PlayerReviewItem = ({ player, onReviewChange, initialReview }: { player: typeof players[0], onReviewChange: (review: PlayerReviewDto) => void, initialReview?: PlayerReviewDto }) => {
+const PlayerReviewItem = ({ player, onReviewChange, initialReview }: { player: Player, onReviewChange: (review: PlayerReviewDto) => void, initialReview?: PlayerReviewDto }) => {
     const [rating, setRating] = useState(initialReview?.rating || 0);
     const [comment, setComment] = useState(initialReview?.comment || "");
 
@@ -64,7 +57,7 @@ const PlayerReviewItem = ({ player, onReviewChange, initialReview }: { player: t
             <AccordionTrigger className="hover:no-underline -mx-2 px-2 py-1 rounded-md hover:bg-accent">
                 <div className="flex items-center justify-between w-full">
                     <div className="flex items-center gap-3">
-                        <Image src={player.avatar} alt={player.name} width={40} height={40} className="rounded-md" data-ai-hint="player avatar" />
+                        <Image src={player.avatarUrl} alt={player.name} width={40} height={40} className="rounded-md" data-ai-hint="player avatar" />
                         <div>
                             <p className="font-semibold text-sm">{player.name}</p>
                             <p className="text-xs text-muted-foreground text-left">{player.role}</p>
@@ -93,10 +86,12 @@ const PlayerReviewItem = ({ player, onReviewChange, initialReview }: { player: t
 }
 
 
-function HomeReviews({ matchId }: { matchId: string }) {
+function HomeReviews({ match }: { match: Match }) {
     const { toast } = useToast();
     const [isLoading, setIsLoading] = useState(false);
     const [review, setReview] = useState<CreateMatchReviewDto>({ playerReviews: [] });
+
+    const players = match.homeTeam.players || [];
 
     const handlePlayerReviewChange = (playerReview: PlayerReviewDto) => {
         setReview(prev => {
@@ -111,7 +106,7 @@ function HomeReviews({ matchId }: { matchId: string }) {
     const handleSave = async () => {
         setIsLoading(true);
         try {
-            await apiClient(`/matches/${matchId}/reviews`, {
+            await apiClient(`/matches/${match.id}/reviews`, {
                 method: 'POST',
                 body: review,
             });
@@ -190,7 +185,7 @@ function HomeReviews({ matchId }: { matchId: string }) {
 }
 
 
-export function ReviewsPanel({ matchId }: { matchId: string }) {
+export function ReviewsPanel({ match }: { match: Match }) {
   return (
     <Tabs defaultValue="home" className="w-full">
       <TabsList className="grid w-full grid-cols-3 bg-transparent p-0">
@@ -199,7 +194,7 @@ export function ReviewsPanel({ matchId }: { matchId: string }) {
         <TabsTrigger value="away" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Away</TabsTrigger>
       </TabsList>
       <TabsContent value="home" className="pt-6">
-        <HomeReviews matchId={matchId} />
+        <HomeReviews match={match} />
       </TabsContent>
       <TabsContent value="ref-org">
          <p className="text-muted-foreground text-center p-8">Referee & Organization reviews will appear here.</p>

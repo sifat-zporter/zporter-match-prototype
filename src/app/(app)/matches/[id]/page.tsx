@@ -13,10 +13,21 @@ import { ReviewsPanel } from "@/components/reviews-panel";
 import { MatchSummary } from "@/components/match-summary";
 import { MatchPlan } from "@/components/match-plan";
 import type { Match } from "@/lib/data";
-import { getMatchById } from "@/lib/data";
+import { apiClient } from "@/lib/api-client";
 
-export default function MatchDetailPage({ params }: { params: { id: string } }) {
-  const match = getMatchById(params.id);
+async function getMatchById(id: string): Promise<Match | null> {
+    try {
+        const match = await apiClient<Match>(`/matches/${id}`);
+        return match;
+    } catch (error) {
+        console.error("Failed to fetch match:", error);
+        return null;
+    }
+}
+
+
+export default async function MatchDetailPage({ params }: { params: { id: string } }) {
+  const match = await getMatchById(params.id);
 
   if (!match) {
     notFound();
@@ -48,7 +59,7 @@ export default function MatchDetailPage({ params }: { params: { id: string } }) 
           </TabsContent>
 
           <TabsContent value="lineup">
-            <MatchLineups />
+            <MatchLineups match={match} />
           </TabsContent>
 
           <TabsContent value="feed">
@@ -56,17 +67,17 @@ export default function MatchDetailPage({ params }: { params: { id: string } }) 
           </TabsContent>
 
           <TabsContent value="events" className="p-0">
-            <MatchEvents events={match.events} />
-          </TabsContent>
+            <MatchEvents events={match.events} homePlayers={match.homeTeam.players || []} awayPlayers={match.awayTeam.players || []} />
+          </TABSCONTENT>
 
           <TabsContent value="stats" className="p-4">
             <MatchStats stats={match.stats} />
           </TabsContent>
           <TabsContent value="reviews" className="p-4">
-            <ReviewsPanel matchId={match.id} />
+            <ReviewsPanel match={match} />
           </TabsContent>
           <TabsContent value="fans" className="p-0">
-            <MatchFans />
+            <MatchFans match={match} />
           </TabsContent>
           <TabsContent value="notes" className="p-0">
             <MatchNotes matchId={match.id} />

@@ -1,12 +1,16 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { players as allPlayers } from "@/lib/data";
+import type { Match } from "@/lib/data";
 import { PlayerListItem } from "./player-list-item";
 import { Button } from "./ui/button";
 import { Plus } from "lucide-react";
 
-export function MatchLineups() {
-  const squad = allPlayers.slice(0, 18);
-  const leaders = allPlayers.slice(18);
+interface MatchLineupsProps {
+  match: Match;
+}
+
+export function MatchLineups({ match }: MatchLineupsProps) {
+  const homeSquad = match.homeTeam.players?.filter(p => p.role !== 'Coach') || [];
+  const homeLeaders = match.homeTeam.players?.filter(p => p.role === 'Coach') || [];
 
   return (
     <div className="relative">
@@ -18,22 +22,29 @@ export function MatchLineups() {
         </TabsList>
         <TabsContent value="home" className="pt-4">
           <div className="space-y-4">
-            <div>
-              <h3 className="text-xs font-semibold uppercase text-muted-foreground px-2 py-1">Squad</h3>
-              <div className="space-y-1">
-                {squad.map((player) => (
-                  <PlayerListItem key={player.id} player={player} />
-                ))}
+            {homeSquad.length > 0 && (
+              <div>
+                <h3 className="text-xs font-semibold uppercase text-muted-foreground px-2 py-1">Squad</h3>
+                <div className="space-y-1">
+                  {homeSquad.map((player) => (
+                    <PlayerListItem key={player.id} player={player} />
+                  ))}
+                </div>
               </div>
-            </div>
-             <div>
-              <h3 className="text-xs font-semibold uppercase text-muted-foreground px-2 py-1">Leaders</h3>
-              <div className="space-y-1">
-                {leaders.map((player) => (
-                  <PlayerListItem key={player.id} player={player} />
-                ))}
+            )}
+             {homeLeaders.length > 0 && (
+              <div>
+                <h3 className="text-xs font-semibold uppercase text-muted-foreground px-2 py-1">Leaders</h3>
+                <div className="space-y-1">
+                  {homeLeaders.map((player) => (
+                    <PlayerListItem key={player.id} player={player} />
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
+            {homeSquad.length === 0 && homeLeaders.length === 0 && (
+              <p className="text-muted-foreground text-center p-8">No player information available for the home team.</p>
+            )}
           </div>
         </TabsContent>
          <TabsContent value="ref-org">

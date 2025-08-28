@@ -1,12 +1,13 @@
-import type { MatchEvent } from "@/lib/data";
+import type { MatchEvent, Player } from "@/lib/data";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeftRight, ChevronLeft, ChevronRight, Plus, RectangleVertical } from "lucide-react";
 import Image from "next/image";
 import { Button } from "./ui/button";
-import { players } from "@/lib/data";
 
 interface MatchEventsProps {
   events: MatchEvent[];
+  homePlayers: Player[];
+  awayPlayers: Player[];
 }
 
 const SoccerBallIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -45,9 +46,9 @@ const eventIcons: Record<MatchEvent['type'], React.ReactNode> = {
   'Substitution': <ArrowLeftRight className="w-5 h-5 text-blue-400" />,
 };
 
-const EventRow = ({ event }: { event: MatchEvent }) => {
+const EventRow = ({ event, player }: { event: MatchEvent, player?: Player }) => {
   const isHomeEvent = event.team === 'home';
-  const player = players.find(p => p.name === event.player) || players[0];
+  const playerNumber = player?.number || '-';
 
   const content = (
     <>
@@ -55,7 +56,7 @@ const EventRow = ({ event }: { event: MatchEvent }) => {
         {isHomeEvent && (
           <>
             <ChevronLeft className="w-5 h-5 text-muted-foreground" />
-            <span className="font-semibold">{player.number}</span>
+            <span className="font-semibold">{playerNumber}</span>
           </>
         )}
       </div>
@@ -69,7 +70,7 @@ const EventRow = ({ event }: { event: MatchEvent }) => {
        <div className="w-1/4 flex justify-start items-center gap-2">
         {!isHomeEvent && (
           <>
-            <span className="font-semibold">{player.number}</span>
+            <span className="font-semibold">{playerNumber}</span>
             <ChevronRight className="w-5 h-5 text-muted-foreground" />
           </>
         )}
@@ -80,9 +81,14 @@ const EventRow = ({ event }: { event: MatchEvent }) => {
   return <div className="flex items-center w-full h-10">{content}</div>
 }
 
-export function MatchEvents({ events }: MatchEventsProps) {
+export function MatchEvents({ events, homePlayers = [], awayPlayers = [] }: MatchEventsProps) {
   const sortedEvents = [...events].sort((a, b) => b.time - a.time);
-  const featuredPlayer = players[0];
+  const allPlayers = [...homePlayers, ...awayPlayers];
+  const featuredPlayer = homePlayers[0];
+
+  const getPlayerForEvent = (event: MatchEvent): Player | undefined => {
+      return allPlayers.find(p => p.name === event.player);
+  }
 
   return (
     <div className="relative h-full flex flex-col">
@@ -97,30 +103,32 @@ export function MatchEvents({ events }: MatchEventsProps) {
         
         <div className="space-y-1">
           {sortedEvents.map((event, index) => (
-            <EventRow key={index} event={event} />
+            <EventRow key={index} event={event} player={getPlayerForEvent(event)} />
           ))}
         </div>
         
         <p className="text-center text-sm text-muted-foreground mt-4">Match started 10:01</p>
       </div>
       
-      <div className="sticky bottom-0 left-0 right-0 p-4 bg-background border-t border-border">
-          <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                  <Image src={featuredPlayer.avatarUrl} alt={featuredPlayer.name} width={48} height={48} className="rounded-md" data-ai-hint="player avatar" />
-                  <div className="grid grid-cols-2 items-center text-xs gap-x-3 gap-y-1">
-                      <p className="font-semibold col-span-2 text-sm">{featuredPlayer.name}</p>
-                      <p className="text-muted-foreground">{featuredPlayer.zporterId}</p>
-                      <p className="text-foreground">{featuredPlayer.role}</p>
-                      <p className="text-muted-foreground">{featuredPlayer.location}</p>
-                      <p className="text-foreground">{featuredPlayer.team}</p>
-                  </div>
-              </div>
-               <Button className="h-14 w-14 rounded-full shadow-lg shrink-0">
-                  <Plus className="w-8 h-8" />
-                </Button>
-          </div>
-      </div>
+      {featuredPlayer && (
+        <div className="sticky bottom-0 left-0 right-0 p-4 bg-background border-t border-border">
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                    <Image src={featuredPlayer.avatarUrl} alt={featuredPlayer.name} width={48} height={48} className="rounded-md" data-ai-hint="player avatar" />
+                    <div className="grid grid-cols-2 items-center text-xs gap-x-3 gap-y-1">
+                        <p className="font-semibold col-span-2 text-sm">{featuredPlayer.name}</p>
+                        <p className="text-muted-foreground">{featuredPlayer.zporterId}</p>
+                        <p className="text-foreground">{featuredPlayer.role}</p>
+                        <p className="text-muted-foreground">{featuredPlayer.location}</p>
+                        <p className="text-foreground">{featuredPlayer.team}</p>
+                    </div>
+                </div>
+                 <Button className="h-14 w-14 rounded-full shadow-lg shrink-0">
+                    <Plus className="w-8 h-8" />
+                  </Button>
+            </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -1,12 +1,21 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { players } from "@/lib/data";
+import type { Match, Player } from "@/lib/data";
 import { PlayerListItem } from "./player-list-item";
 import { Button } from "./ui/button";
 import { Plus, ArrowUpDown, ListFilter } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
 
-export function MatchFans() {
-  const onlineFans = players; // Using mock player data for fans
+interface MatchFansProps {
+  match: Match;
+}
+
+export function MatchFans({ match }: MatchFansProps) {
+  // A real implementation would fetch fans. For now, we simulate fans
+  // by combining players from both teams.
+  const onlineFans: Player[] = [
+    ...(match.homeTeam.players || []), 
+    ...(match.awayTeam.players || [])
+  ];
 
   return (
     <div className="relative h-full">
@@ -26,9 +35,13 @@ export function MatchFans() {
           </div>
           <ScrollArea className="h-[calc(100vh-280px)]">
             <div className="space-y-1 p-2">
-              {onlineFans.map((fan) => (
-                <PlayerListItem key={fan.id} player={fan} />
-              ))}
+              {onlineFans.length > 0 ? (
+                onlineFans.map((fan) => (
+                  <PlayerListItem key={fan.id} player={fan} />
+                ))
+              ) : (
+                <p className="text-muted-foreground text-center p-8">No online fans to display.</p>
+              )}
             </div>
           </ScrollArea>
         </TabsContent>
