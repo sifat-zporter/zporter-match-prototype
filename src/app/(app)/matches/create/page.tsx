@@ -16,42 +16,16 @@ export default function CreateMatchPage() {
           <Button variant="ghost" size="icon" asChild>
             <Link href="/"><ChevronLeft className="w-5 h-5" /></Link>
           </Button>
-          <h1 className="text-xl font-semibold">Match</h1>
+          <h1 className="text-xl font-semibold">Create Match</h1>
         </div>
         <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon"><MoreVertical className="w-5 h-5" /></Button>
         </div>
       </header>
-      <main className="flex-1 overflow-y-auto">
-        <Tabs defaultValue="event" className="w-full">
-            <TabsList className="grid w-full grid-cols-5 bg-transparent p-0 border-b">
-                <TabsTrigger value="event" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent text-orange-500 data-[state=active]:text-orange-500">Event</TabsTrigger>
-                <TabsTrigger value="invites" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Invites</TabsTrigger>
-                <TabsTrigger value="plan" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Plan</TabsTrigger>
-                <TabsTrigger value="notes" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Notes</TabsTrigger>
-                <TabsTrigger value="reviews" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Reviews</TabsTrigger>
-            </TabsList>
-          
-          <TabsContent value="event" className="p-4">
-            <CreateMatchForm />
-          </TabsContent>
-
-          <TabsContent value="invites" className="p-4">
-            <InvitePlayers />
-          </TabsContent>
-
-          <TabsContent value="plan" className="p-4">
-            <MatchPlan />
-          </TabsContent>
-          
-          <TabsContent value="notes" className="p-0">
-             <MatchNotes />
-          </TabsContent>
-
-           <TabsContent value="reviews" className="p-4">
-             <ReviewsPanel />
-          </TabsContent>
-        </Tabs>
+      <main className="flex-1 overflow-y-auto p-4">
+        {/* The CreateMatchForm will create the match and redirect to /matches/:id */}
+        {/* On the match detail page, the user can then access the other tabs. */}
+        <CreateMatchForm />
       </main>
     </div>
   );

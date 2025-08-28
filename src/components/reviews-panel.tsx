@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState } from "react";
@@ -6,20 +5,20 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Star, Camera, Video, ListFilter } from "lucide-react";
+import { Star, Camera, Video, ListFilter, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "./ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
+import { apiClient } from "@/lib/api-client";
+import { useToast } from "@/hooks/use-toast";
+import type { CreateMatchReviewDto, PlayerReviewDto } from "@/lib/models";
 
 const players = [
-    { id: '1', name: "#ZporterID", role: "Role", avatar: "https://placehold.co/40x40.png" },
-    { id: '2', name: "#Johnlund10", role: "CAM", avatar: "https://placehold.co/40x40.png" },
-    { id: '3', name: "#Johnlund10", role: "CAM", avatar: "https://placehold.co/40x40.png" },
-    { id: '4', name: "#Johnlund10", role: "CAM", avatar: "https://placehold.co/40x40.png" },
-    { id: '5', name: "#Johnlund10", role: "CAM", avatar: "https://placehold.co/40x40.png" },
-    { id: '6', name: "#ZporterID", role: "Role", avatar: "https://placehold.co/40x40.png" },
-    { id: '7', name: "#Johnlund10", role: "CAM", avatar: "https://placehold.co/40x40.png" },
+    { id: 'player-1', name: "#ZporterID", role: "Role", avatar: "https://placehold.co/40x40.png" },
+    { id: 'player-2', name: "#Johnlund10", role: "CAM", avatar: "https://placehold.co/40x40.png" },
+    { id: 'player-3', name: "#Johnlund10", role: "CAM", avatar: "https://placehold.co/40x40.png" },
+    { id: 'player-4', name: "#Johnlund10", role: "CAM", avatar: "https://placehold.co/40x40.png" },
 ];
 
 const StarRating = ({ rating, setRating }: { rating: number, setRating: (rating: number) => void }) => {
@@ -45,8 +44,20 @@ const StarRating = ({ rating, setRating }: { rating: number, setRating: (rating:
     );
 };
 
-const PlayerReviewItem = ({ player, initialRating }: { player: typeof players[0], initialRating: number }) => {
-    const [rating, setRating] = useState(initialRating);
+const PlayerReviewItem = ({ player, onReviewChange, initialReview }: { player: typeof players[0], onReviewChange: (review: PlayerReviewDto) => void, initialReview?: PlayerReviewDto }) => {
+    const [rating, setRating] = useState(initialReview?.rating || 0);
+    const [comment, setComment] = useState(initialReview?.comment || "");
+
+    const handleRatingChange = (newRating: number) => {
+        setRating(newRating);
+        onReviewChange({ playerId: player.id, rating: newRating, comment });
+    };
+    
+    const handleCommentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        const newComment = e.target.value;
+        setComment(newComment);
+        onReviewChange({ playerId: player.id, rating, comment: newComment });
+    };
 
     return (
         <AccordionItem value={player.id}>
@@ -60,13 +71,17 @@ const PlayerReviewItem = ({ player, initialRating }: { player: typeof players[0]
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
-                        <StarRating rating={rating} setRating={setRating} />
+                        <StarRating rating={rating} setRating={handleRatingChange} />
                     </div>
                 </div>
             </AccordionTrigger>
             <AccordionContent>
                 <div className="space-y-2 pt-2">
-                    <Textarea placeholder="Describe what he/she did well and what he could have done better" />
+                    <Textarea 
+                      placeholder="Describe what they did well and what they could have done better" 
+                      value={comment}
+                      onChange={handleCommentChange}
+                    />
                     <div className="flex items-center gap-2">
                         <Button variant="ghost" size="icon"><Camera className="w-5 h-5" /></Button>
                         <Button variant="ghost" size="icon"><Video className="w-5 h-5" /></Button>
@@ -78,15 +93,50 @@ const PlayerReviewItem = ({ player, initialRating }: { player: typeof players[0]
 }
 
 
-function HomeReviews() {
-    const [teamRating, setTeamRating] = useState(4);
+function HomeReviews({ matchId }: { matchId: string }) {
+    const { toast } = useToast();
+    const [isLoading, setIsLoading] = useState(false);
+    const [review, setReview] = useState<CreateMatchReviewDto>({ playerReviews: [] });
+
+    const handlePlayerReviewChange = (playerReview: PlayerReviewDto) => {
+        setReview(prev => {
+            const existingReviews = prev.playerReviews?.filter(r => r.playerId !== playerReview.playerId) || [];
+            return {
+                ...prev,
+                playerReviews: [...existingReviews, playerReview]
+            };
+        });
+    };
+
+    const handleSave = async () => {
+        setIsLoading(true);
+        try {
+            await apiClient(`/matches/${matchId}/reviews`, {
+                method: 'POST',
+                body: review,
+            });
+            toast({
+                title: "Review Saved!",
+                description: "Your match review has been submitted successfully.",
+            });
+        } catch (error) {
+            console.error("Failed to save review:", error);
+            toast({
+                variant: "destructive",
+                title: "Error",
+                description: "Failed to save your review. Please try again.",
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     return (
          <Card>
             <CardContent className="p-4 space-y-4">
                 <div className="space-y-2">
                     <label className="text-sm font-medium">Your Ztar of the Match</label>
-                    <Select>
+                    <Select onValueChange={(value) => setReview(prev => ({...prev, ztarOfTheMatchPlayerId: value}))}>
                         <SelectTrigger>
                             <SelectValue placeholder="Choose player" />
                         </SelectTrigger>
@@ -97,7 +147,7 @@ function HomeReviews() {
                 </div>
                 <div className="space-y-2">
                     <label className="text-sm font-medium">Match review</label>
-                    <Textarea />
+                    <Textarea onChange={(e) => setReview(prev => ({...prev, review: e.target.value}))} />
                 </div>
                 <div className="flex items-center gap-2">
                     <Button variant="ghost" size="icon"><Camera className="w-5 h-5" /></Button>
@@ -106,7 +156,10 @@ function HomeReviews() {
                 
                 <div className="flex items-center justify-between">
                     <p className="font-medium">Team review</p>
-                    <StarRating rating={teamRating} setRating={setTeamRating} />
+                    <StarRating 
+                      rating={review.rating || 0} 
+                      setRating={(rating) => setReview(prev => ({...prev, rating}))}
+                    />
                 </div>
                 
                 <div className="flex items-center justify-between">
@@ -114,14 +167,21 @@ function HomeReviews() {
                     <Button variant="ghost" size="icon"><ListFilter className="w-4 h-4" /></Button>
                 </div>
 
-                <Accordion type="single" collapsible className="w-full">
+                <Accordion type="multiple" className="w-full">
                     {players.map((player) => (
-                        <PlayerReviewItem key={player.id} player={player} initialRating={4} />
+                        <PlayerReviewItem 
+                            key={player.id} 
+                            player={player} 
+                            onReviewChange={handlePlayerReviewChange}
+                            initialReview={review.playerReviews?.find(r => r.playerId === player.id)}
+                        />
                     ))}
                 </Accordion>
                 
                 <div className="pt-4">
-                    <Button className="w-full">Save</Button>
+                    <Button className="w-full" onClick={handleSave} disabled={isLoading}>
+                        {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...</> : 'Save Review'}
+                    </Button>
                 </div>
 
             </CardContent>
@@ -130,7 +190,7 @@ function HomeReviews() {
 }
 
 
-export function ReviewsPanel() {
+export function ReviewsPanel({ matchId }: { matchId: string }) {
   return (
     <Tabs defaultValue="home" className="w-full">
       <TabsList className="grid w-full grid-cols-3 bg-transparent p-0">
@@ -139,7 +199,7 @@ export function ReviewsPanel() {
         <TabsTrigger value="away" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Away</TabsTrigger>
       </TabsList>
       <TabsContent value="home" className="pt-6">
-        <HomeReviews />
+        <HomeReviews matchId={matchId} />
       </TabsContent>
       <TabsContent value="ref-org">
          <p className="text-muted-foreground text-center p-8">Referee & Organization reviews will appear here.</p>

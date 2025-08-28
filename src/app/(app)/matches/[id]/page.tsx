@@ -11,6 +11,7 @@ import { MatchNotes } from "@/components/match-notes";
 import { MatchFans } from "@/components/match-fans";
 import { ReviewsPanel } from "@/components/reviews-panel";
 import { MatchSummary } from "@/components/match-summary";
+import { MatchPlan } from "@/components/match-plan";
 
 export default function MatchDetailPage({ params }: { params: { id: string } }) {
   const match = getMatchById(params.id);
@@ -24,8 +25,9 @@ export default function MatchDetailPage({ params }: { params: { id: string } }) 
       <MatchHeader match={match} title="Highlights and Notes"/>
       <main className="flex-1 overflow-y-auto">
         <Tabs defaultValue="events" className="w-full">
-          <TabsList className="grid w-full grid-cols-8">
+          <TabsList className="grid w-full grid-cols-9">
             <TabsTrigger value="summary">Summary</TabsTrigger>
+            <TabsTrigger value="plan">Plan</TabsTrigger>
             <TabsTrigger value="lineup">Line up</TabsTrigger>
             <TabsTrigger value="feed">Feed</TabsTrigger>
             <TabsTrigger value="events">Events</TabsTrigger>
@@ -37,6 +39,10 @@ export default function MatchDetailPage({ params }: { params: { id: string } }) 
           
           <TabsContent value="summary" className="p-4">
             <MatchSummary match={match} />
+          </TabsContent>
+          
+          <TabsContent value="plan" className="p-4">
+            <MatchPlan matchId={match.id} />
           </TabsContent>
 
           <TabsContent value="lineup">
@@ -55,13 +61,13 @@ export default function MatchDetailPage({ params }: { params: { id: string } }) 
             <MatchStats stats={match.stats} />
           </TabsContent>
           <TabsContent value="reviews" className="p-4">
-            <ReviewsPanel />
+            <ReviewsPanel matchId={match.id} />
           </TabsContent>
           <TabsContent value="fans" className="p-0">
             <MatchFans />
           </TabsContent>
           <TabsContent value="notes" className="p-0">
-            <MatchNotes />
+            <MatchNotes matchId={match.id} />
           </TabsContent>
         </Tabs>
       </main>
