@@ -5,14 +5,9 @@
  * authentication headers, and consistent error handling.
  */
 
-// In a real application, this would be retrieved from a secure auth context (e.g., after login)
+// Retrieves the auth token from the environment variables.
 const getAuthToken = (): string | null => {
-  // For demonstration purposes, we'll use a placeholder.
-  // Replace this with your actual authentication logic.
-  if (typeof window !== 'undefined') {
-    return localStorage.getItem('authToken');
-  }
-  return 'YOUR_DUMMY_AUTH_TOKEN';
+  return process.env.NEXT_PUBLIC_API_AUTH_TOKEN || null;
 };
 
 // The base URL for the API, configured via environment variables.
