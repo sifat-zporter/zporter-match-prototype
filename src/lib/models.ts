@@ -152,6 +152,18 @@ export type CreateMatchLogDto = {
     location: string;
 };
 
+/**
+ * @model LogMatchEventDto
+ * @description Corresponds to the body of POST /api/matches/{id}/log-event
+ */
+export type LogMatchEventDto = {
+  type: string; // e.g., 'GOAL', 'YELLOW_CARD', 'SHOT'
+  timeInSeconds: number;
+  teamId: string;
+  playerId: string;
+  details?: any;
+};
+
 
 /**
  * @model CreateMatchNoteDto

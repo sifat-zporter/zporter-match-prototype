@@ -6,12 +6,22 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Goal, Footprints, Shield } from "lucide-react";
 import { ShotLoggerModal } from "@/components/shot-logger-modal";
 import type { LoggedEvent } from "@/lib/data";
+import { apiClient } from "@/lib/api-client";
+import { useToast } from "@/hooks/use-toast";
+import type { LogMatchEventDto } from "@/lib/models";
 
-export function LiveLogger() {
-  const [events, setEvents] = useState<LoggedEvent[]>([]);
+interface LiveLoggerProps {
+  matchId: string;
+  initialEvents: LoggedEvent[];
+}
+
+export function LiveLogger({ matchId, initialEvents }: LiveLoggerProps) {
+  const { toast } = useToast();
+  const [events, setEvents] = useState<LoggedEvent[]>(initialEvents);
   const [isShotModalOpen, setIsShotModalOpen] = useState(false);
   const [timer, setTimer] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
@@ -33,13 +43,44 @@ export function LiveLogger() {
     return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
   };
 
-  const handleAddEvent = (event: Omit<LoggedEvent, 'id' | 'time'>) => {
-    const newEvent: LoggedEvent = {
-      id: Date.now().toString(),
-      time: timer,
-      ...event,
-    };
-    setEvents((prevEvents) => [newEvent, ...prevEvents]);
+  const handleAddEvent = async (event: Omit<LoggedEvent, 'id' | 'time'>) => {
+    setIsSubmitting(true);
+    try {
+      const payload: LogMatchEventDto = {
+        type: event.type.toUpperCase(),
+        timeInSeconds: timer,
+        // The current UI doesn't allow selecting teams/players for events.
+        // Using placeholders for now. This would be a future enhancement.
+        teamId: 'homeTeam_placeholder',
+        playerId: 'player_placeholder',
+        details: {
+          description: event.details,
+        }
+      };
+
+      const response = await apiClient<{ newEvent: LoggedEvent, updatedStats: any }>(`/matches/${matchId}/log-event`, {
+        method: 'POST',
+        body: payload,
+      });
+
+      // Add the event returned by the API to the top of the list
+      setEvents((prevEvents) => [response.newEvent, ...prevEvents]);
+
+      toast({
+        title: "Event Logged!",
+        description: `${event.type} at ${formatTime(timer)} was saved.`,
+      });
+
+    } catch (error) {
+      console.error("Failed to log event:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to save the event. Please try again.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -81,6 +122,7 @@ export function LiveLogger() {
         isOpen={isShotModalOpen} 
         onClose={() => setIsShotModalOpen(false)}
         onEventLogged={handleAddEvent}
+        isSubmitting={isSubmitting}
       />
 
       <div className="fixed bottom-6 right-6">
@@ -88,6 +130,7 @@ export function LiveLogger() {
             size="icon" 
             className="w-16 h-16 rounded-full shadow-lg"
             onClick={() => setIsShotModalOpen(true)}
+            disabled={isSubmitting}
         >
             <Plus className="w-8 h-8" />
         </Button>

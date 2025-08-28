@@ -7,21 +7,24 @@ import { calculateXg } from "@/ai/flows/calculate-xg-flow";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { Card, CardContent } from "./ui/card";
-import { LoggedEvent } from "@/lib/data";
+import type { LoggedEvent } from "@/lib/data";
 
 interface ShotLoggerModalProps {
   isOpen: boolean;
   onClose: () => void;
   onEventLogged: (event: Omit<LoggedEvent, 'id' | 'time'>) => void;
+  isSubmitting: boolean;
 }
 
-export function ShotLoggerModal({ isOpen, onClose, onEventLogged }: ShotLoggerModalProps) {
+export function ShotLoggerModal({ isOpen, onClose, onEventLogged, isSubmitting }: ShotLoggerModalProps) {
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
+  const [isCalculating, setIsCalculating] = useState(false);
   const [result, setResult] = useState<{ xG: number; reasoning: string } | null>(null);
 
   const handlePitchClick = async (event: React.MouseEvent<SVGSVGElement>) => {
-    setIsLoading(true);
+    if (isSubmitting || isCalculating) return;
+
+    setIsCalculating(true);
     setResult(null);
     const svg = event.currentTarget;
     const pt = svg.createSVGPoint();
@@ -39,14 +42,14 @@ export function ShotLoggerModal({ isOpen, onClose, onEventLogged }: ShotLoggerMo
         shotCoordinates: { x: normalizedX, y: normalizedY },
       });
       setResult(xgResult);
+
+      // Pass the event up to the LiveLogger, which will handle the API call
       onEventLogged({
           type: "Shot",
           details: `Shot from (${normalizedX}, ${normalizedY}) with xG: ${xgResult.xG.toFixed(2)}. AI says: "${xgResult.reasoning}"`
       });
-      toast({
-          title: "Shot Logged!",
-          description: `xG: ${xgResult.xG.toFixed(2)}`
-      });
+
+      // The toast is now handled by LiveLogger upon successful API call
       onClose();
     } catch (error) {
       console.error("xG Calculation Error:", error);
@@ -56,7 +59,7 @@ export function ShotLoggerModal({ isOpen, onClose, onEventLogged }: ShotLoggerMo
         description: "Failed to calculate xG. Please try again.",
       });
     } finally {
-      setIsLoading(false);
+      setIsCalculating(false);
     }
   };
 
@@ -74,7 +77,7 @@ export function ShotLoggerModal({ isOpen, onClose, onEventLogged }: ShotLoggerMo
             className="w-full h-auto cursor-pointer text-primary"
             onClick={handlePitchClick}
           />
-          {isLoading && (
+          {(isCalculating || isSubmitting) && (
             <div className="absolute inset-0 bg-background/50 flex items-center justify-center">
               <Loader2 className="w-8 h-8 animate-spin" />
             </div>
