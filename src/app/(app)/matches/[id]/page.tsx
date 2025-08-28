@@ -10,6 +10,7 @@ import { MatchStats } from "@/components/match-stats";
 import { MatchNotes } from "@/components/match-notes";
 import { MatchFans } from "@/components/match-fans";
 import { ReviewsPanel } from "@/components/reviews-panel";
+import { MatchSummary } from "@/components/match-summary";
 
 export default function MatchDetailPage({ params }: { params: { id: string } }) {
   const match = getMatchById(params.id);
@@ -23,7 +24,8 @@ export default function MatchDetailPage({ params }: { params: { id: string } }) 
       <MatchHeader match={match} title="Highlights and Notes"/>
       <main className="flex-1 overflow-y-auto">
         <Tabs defaultValue="events" className="w-full">
-          <TabsList className="grid w-full grid-cols-7">
+          <TabsList className="grid w-full grid-cols-8">
+            <TabsTrigger value="summary">Summary</TabsTrigger>
             <TabsTrigger value="lineup">Line up</TabsTrigger>
             <TabsTrigger value="feed">Feed</TabsTrigger>
             <TabsTrigger value="events">Events</TabsTrigger>
@@ -33,6 +35,10 @@ export default function MatchDetailPage({ params }: { params: { id: string } }) 
             <TabsTrigger value="notes">Notes</TabsTrigger>
           </TabsList>
           
+          <TabsContent value="summary" className="p-4">
+            <MatchSummary match={match} />
+          </TabsContent>
+
           <TabsContent value="lineup">
             <MatchLineups />
           </TabsContent>
