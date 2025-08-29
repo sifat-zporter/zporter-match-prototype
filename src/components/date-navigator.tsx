@@ -1,9 +1,11 @@
 
 "use client";
 
-import { format, addDays } from "date-fns";
+import { format, addDays, isToday, subDays } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useMemo } from "react";
 
 interface DateNavigatorProps {
   selectedDate: Date;
@@ -11,24 +13,22 @@ interface DateNavigatorProps {
 }
 
 export function DateNavigator({ selectedDate, onDateChange }: DateNavigatorProps) {
-  const getDays = () => {
+  
+  const days = useMemo(() => {
     const days = [];
-    const baseDate = new Date(); // Always calculate range based on today
+    // Generate a range of dates centered around the selected date
     for (let i = -3; i <= 3; i++) {
-      days.push(addDays(baseDate, i));
+      days.push(addDays(selectedDate, i));
     }
     return days;
-  };
-  
-  const days = getDays();
+  }, [selectedDate]);
 
   const isSelected = (date: Date) => {
     return format(date, 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd');
   }
 
   const getDayString = (date: Date) => {
-    const today = new Date();
-    if (format(date, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd')) {
+    if (isToday(date)) {
       return 'Today';
     }
     return format(date, 'd');
@@ -38,19 +38,44 @@ export function DateNavigator({ selectedDate, onDateChange }: DateNavigatorProps
       return format(date, 'E');
   }
 
+  const handlePrevDay = () => {
+    onDateChange(subDays(selectedDate, 1));
+  };
+
+  const handleNextDay = () => {
+    onDateChange(addDays(selectedDate, 1));
+  };
+
+
   return (
-    <div className="flex items-center justify-between gap-2">
-      {days.map((day, index) => (
+    <div className="flex items-center justify-between gap-1">
+       <Button 
+        variant="ghost" 
+        size="icon" 
+        className="h-auto w-auto p-2"
+        onClick={handlePrevDay}
+      >
+        <ChevronLeft className="w-4 h-4" />
+      </Button>
+      {days.map((day) => (
         <Button 
-            key={index} 
+            key={day.toISOString()} 
             variant={isSelected(day) ? 'default' : 'ghost'} 
-            className={cn("flex-col h-auto p-2", !isSelected(day) && "text-muted-foreground")}
+            className={cn("flex-col h-auto p-2 flex-1", !isSelected(day) && "text-muted-foreground")}
             onClick={() => onDateChange(day)}
         >
           <span className="text-xs">{getDayOfWeekString(day)}</span>
           <span className="font-bold text-lg">{getDayString(day)}</span>
         </Button>
       ))}
+       <Button 
+        variant="ghost" 
+        size="icon" 
+        className="h-auto w-auto p-2"
+        onClick={handleNextDay}
+       >
+        <ChevronRight className="w-4 h-4" />
+      </Button>
     </div>
   );
 }

@@ -37,8 +37,7 @@ export default function MatchesList({ matches }: MatchesListProps) {
       )}
 
       {Object.entries(groupedByLeague).map(([leagueName, leagueMatches]) => (
-        // The key must be on the outermost element of the loop
-        <div key={leagueMatches[0]?.league?.id || leagueName}>
+        <div key={`league-group-${leagueMatches[0]?.league?.id || leagueName}`}>
           <h2 className="text-xs font-semibold uppercase text-muted-foreground px-3 py-2">{leagueName}</h2>
           <div className="space-y-1">
             {leagueMatches.map((match) => (
