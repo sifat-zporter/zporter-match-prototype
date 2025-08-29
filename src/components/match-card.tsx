@@ -27,6 +27,8 @@ export function MatchCard({ match }: MatchCardProps) {
   };
 
   const isLive = match.status === 'live';
+  const hasScores = match.scores && typeof match.scores.home === 'number';
+
 
   return (
     <Link href={`/matches/${match.id}`} className="block">
@@ -55,17 +57,17 @@ export function MatchCard({ match }: MatchCardProps) {
           <div className="flex items-center gap-2">
             <Image src={match.homeTeam.logoUrl} alt={match.homeTeam.name} width={20} height={20} className="rounded-full" data-ai-hint="team logo" />
             <span className="font-medium">{match.homeTeam.name}</span>
-            {match.status !== 'scheduled' && <span className="font-bold ml-auto">{match.scores.home}</span>}
+            {hasScores && <span className="font-bold ml-auto">{match.scores.home}</span>}
           </div>
           <div className="flex items-center gap-2">
             <Image src={match.awayTeam.logoUrl} alt={match.awayTeam.name} width={20} height={20} className="rounded-full" data-ai-hint="team logo" />
             <span className="font-medium">{match.awayTeam.name}</span>
-            {match.status !== 'scheduled' && <span className="font-bold ml-auto">{match.scores.away}</span>}
+            {hasScores && <span className="font-bold ml-auto">{match.scores.away}</span>}
           </div>
         </div>
 
         <div className="w-28 text-right text-xs text-muted-foreground ml-2">
-            <p>{match.league.name}</p>
+            <p>{match.league?.name || 'N/A'}</p>
             <p>{match.stadium}</p>
         </div>
 
