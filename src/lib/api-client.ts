@@ -71,6 +71,12 @@ export async function apiClient<T>(path: string, options: ApiClientOptions = {})
     } catch (e) {
       errorData = { message: 'An unknown error occurred.' };
     }
+
+    console.error(`[API ERROR - ${method} ${path}]:`, {
+      status: response.status,
+      data: errorData,
+    });
+    
     throw new ApiError(
       errorData.message || `Request failed with status ${response.status}`,
       response.status,
@@ -83,5 +89,9 @@ export async function apiClient<T>(path: string, options: ApiClientOptions = {})
     return null as T;
   }
 
-  return response.json();
+  const responseData = await response.json();
+  
+  console.log(`[API RESPONSE - ${method} ${path}]:`, JSON.stringify(responseData, null, 2));
+
+  return responseData;
 }
