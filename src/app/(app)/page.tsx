@@ -14,13 +14,49 @@ import { Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle, SheetClose 
 import { FilterSheet } from "@/components/filter-sheet";
 import type { Match, Cup } from "@/lib/data";
 import { apiClient } from "@/lib/api-client";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 
+// --- Data Transformation Layer ---
 
-// NOTE: This is a placeholder for how cups might be fetched or structured.
-// The current API returns a flat list of matches.
-// For the UI to work as designed, the backend would ideally group cup matches.
-// For now, we'll create a dummy cup structure from the matches list.
+/**
+ * Maps the raw API match object to the frontend Match type.
+ * @param apiMatch - The match object from the backend API.
+ * @returns A Match object formatted for the frontend.
+ */
+function transformApiMatchToFrontendMatch(apiMatch: any): Match {
+  const matchDate = apiMatch.startTime ? new Date(`1970-01-01T${apiMatch.startTime}:00Z`) : new Date();
+
+  return {
+    id: apiMatch.matchId,
+    status: 'scheduled', // Assuming 'scheduled' as API doesn't provide this yet.
+    date: format(matchDate, 'dd/MM'),
+    startTime: apiMatch.startTime || 'N/A',
+    fullDate: new Date().toISOString(), // Placeholder as API doesn't provide full date
+    homeTeam: {
+      id: apiMatch.homeTeam.id,
+      name: apiMatch.homeTeam.name,
+      logoUrl: apiMatch.homeTeam.logoUrl || 'https://placehold.co/40x40.png',
+    },
+    awayTeam: {
+      id: apiMatch.awayTeam.id,
+      name: apiMatch.awayTeam.name,
+      logoUrl: apiMatch.awayTeam.logoUrl || 'https://placehold.co/40x40.png',
+    },
+    scores: apiMatch.score || { home: 0, away: 0 },
+    league: {
+      id: apiMatch.competition?.id || `league-${apiMatch.matchId}`,
+      name: apiMatch.competition?.name || 'N/A',
+      logoUrl: apiMatch.competition?.logoUrl || 'https://placehold.co/24x24.png',
+    },
+    stadium: apiMatch.venue || 'N/A',
+    featuredPlayers: apiMatch.featuredPlayer ? [apiMatch.featuredPlayer] : [], // API provides one, frontend expects array
+    // Default values for fields not yet in API response, to prevent crashes
+    events: [],
+    stats: {} as any, 
+    time: 'scheduled',
+  };
+}
+
 function groupMatchesIntoCups(matches: Match[]): Cup[] {
   // Defensive check added here to prevent crash if m.league or m.league.name is undefined
   const cupMatches = matches.filter(m => m.league && m.league.name && m.league.name.toLowerCase().includes('cup'));
@@ -51,16 +87,20 @@ export default function MatchesHubPage() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [matches, setMatches] = useState<Match[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function getMatchesForDate(date: Date) {
       setIsLoading(true);
+      setError(null);
       try {
         const dateString = format(date, 'yyyy-MM-dd');
-        const response = await apiClient<{ matches: Match[] }>(`/matches?date=${dateString}&limit=50`);
-        setMatches(response.matches || []);
+        const response = await apiClient<{ matches: any[] }>(`/matches?date=${dateString}&limit=50`);
+        const transformedMatches = (response.matches || []).map(transformApiMatchToFrontendMatch);
+        setMatches(transformedMatches);
       } catch (error) {
         console.error("Failed to fetch matches:", error);
+        setError("Failed to load matches. Please try again.");
         setMatches([]); // Clear matches on error
       } finally {
         setIsLoading(false);
@@ -73,7 +113,7 @@ export default function MatchesHubPage() {
   const playerMatches = matches.filter(m => m.featuredPlayers && m.featuredPlayers.length > 0);
   const cups = groupMatchesIntoCups(matches);
 
-  const renderContent = () => {
+  const renderContent = (content: React.ReactNode) => {
     if (isLoading) {
       return (
         <div className="flex justify-center items-center h-64">
@@ -81,46 +121,15 @@ export default function MatchesHubPage() {
         </div>
       );
     }
-    return (
-      <>
-        <PlayerMatchesList matches={playerMatches} />
-      </>
-    );
+    if (error) {
+       return (
+        <div className="text-center py-16 text-destructive">
+          <p>{error}</p>
+        </div>
+      );
+    }
+    return <>{content}</>;
   };
-  
-  const renderTeamsContent = () => {
-    if (isLoading) {
-      return (
-        <div className="flex justify-center items-center h-64">
-          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-        </div>
-      );
-    }
-    return <MatchesList matches={matches} />;
-  }
-
-  const renderSeriesContent = () => {
-    if (isLoading) {
-      return (
-        <div className="flex justify-center items-center h-64">
-          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-        </div>
-      );
-    }
-    return <SeriesMatchesList matches={matches} />;
-  }
-  
-  const renderCupContent = () => {
-    if (isLoading) {
-      return (
-        <div className="flex justify-center items-center h-64">
-          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-        </div>
-      );
-    }
-    return <CupMatchesList cups={cups} />;
-  }
-
 
   return (
     <Sheet>
@@ -161,18 +170,18 @@ export default function MatchesHubPage() {
                       </div>
                    </div>
                    <DateNavigator selectedDate={selectedDate} onDateChange={setSelectedDate} />
-                   {renderContent()}
+                   {renderContent(<PlayerMatchesList matches={playerMatches} />)}
                 </TabsContent>
                 <TabsContent value="teams">
                    <div className="pt-4 space-y-4">
                     <DateNavigator selectedDate={selectedDate} onDateChange={setSelectedDate} />
-                    {renderTeamsContent()}
+                    {renderContent(<MatchesList matches={matches} />)}
                   </div>
                 </TabsContent>
                  <TabsContent value="series">
                    <div className="pt-4 space-y-4">
                     <DateNavigator selectedDate={selectedDate} onDateChange={setSelectedDate} />
-                    {renderSeriesContent()}
+                    {renderContent(<SeriesMatchesList matches={matches} />)}
                   </div>
                 </TabsContent>
                  <TabsContent value="cup" className="pt-4 space-y-4">
@@ -187,7 +196,7 @@ export default function MatchesHubPage() {
                       </div>
                    </div>
                     <DateNavigator selectedDate={selectedDate} onDateChange={setSelectedDate} />
-                    {renderCupContent()}
+                    {renderContent(<CupMatchesList cups={cups} />)}
                 </TabsContent>
               </Tabs>
             </TabsContent>
