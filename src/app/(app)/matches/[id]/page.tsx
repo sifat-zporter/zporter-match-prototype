@@ -68,7 +68,7 @@ export default async function MatchDetailPage({ params }: { params: { id: string
 
           <TabsContent value="events" className="p-0">
             <MatchEvents events={match.events} homePlayers={match.homeTeam.players || []} awayPlayers={match.awayTeam.players || []} />
-          </TABSCONTENT>
+          </TabsContent>
 
           <TabsContent value="stats" className="p-4">
             <MatchStats stats={match.stats} />
