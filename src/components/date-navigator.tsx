@@ -1,22 +1,30 @@
+
 "use client";
 
-import { useState } from "react";
-import { format, addDays, subDays } from "date-fns";
+import { format, addDays } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-export function DateNavigator() {
-  const [currentDate, setCurrentDate] = useState(new Date());
+interface DateNavigatorProps {
+  selectedDate: Date;
+  onDateChange: (date: Date) => void;
+}
 
+export function DateNavigator({ selectedDate, onDateChange }: DateNavigatorProps) {
   const getDays = () => {
     const days = [];
+    const baseDate = new Date(); // Always calculate range based on today
     for (let i = -3; i <= 3; i++) {
-      days.push(addDays(currentDate, i));
+      days.push(addDays(baseDate, i));
     }
     return days;
   };
   
   const days = getDays();
+
+  const isSelected = (date: Date) => {
+    return format(date, 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd');
+  }
 
   const getDayString = (date: Date) => {
     const today = new Date();
@@ -35,9 +43,9 @@ export function DateNavigator() {
       {days.map((day, index) => (
         <Button 
             key={index} 
-            variant={getDayString(day) === 'Today' ? 'default' : 'ghost'} 
-            className={cn("flex-col h-auto p-2", getDayString(day) !== 'Today' && "text-muted-foreground")}
-            onClick={() => setCurrentDate(day)}
+            variant={isSelected(day) ? 'default' : 'ghost'} 
+            className={cn("flex-col h-auto p-2", !isSelected(day) && "text-muted-foreground")}
+            onClick={() => onDateChange(day)}
         >
           <span className="text-xs">{getDayOfWeekString(day)}</span>
           <span className="font-bold text-lg">{getDayString(day)}</span>

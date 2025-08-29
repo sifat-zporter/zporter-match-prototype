@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { Match } from "@/lib/data";
@@ -12,6 +13,7 @@ export default function MatchesList({ matches }: MatchesListProps) {
   const mostPopularMatches = matches.slice(2);
 
   const groupedByLeague = mostPopularMatches.reduce((acc, match) => {
+    if (!match.league) return acc; // Safety check
     const leagueName = match.league.name;
     if (!acc[leagueName]) {
       acc[leagueName] = [];
@@ -35,7 +37,8 @@ export default function MatchesList({ matches }: MatchesListProps) {
       )}
 
       {Object.entries(groupedByLeague).map(([leagueName, leagueMatches]) => (
-        <div key={leagueName}>
+        // The key must be on the outermost element of the loop
+        <div key={leagueMatches[0]?.league?.id || leagueName}>
           <h2 className="text-xs font-semibold uppercase text-muted-foreground px-3 py-2">{leagueName}</h2>
           <div className="space-y-1">
             {leagueMatches.map((match) => (

@@ -1,9 +1,12 @@
 
+"use client";
+
+import { useState, useEffect } from "react";
 import { DateNavigator } from "@/components/date-navigator";
 import MatchesList from "@/components/matches-list";
 import { PlayerMatchesList } from "@/components/player-matches-list";
 import { Button } from "@/components/ui/button";
-import { Search, MessageSquare, Bell, MapPin, ListFilter, ArrowUpDown } from "lucide-react";
+import { Search, MessageSquare, Bell, MapPin, ListFilter, ArrowUpDown, Loader2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SeriesMatchesList } from "@/components/series-matches-list";
 import { CupMatchesList } from "@/components/cup-matches-list";
@@ -13,17 +16,6 @@ import type { Match, Cup } from "@/lib/data";
 import { apiClient } from "@/lib/api-client";
 import { format } from "date-fns";
 
-async function getTodaysMatches(): Promise<Match[]> {
-  try {
-    const today = format(new Date(), 'yyyy-MM-dd');
-    const response = await apiClient<{ matches: Match[] }>(`/matches?date=${today}&limit=50`);
-    return response.matches || [];
-  } catch (error) {
-    console.error("Failed to fetch matches:", error);
-    // Return empty array on error to prevent crashing the page
-    return [];
-  }
-}
 
 // NOTE: This is a placeholder for how cups might be fetched or structured.
 // The current API returns a flat list of matches.
@@ -35,6 +27,9 @@ function groupMatchesIntoCups(matches: Match[]): Cup[] {
   if (cupMatches.length === 0) return [];
 
   const cups = cupMatches.reduce((acc, match) => {
+    // Defensive check
+    if (!match.league || !match.league.id) return acc;
+      
     if (!acc[match.league.id]) {
       acc[match.league.id] = {
         id: match.league.id,
@@ -52,11 +47,80 @@ function groupMatchesIntoCups(matches: Match[]): Cup[] {
 }
 
 
-export default async function MatchesHubPage() {
-  const todaysMatches = await getTodaysMatches();
+export default function MatchesHubPage() {
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [matches, setMatches] = useState<Match[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function getMatchesForDate(date: Date) {
+      setIsLoading(true);
+      try {
+        const dateString = format(date, 'yyyy-MM-dd');
+        const response = await apiClient<{ matches: Match[] }>(`/matches?date=${dateString}&limit=50`);
+        setMatches(response.matches || []);
+      } catch (error) {
+        console.error("Failed to fetch matches:", error);
+        setMatches([]); // Clear matches on error
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    getMatchesForDate(selectedDate);
+  }, [selectedDate]);
   
-  const playerMatches = todaysMatches.filter(m => m.featuredPlayers && m.featuredPlayers.length > 0);
-  const cups = groupMatchesIntoCups(todaysMatches);
+  const playerMatches = matches.filter(m => m.featuredPlayers && m.featuredPlayers.length > 0);
+  const cups = groupMatchesIntoCups(matches);
+
+  const renderContent = () => {
+    if (isLoading) {
+      return (
+        <div className="flex justify-center items-center h-64">
+          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+        </div>
+      );
+    }
+    return (
+      <>
+        <PlayerMatchesList matches={playerMatches} />
+      </>
+    );
+  };
+  
+  const renderTeamsContent = () => {
+    if (isLoading) {
+      return (
+        <div className="flex justify-center items-center h-64">
+          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+        </div>
+      );
+    }
+    return <MatchesList matches={matches} />;
+  }
+
+  const renderSeriesContent = () => {
+    if (isLoading) {
+      return (
+        <div className="flex justify-center items-center h-64">
+          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+        </div>
+      );
+    }
+    return <SeriesMatchesList matches={matches} />;
+  }
+  
+  const renderCupContent = () => {
+    if (isLoading) {
+      return (
+        <div className="flex justify-center items-center h-64">
+          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+        </div>
+      );
+    }
+    return <CupMatchesList cups={cups} />;
+  }
+
 
   return (
     <Sheet>
@@ -96,19 +160,19 @@ export default async function MatchesHubPage() {
                           </SheetTrigger>
                       </div>
                    </div>
-                   <DateNavigator />
-                   <PlayerMatchesList matches={playerMatches} />
+                   <DateNavigator selectedDate={selectedDate} onDateChange={setSelectedDate} />
+                   {renderContent()}
                 </TabsContent>
                 <TabsContent value="teams">
                    <div className="pt-4 space-y-4">
-                    <DateNavigator />
-                    <MatchesList matches={todaysMatches} />
+                    <DateNavigator selectedDate={selectedDate} onDateChange={setSelectedDate} />
+                    {renderTeamsContent()}
                   </div>
                 </TabsContent>
                  <TabsContent value="series">
                    <div className="pt-4 space-y-4">
-                    <DateNavigator />
-                    <SeriesMatchesList matches={todaysMatches} />
+                    <DateNavigator selectedDate={selectedDate} onDateChange={setSelectedDate} />
+                    {renderSeriesContent()}
                   </div>
                 </TabsContent>
                  <TabsContent value="cup" className="pt-4 space-y-4">
@@ -122,8 +186,8 @@ export default async function MatchesHubPage() {
                           </SheetTrigger>
                       </div>
                    </div>
-                    <DateNavigator />
-                    <CupMatchesList cups={cups} />
+                    <DateNavigator selectedDate={selectedDate} onDateChange={setSelectedDate} />
+                    {renderCupContent()}
                 </TabsContent>
               </Tabs>
             </TabsContent>
