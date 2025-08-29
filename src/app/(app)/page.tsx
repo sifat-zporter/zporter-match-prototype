@@ -30,7 +30,8 @@ async function getTodaysMatches(): Promise<Match[]> {
 // For the UI to work as designed, the backend would ideally group cup matches.
 // For now, we'll create a dummy cup structure from the matches list.
 function groupMatchesIntoCups(matches: Match[]): Cup[] {
-  const cupMatches = matches.filter(m => m.league.name.toLowerCase().includes('cup'));
+  // Defensive check added here to prevent crash if m.league or m.league.name is undefined
+  const cupMatches = matches.filter(m => m.league && m.league.name && m.league.name.toLowerCase().includes('cup'));
   if (cupMatches.length === 0) return [];
 
   const cups = cupMatches.reduce((acc, match) => {
