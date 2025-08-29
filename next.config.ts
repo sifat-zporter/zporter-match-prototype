@@ -2,11 +2,6 @@ import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
   /* config options here */
-  devServer: {
-    allowedDevOrigins: [
-      'https://*.cloudworkstations.dev',
-    ],
-  },
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -21,6 +16,12 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'cdn.sportmonks.com',
+        port: '',
+        pathname: '/**',
+      }
     ],
   },
 };
