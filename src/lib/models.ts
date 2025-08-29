@@ -132,6 +132,18 @@ export type UpdateMatchDraftDto = {
   plan?: PlanTabModel;
 };
 
+/**
+ * @model CreateMatchDraftResponse
+ * @description The response DTO from the POST /matches endpoint.
+ */
+export interface CreateMatchDraftResponse extends UpdateMatchDraftDto {
+  matchId: string;
+  authorId: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // --- API DTOs for other Endpoints ---
 
 /**
@@ -193,4 +205,61 @@ export type CreateMatchReviewDto = {
   rating?: number; // 1-5
   ztarOfTheMatchPlayerId?: string;
   playerReviews?: PlayerReviewDto[];
+};
+
+/**
+ * @model Player
+ * @description A temporary type for player data until a full player model is available.
+ */
+export type Player = {
+  id: string;
+  name: string;
+  avatarUrl: string;
+  zporterId: string;
+  location: string;
+  team: string;
+  role: string;
+  number: number;
+  nationality?: string;
+  year?: number;
+  position?: string;
+  goals?: number;
+  assists?: number;
+};
+
+
+/**
+ * @model Match
+ * @description Represents the detailed match object returned by GET /matches and GET /matches/:id.
+ */
+export type Match = {
+  id: string;
+  sportmonksId?: number;
+  status: 'draft' | 'scheduled' | 'live' | 'finished' | 'cancelled';
+  date: string;
+  fullDate: string;
+  startTime: string;
+  time?: string;
+  homeTeam: { id: string; name: string; logoUrl: string; players?: Player[] };
+  awayTeam: { id: string; name: string; logoUrl: string; players?: Player[] };
+  league: { id: string; name: string; logoUrl: string; };
+  stadium: string;
+  scores: {
+    home: number;
+    away: number;
+  };
+  events: any[]; // Define a proper event type later
+  stats: any; // Define a proper stats type later
+  featuredPlayers?: Player[];
+  round?: string;
+  isPenalty?: boolean;
+  penalties?: { home: number, away: number };
+  isLiveStreamed?: boolean;
+  teamForm?: any;
+  pastMeetings?: any[];
+  topGoalscorers?: any;
+  topAssists?: any;
+  averageStats?: any;
+  standings?: any[];
+  userGeneratedData?: any;
 };

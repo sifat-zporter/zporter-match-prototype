@@ -35,7 +35,7 @@ import { Textarea } from "./ui/textarea";
 import { Switch } from "./ui/switch";
 import { Separator } from "./ui/separator";
 import { apiClient } from "@/lib/api-client";
-import type { UpdateMatchDraftDto } from "@/lib/models";
+import type { UpdateMatchDraftDto, CreateMatchDraftResponse } from "@/lib/models";
 import { useToast } from "@/hooks/use-toast";
 
 const createMatchSchema = z.object({
@@ -150,7 +150,7 @@ export function CreateMatchForm() {
       };
 
       // 3. Call the API to create the match draft
-      const newMatch = await apiClient<{ matchId: string }>('/matches', {
+      const newMatch = await apiClient<CreateMatchDraftResponse>('/matches', {
         method: 'POST',
         body: payload,
       });
