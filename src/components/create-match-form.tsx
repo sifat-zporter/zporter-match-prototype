@@ -112,16 +112,18 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
       const [toHours, toMinutes] = values.endTime.split(':').map(Number);
       endDateTime.setHours(toHours, toMinutes);
 
-      const payload: CreateMatchDraftDto = {
-        homeTeam: { id: 'home-team-placeholder-id', name: values.yourTeamName },
-        awayTeam: { id: 'away-team-placeholder-id', name: values.opponentTeamName },
+      // Adjusted payload to match backend validation
+      const payload: Omit<CreateMatchDraftDto, 'homeTeam' | 'awayTeam' | 'location'> & {
+          homeTeamId: string;
+          opponentTeamName: string;
+          location: string;
+      } = {
+        homeTeamId: 'home-team-placeholder-id', // Placeholder ID
+        yourTeamName: values.yourTeamName, // This might be needed if backend expects name too
+        opponentTeamName: values.opponentTeamName,
         matchDate: format(values.date, 'yyyy-MM-dd'),
         startTime: values.start,
-        location: {
-          name: values.locationName,
-          address: values.locationAddress,
-          coordinates: { latitude: 59.42, longitude: 17.95 } // Placeholder coordinates
-        },
+        location: values.locationName, // Sending location name as a string
         category: values.category,
         format: values.format,
         contestId: values.evContest,
@@ -139,13 +141,12 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
         markAsOccupied: values.occupied,
         isPrivate: values.private,
       };
-
+      
       const newMatchResponse = await apiClient<Match>('/matches', {
         method: 'POST',
-        body: payload,
+        body: payload as any, // Using 'as any' because our DTO is slightly different now.
       });
       
-      // Fetch the full match details to pass to the parent
       const newMatchDetails = await apiClient<Match>(`/matches/${newMatchResponse.id}`);
 
       toast({
