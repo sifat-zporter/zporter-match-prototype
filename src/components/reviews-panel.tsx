@@ -12,7 +12,8 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { apiClient } from "@/lib/api-client";
 import { useToast } from "@/hooks/use-toast";
-import type { CreateMatchReviewDto, PlayerReviewDto, Match, Player } from "@/lib/models";
+import type { CreateMatchReviewDto, PlayerReviewDto } from "@/lib/models";
+import type { Match, Player } from "@/lib/data";
 
 const StarRating = ({ rating, setRating }: { rating: number, setRating: (rating: number) => void }) => {
     return (
@@ -39,17 +40,17 @@ const StarRating = ({ rating, setRating }: { rating: number, setRating: (rating:
 
 const PlayerReviewItem = ({ player, onReviewChange, initialReview }: { player: Player, onReviewChange: (review: PlayerReviewDto) => void, initialReview?: PlayerReviewDto }) => {
     const [rating, setRating] = useState(initialReview?.rating || 0);
-    const [comment, setComment] = useState(initialReview?.comment || "");
+    const [comment, setComment] = useState(initialReview?.notes || "");
 
     const handleRatingChange = (newRating: number) => {
         setRating(newRating);
-        onReviewChange({ playerId: player.id, rating: newRating, comment });
+        onReviewChange({ playerId: player.id, rating: newRating, notes: comment });
     };
     
     const handleCommentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         const newComment = e.target.value;
         setComment(newComment);
-        onReviewChange({ playerId: player.id, rating, comment: newComment });
+        onReviewChange({ playerId: player.id, rating, notes: newComment });
     };
 
     return (
@@ -89,7 +90,7 @@ const PlayerReviewItem = ({ player, onReviewChange, initialReview }: { player: P
 function HomeReviews({ match }: { match: Match }) {
     const { toast } = useToast();
     const [isLoading, setIsLoading] = useState(false);
-    const [review, setReview] = useState<CreateMatchReviewDto>({ playerReviews: [] });
+    const [review, setReview] = useState<Partial<CreateMatchReviewDto>>({ playerReviews: [] });
 
     const players = match.homeTeam.players || [];
 
@@ -105,10 +106,20 @@ function HomeReviews({ match }: { match: Match }) {
 
     const handleSave = async () => {
         setIsLoading(true);
+        // Add required fields that are not in the form yet
+        const payload: CreateMatchReviewDto = {
+            authorId: 'current-user-placeholder', // This should come from auth state
+            reviewType: 'home-team',
+            overallReview: review.overallReview || '',
+            teamRating: review.teamRating || 0,
+            starPlayerId: review.starPlayerId,
+            playerReviews: review.playerReviews || [],
+        };
+
         try {
             await apiClient(`/matches/${match.id}/reviews`, {
                 method: 'POST',
-                body: review,
+                body: payload,
             });
             toast({
                 title: "Review Saved!",
@@ -130,8 +141,8 @@ function HomeReviews({ match }: { match: Match }) {
          <Card>
             <CardContent className="p-4 space-y-4">
                 <div className="space-y-2">
-                    <label className="text-sm font-medium">Your Ztar of the Match</label>
-                    <Select onValueChange={(value) => setReview(prev => ({...prev, ztarOfTheMatchPlayerId: value}))}>
+                    <label className="text-sm font-medium">Your Star of the Match</label>
+                    <Select onValueChange={(value) => setReview(prev => ({...prev, starPlayerId: value}))}>
                         <SelectTrigger>
                             <SelectValue placeholder="Choose player" />
                         </SelectTrigger>
@@ -141,8 +152,8 @@ function HomeReviews({ match }: { match: Match }) {
                     </Select>
                 </div>
                 <div className="space-y-2">
-                    <label className="text-sm font-medium">Match review</label>
-                    <Textarea onChange={(e) => setReview(prev => ({...prev, review: e.target.value}))} />
+                    <label className="text-sm font-medium">Overall Match review</label>
+                    <Textarea onChange={(e) => setReview(prev => ({...prev, overallReview: e.target.value}))} />
                 </div>
                 <div className="flex items-center gap-2">
                     <Button variant="ghost" size="icon"><Camera className="w-5 h-5" /></Button>
@@ -152,8 +163,8 @@ function HomeReviews({ match }: { match: Match }) {
                 <div className="flex items-center justify-between">
                     <p className="font-medium">Team review</p>
                     <StarRating 
-                      rating={review.rating || 0} 
-                      setRating={(rating) => setReview(prev => ({...prev, rating}))}
+                      rating={review.teamRating || 0} 
+                      setRating={(rating) => setReview(prev => ({...prev, teamRating: rating}))}
                     />
                 </div>
                 

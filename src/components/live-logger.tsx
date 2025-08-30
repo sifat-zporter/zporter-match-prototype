@@ -3,12 +3,12 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Goal, Footprints, Shield } from "lucide-react";
+import { Plus } from "lucide-react";
 import { ShotLoggerModal } from "@/components/shot-logger-modal";
-import type { LoggedEvent } from "@/lib/data";
 import { apiClient } from "@/lib/api-client";
 import { useToast } from "@/hooks/use-toast";
-import type { LogMatchEventDto } from "@/lib/models";
+import type { LogMatchEventDto, LogMatchEventResponse } from "@/lib/models";
+import type { LoggedEvent } from "@/lib/data";
 
 interface LiveLoggerProps {
   matchId: string;
@@ -43,32 +43,22 @@ export function LiveLogger({ matchId, initialEvents }: LiveLoggerProps) {
     return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
   };
 
-  const handleAddEvent = async (event: Omit<LoggedEvent, 'id' | 'time'>) => {
+  const handleAddEvent = async (eventPayload: LogMatchEventDto) => {
     setIsSubmitting(true);
     try {
-      const payload: LogMatchEventDto = {
-        type: event.type.toUpperCase(),
-        timeInSeconds: timer,
-        // The current UI doesn't allow selecting teams/players for events.
-        // Using placeholders for now. This would be a future enhancement.
-        teamId: 'homeTeam_placeholder',
-        playerId: 'player_placeholder',
-        details: {
-          description: event.details,
-        }
-      };
-
-      const response = await apiClient<{ newEvent: LoggedEvent, updatedStats: any }>(`/matches/${matchId}/log-event`, {
+      const response = await apiClient<LogMatchEventResponse>(`/matches/${matchId}/log-event`, {
         method: 'POST',
-        body: payload,
+        body: eventPayload,
       });
 
       // Add the event returned by the API to the top of the list
       setEvents((prevEvents) => [response.newEvent, ...prevEvents]);
+      
+      // Here you could update the score display using response.updatedStats
 
       toast({
         title: "Event Logged!",
-        description: `${event.type} at ${formatTime(timer)} was saved.`,
+        description: `${eventPayload.eventType} event was saved.`,
       });
 
     } catch (error) {
@@ -109,8 +99,8 @@ export function LiveLogger({ matchId, initialEvents }: LiveLoggerProps) {
             events.map((event) => (
               <Card key={event.id}>
                 <CardContent className="p-3">
-                  <p className="font-semibold">{event.type} at {formatTime(event.time)}</p>
-                  <p className="text-sm text-muted-foreground">{event.details}</p>
+                  <p className="font-semibold">{event.eventType} at {formatTime(new Date(event.timestamp).getTime() / 1000)}</p>
+                  <p className="text-sm text-muted-foreground">{JSON.stringify(event.details)}</p>
                 </CardContent>
               </Card>
             ))

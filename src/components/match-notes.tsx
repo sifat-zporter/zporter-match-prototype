@@ -1,38 +1,46 @@
 "use client";
 
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Send } from "lucide-react";
 import { useState } from "react";
 import { apiClient } from "@/lib/api-client";
 import { useToast } from "@/hooks/use-toast";
+import type { CreateMatchNoteDto, MatchNoteResponse } from "@/lib/models";
 
-// A simple type for a note object, assuming this structure from the backend
 interface Note {
-    note: string;
-    authorId: string;
+    id: string;
+    author: string;
+    content: string;
     createdAt: string;
 }
 
-export function MatchNotes({ matchId }: { matchId: string }) {
+interface MatchNotesProps {
+  matchId: string;
+  initialNotes: Note[];
+}
+
+export function MatchNotes({ matchId, initialNotes }: MatchNotesProps) {
     const { toast } = useToast();
-    const [note, setNote] = useState("");
+    const [noteContent, setNoteContent] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
-    // In a real app, you would fetch existing notes for the matchId
-    const [notes, setNotes] = useState<Note[]>([]); 
+    const [notes, setNotes] = useState<Note[]>(initialNotes); 
     
     const handleAddNote = async () => {
-        if (!note.trim()) return;
+        if (!noteContent.trim()) return;
         setIsSubmitting(true);
         try {
-            const newNote = await apiClient<Note>(`/matches/${matchId}/notes`, {
+            const payload: CreateMatchNoteDto = {
+                content: noteContent,
+            };
+            const newNote = await apiClient<MatchNoteResponse>(`/matches/${matchId}/notes`, {
                 method: 'POST',
-                body: { note },
+                body: payload,
             });
+            
             // Add the new note to the top of the list
             setNotes(prevNotes => [newNote, ...prevNotes]);
-            setNote(""); // Clear the input
+            setNoteContent(""); // Clear the input
             toast({
                 title: "Note Added",
                 description: "Your note has been saved successfully.",
@@ -52,10 +60,10 @@ export function MatchNotes({ matchId }: { matchId: string }) {
     return (
         <div className="flex flex-col h-[calc(100vh-200px)]">
             <div className="flex-1 overflow-y-auto p-6 space-y-8">
-                {notes.map((n, i) => (
-                    <div className="space-y-2" key={i}>
-                        <p className="text-xs text-muted-foreground">{new Date(n.createdAt).toLocaleString()}</p>
-                        <p className="text-sm whitespace-pre-line">{n.note}</p>
+                {notes.map((n) => (
+                    <div className="space-y-2" key={n.id}>
+                        <p className="text-xs text-muted-foreground">{new Date(n.createdAt).toLocaleString()} by {n.author}</p>
+                        <p className="text-sm whitespace-pre-line">{n.content}</p>
                     </div>
                 ))}
 
@@ -72,8 +80,8 @@ export function MatchNotes({ matchId }: { matchId: string }) {
                     <Input 
                         placeholder="Add a note..."
                         className="pr-12"
-                        value={note}
-                        onChange={(e) => setNote(e.target.value)}
+                        value={noteContent}
+                        onChange={(e) => setNoteContent(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleAddNote()}
                         disabled={isSubmitting}
                     />
@@ -82,7 +90,7 @@ export function MatchNotes({ matchId }: { matchId: string }) {
                         size="icon" 
                         className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 text-blue-500 hover:text-blue-600"
                         onClick={handleAddNote}
-                        disabled={isSubmitting || !note.trim()}
+                        disabled={isSubmitting || !noteContent.trim()}
                     >
                         <Send className="w-5 h-5" />
                     </Button>

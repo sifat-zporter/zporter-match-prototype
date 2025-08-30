@@ -7,12 +7,12 @@ import { calculateXg } from "@/ai/flows/calculate-xg-flow";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { Card, CardContent } from "./ui/card";
-import type { LoggedEvent } from "@/lib/data";
+import type { LogMatchEventDto } from "@/lib/models";
 
 interface ShotLoggerModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onEventLogged: (event: Omit<LoggedEvent, 'id' | 'time'>) => void;
+  onEventLogged: (payload: LogMatchEventDto) => void;
   isSubmitting: boolean;
 }
 
@@ -32,10 +32,8 @@ export function ShotLoggerModal({ isOpen, onClose, onEventLogged, isSubmitting }
     pt.y = event.clientY;
     const { x, y } = pt.matrixTransform(svg.getScreenCTM()?.inverse());
 
-    // Normalize coordinates to a 100x100 grid where goal is at x=100
-    // SVG is 300x150. Pitch area is 290x140, starting at (5,5).
     const normalizedX = Math.round(((x - 5) / 290) * 100);
-    const normalizedY = Math.round(Math.abs((y - 75) / 140) * 100); // y=75 is centerline
+    const normalizedY = Math.round(Math.abs((y - 75) / 140) * 100);
 
     try {
       const xgResult = await calculateXg({
@@ -43,14 +41,17 @@ export function ShotLoggerModal({ isOpen, onClose, onEventLogged, isSubmitting }
       });
       setResult(xgResult);
 
-      // Pass the event up to the LiveLogger, which will handle the API call
-      onEventLogged({
-          type: "Shot",
-          details: `Shot from (${normalizedX}, ${normalizedY}) with xG: ${xgResult.xG.toFixed(2)}. AI says: "${xgResult.reasoning}"`
-      });
+      const payload: LogMatchEventDto = {
+        eventType: "SHOT",
+        playerId: "player-placeholder-id", // This should be selected in the UI
+        coordinates: { x: normalizedX, y: normalizedY },
+        isGoal: false, // This would be determined after the shot
+        xG: xgResult.xG,
+      };
 
-      // The toast is now handled by LiveLogger upon successful API call
+      onEventLogged(payload);
       onClose();
+
     } catch (error) {
       console.error("xG Calculation Error:", error);
       toast({

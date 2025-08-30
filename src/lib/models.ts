@@ -1,190 +1,112 @@
 /**
  * @fileoverview This file contains the TypeScript type definitions for the API request
- * and response models used throughout the Zporter application. These models define the
- * expected data structures for creating and updating matches, ensuring consistency
- * between the frontend and backend.
+ * and response models used throughout the Zporter application, based on the new API documentation.
  */
 
 // --- Base and Utility Types ---
 
-export type PlayerLineupInfo = {
-  playerId: string;
-  position: string; // e.g., 'Goalkeeper', 'Striker'
-  isStarter: boolean;
-};
-
-export type TacticalAttachment = {
+export type TeamRef = {
   id: string;
-  type: 'image' | 'video' | 'document';
-  url: string;
+  name: string;
 };
 
-export type SetPiecePlan = {
-  summary: string;
-  attachments: TacticalAttachment[];
-  lineupEnabled: boolean;
-  lineup?: PlayerLineupInfo[];
+export type LocationDto = {
+  name: string;
+  address: string;
+  coordinates: {
+    latitude: number;
+    longitude: number;
+  };
 };
 
 // --- API DTOs for Match Creation & Updates ---
 
-// MatchesModule DTOs (as per final documentation)
-
-export type MatchDetailsDto = {
-  categoryId: string;
-  formatId: string;
-  contestId?: string;
-  homeTeamId: string;
-  awayTeamId: string;
-  matchDate: string; // ISO 8601 string
-  startTime: string; // ISO 8601 string
-  numberOfPeriods: number;
-  periodTime: number;
-  pauseTime: number;
-  venueType: string;
-  matchArena: string;
-  homeOrAway?: 'Home' | 'Away';
-};
-
-export type MatchContentDto = {
-  headline?: string;
-  description?: string; // Rich text/HTML/Markdown
-  mediaLinks?: string[];
-};
-
-export type MatchLogisticsDto = {
-  gatheringTime: string; // ISO 8601 string
-  endTime: string; // ISO 8601 string
-  isFullDay: boolean;
-  recurrenceRule: string;
-  gatheringLocation: string;
-  notificationReminder: number;
-  isOccupied: boolean;
-  isPrivate: boolean;
-};
-
-export type InvitesTabModel = {
-  homeTeamPlayerIds?: string[];
-  refereeIds?: string[];
-  awayTeamContactIds?: string[];
-  hostIds?: string[];
-  invitationMessage?: string;
-};
-
-// PlanTabModel Nested DTOs
-export type TrainingSessionDto = {
-  name?: string;
-  date?: string; // ISO 8601 string
-  description?: string;
-};
-
-export type TacticalSummaryDto = {
-  summary?: string;
-  attachments?: string[]; // Array of attachment URLs
-};
-
-export type FormationDto = {
-  formationName?: string; // e.g., "4-3-3"
-  playerPositions?: string[]; // e.g., ["GK", "LB", "CB", ...] or player IDs
-};
-
-export type OpponentDto = {
-  tacticalSummary?: TacticalSummaryDto;
-  expectedFormation?: FormationDto;
-};
-
-export type LineUpDto = {
-  tacticalSummary?: TacticalSummaryDto;
-  plannedFormation?: FormationDto;
-};
-
-export type OffenseDto = {
-  tacticalSummary?: TacticalSummaryDto;
-  playTypes?: string[]; // e.g., "Counter Attack", "Possession"
-};
-
-export type DefenseDto = {
-  tacticalSummary?: TacticalSummaryDto;
-  strategies?: string[]; // e.g., "Man-marking", "Zonal"
-};
-
-export type PlanTabModel = {
-  strategyOverview?: string;
-  trainingSessions?: TrainingSessionDto[];
-  preMatchRoutine?: string;
-  opponent?: OpponentDto;
-  lineUp?: LineUpDto;
-  offense?: OffenseDto;
-  defense?: DefenseDto;
-};
-
-
 /**
- * @model UpdateMatchDraftDto
- * @description The main DTO for creating (POST /matches) and updating (PATCH /matches/:id) a match draft.
- * It contains all possible fields across all tabs.
+ * @model CreateMatchDraftDto
+ * @description The main DTO for creating a match draft (POST /api/matches).
  */
-export type UpdateMatchDraftDto = {
-  details?: MatchDetailsDto;
-  content?: MatchContentDto;
-  logistics?: MatchLogisticsDto;
-  invites?: InvitesTabModel;
-  plan?: PlanTabModel;
+export type CreateMatchDraftDto = {
+  homeTeam: TeamRef;
+  awayTeam: TeamRef;
+  matchDate: string; // YYYY-MM-DD
+  startTime: string; // HH:MM
+  location: LocationDto;
+  category: "Friendly" | "Cup" | "League" | "Other";
+  format: "11v11" | "9v9" | "8v8" | "7v7" | "5v5" | "3v3" | "2v2" | "1v1" | "Futsal" | "Futnet" | "Panna" | "Teqball" | "Other";
+  contestId?: string;
+  isNeutral?: boolean;
+  numberOfPeriods?: number;
+  periodTime?: number;
+  pauseTime?: number;
+  headline?: string;
+  description?: string;
+  gatheringTime?: string; // ISO 8601
+  fullDayScheduling?: boolean;
+  endTime?: string; // ISO 8601
+  isRecurring?: boolean;
+  recurringUntil?: string; // YYYY-MM-DD
+  notificationMinutesBefore?: number;
+  markAsOccupied?: boolean;
+  isPrivate?: boolean;
 };
 
 /**
  * @model CreateMatchDraftResponse
- * @description The response DTO from the POST /matches endpoint.
+ * @description The response DTO from the POST /api/matches endpoint.
  */
-export interface CreateMatchDraftResponse extends UpdateMatchDraftDto {
-  matchId: string;
-  authorId: string;
-  status: string;
+export type CreateMatchDraftResponse = {
+  id: string;
+  homeTeam: TeamRef;
+  awayTeam: TeamRef;
+  matchDate: string;
+  startTime: string;
+  location: LocationDto;
+  status: 'draft';
   createdAt: string;
   updatedAt: string;
-}
-
-// --- API DTOs for other Endpoints ---
-
-/**
- * @model CreateMatchLogDto
- * @description Corresponds to the "Create Match Log" form.
- */
-export type CreateMatchLogDto = {
-    contestName: string;
-    homeClub: string;
-    homeTeam: string;
-    awayClub: string;
-    awayTeam: string;
-    matchDate: string; // YYYY-MM-DD
-    startTime: string; // HH:MM
-    periods: number;
-    periodDurationMinutes: number;
-    pauseDurationMinutes: number;
-    location: string;
 };
 
 /**
- * @model LogMatchEventDto
- * @description Corresponds to the body of POST /api/matches/{id}/log-event
+ * @model GetMatchesResponse
+ * @description The response DTO from the GET /api/matches endpoint.
  */
-export type LogMatchEventDto = {
-  type: string; // e.g., 'GOAL', 'YELLOW_CARD', 'SHOT'
-  timeInSeconds: number;
-  teamId: string;
-  playerId: string;
-  details?: any;
+export type GetMatchesResponse = {
+  data: Array<{
+    id: string;
+    homeTeam: { id: string; name: string; logoUrl: string };
+    awayTeam: { id: string; name: string; logoUrl: string };
+    matchDate: string;
+    startTime: string;
+    location: { name: string; address: string };
+    status: string;
+    score?: { home: number; away: number };
+    featuredPlayer?: { id: string; name: string; imageUrl: string };
+  }>;
+  total: number;
+  limit: number;
+  offset: number;
 };
 
 
 /**
  * @model CreateMatchNoteDto
- * @description Corresponds to the "Notes" tab. Used for the body of `POST /api/matches/{id}/notes`.
+ * @description Corresponds to the body of POST /api/matches/{id}/notes.
  */
 export type CreateMatchNoteDto = {
-  note: string;
+  content: string;
 };
 
+/**
+ * @model MatchNoteResponse
+ * @description The response DTO from POST /api/matches/{id}/notes.
+ */
+export type MatchNoteResponse = {
+    id: string;
+    matchId: string;
+    author: string;
+    content: string;
+    createdAt: string;
+}
 
 /**
  * @model PlayerReviewDto
@@ -193,73 +115,54 @@ export type CreateMatchNoteDto = {
 export type PlayerReviewDto = {
     playerId: string;
     rating: number; // 1-5
-    comment?: string;
+    notes: string;
 };
 
 /**
  * @model CreateMatchReviewDto
- * @description Corresponds to the "Reviews" tab. Used for the body of `POST /api/matches/{id}/reviews`.
+ * @description Corresponds to the body of POST /api/matches/{id}/reviews.
  */
 export type CreateMatchReviewDto = {
-  review?: string;
-  rating?: number; // 1-5
-  ztarOfTheMatchPlayerId?: string;
-  playerReviews?: PlayerReviewDto[];
+  authorId: string;
+  reviewType: string;
+  starPlayerId?: string;
+  overallReview: string;
+  teamRating: number;
+  playerReviews: PlayerReviewDto[];
+};
+
+
+/**
+ * @model LogMatchEventDto
+ * @description Corresponds to the body of POST /api/matches/{id}/log-event
+ */
+export type LogMatchEventDto = {
+  eventType: 'SHOT' | 'GOAL' | 'YELLOW_CARD' | 'RED_CARD' | 'SUBSTITUTION';
+  [key: string]: any; // Allows for event-specific fields
 };
 
 /**
- * @model Player
- * @description A temporary type for player data until a full player model is available.
+ * @model LogMatchEventResponse
+ * @description The response from POST /api/matches/{id}/log-event
  */
+export type LogMatchEventResponse = {
+  newEvent: {
+    id: string;
+    matchId: string;
+    eventType: string;
+    timestamp: string;
+    details: any;
+  };
+  updatedStats: {
+    goals?: { home: number; away: number; };
+    shots?: { home: number; away: number; };
+  };
+};
+
+// --- Temporary Player type until full model is available ---
 export type Player = {
   id: string;
   name: string;
   avatarUrl: string;
-  zporterId: string;
-  location: string;
-  team: string;
-  role: string;
-  number: number;
-  nationality?: string;
-  year?: number;
-  position?: string;
-  goals?: number;
-  assists?: number;
-};
-
-
-/**
- * @model Match
- * @description Represents the detailed match object returned by GET /matches and GET /matches/:id.
- */
-export type Match = {
-  id: string;
-  sportmonksId?: number;
-  status: 'draft' | 'scheduled' | 'live' | 'finished' | 'cancelled';
-  date: string;
-  fullDate: string;
-  startTime: string;
-  time?: string;
-  homeTeam: { id: string; name: string; logoUrl: string; players?: Player[] };
-  awayTeam: { id: string; name: string; logoUrl: string; players?: Player[] };
-  league: { id: string; name: string; logoUrl: string; };
-  stadium: string;
-  scores: {
-    home: number;
-    away: number;
-  };
-  events: any[]; // Define a proper event type later
-  stats: any; // Define a proper stats type later
-  featuredPlayers?: Player[];
-  round?: string;
-  isPenalty?: boolean;
-  penalties?: { home: number, away: number };
-  isLiveStreamed?: boolean;
-  teamForm?: any;
-  pastMeetings?: any[];
-  topGoalscorers?: any;
-  topAssists?: any;
-  averageStats?: any;
-  standings?: any[];
-  userGeneratedData?: any;
+  role?: string;
 };

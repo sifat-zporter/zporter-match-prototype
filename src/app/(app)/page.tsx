@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -14,7 +13,8 @@ import { Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle, SheetClose 
 import { FilterSheet } from "@/components/filter-sheet";
 import type { Match, Cup } from "@/lib/data";
 import { apiClient } from "@/lib/api-client";
-import { format, parseISO } from "date-fns";
+import { format, parse } from "date-fns";
+import type { GetMatchesResponse } from "@/lib/models";
 
 // --- Data Transformation Layer ---
 
@@ -23,15 +23,15 @@ import { format, parseISO } from "date-fns";
  * @param apiMatch - The match object from the backend API.
  * @returns A Match object formatted for the frontend.
  */
-function transformApiMatchToFrontendMatch(apiMatch: any): Match {
-  const matchDate = apiMatch.startTime ? new Date(`1970-01-01T${apiMatch.startTime}:00Z`) : new Date();
+function transformApiMatchToFrontendMatch(apiMatch: GetMatchesResponse['data'][0]): Match {
+  const matchDate = parse(apiMatch.matchDate, 'yyyy-MM-dd', new Date());
 
   return {
-    id: apiMatch.matchId,
-    status: 'scheduled', // Assuming 'scheduled' as API doesn't provide this yet.
+    id: apiMatch.id,
+    status: apiMatch.status,
     date: format(matchDate, 'dd/MM'),
-    startTime: apiMatch.startTime || 'N/A',
-    fullDate: new Date().toISOString(), // Placeholder as API doesn't provide full date
+    startTime: apiMatch.startTime,
+    fullDate: matchDate.toISOString(),
     homeTeam: {
       id: apiMatch.homeTeam.id,
       name: apiMatch.homeTeam.name,
@@ -44,26 +44,36 @@ function transformApiMatchToFrontendMatch(apiMatch: any): Match {
     },
     scores: apiMatch.score || { home: 0, away: 0 },
     league: {
-      id: apiMatch.competition?.id || `league-${apiMatch.matchId}`,
-      name: apiMatch.competition?.name || 'N/A',
-      logoUrl: apiMatch.competition?.logoUrl || 'https://placehold.co/24x24.png',
+      id: `league-${apiMatch.id}`, // Placeholder
+      name: 'Competition Name', // Placeholder
+      logoUrl: 'https://placehold.co/24x24.png', // Placeholder
     },
-    stadium: apiMatch.venue || 'N/A',
-    featuredPlayers: apiMatch.featuredPlayer ? [apiMatch.featuredPlayer] : [], // API provides one, frontend expects array
-    // Default values for fields not yet in API response, to prevent crashes
+    stadium: apiMatch.location.name,
+    featuredPlayers: apiMatch.featuredPlayer ? [{
+      id: apiMatch.featuredPlayer.id,
+      name: apiMatch.featuredPlayer.name,
+      avatarUrl: apiMatch.featuredPlayer.imageUrl,
+    }] : [],
+    // Default values for fields not yet in API response
     events: [],
     stats: {} as any, 
+    notes: [],
+    reviews: [],
+    eventDetails: {} as any,
+    scheduleDetails: {} as any,
+    settings: {} as any,
+    location: { name: apiMatch.location.name, address: apiMatch.location.address },
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
     time: 'scheduled',
   };
 }
 
 function groupMatchesIntoCups(matches: Match[]): Cup[] {
-  // Defensive check added here to prevent crash if m.league or m.league.name is undefined
   const cupMatches = matches.filter(m => m.league && m.league.name && m.league.name.toLowerCase().includes('cup'));
   if (cupMatches.length === 0) return [];
 
   const cups = cupMatches.reduce((acc, match) => {
-    // Defensive check
     if (!match.league || !match.league.id) return acc;
       
     if (!acc[match.league.id]) {
@@ -95,8 +105,9 @@ export default function MatchesHubPage() {
       setError(null);
       try {
         const dateString = format(date, 'yyyy-MM-dd');
-        const response = await apiClient<{ matches: any[] }>(`/matches?date=${dateString}&limit=50`);
-        const transformedMatches = (response.matches || []).map(transformApiMatchToFrontendMatch);
+        // Using the new API response structure
+        const response = await apiClient<GetMatchesResponse>(`/matches?date=${dateString}&limit=50`);
+        const transformedMatches = (response.data || []).map(transformApiMatchToFrontendMatch);
         setMatches(transformedMatches);
       } catch (error) {
         console.error("Failed to fetch matches:", error);
