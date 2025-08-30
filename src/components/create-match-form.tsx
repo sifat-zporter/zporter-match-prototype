@@ -1,11 +1,11 @@
+
 "use client"
 
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format, toDate } from "date-fns";
-import { Calendar as CalendarIcon, Clock, Search, MapPin, Camera, Video, Link as LinkIcon, RefreshCw } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { Calendar as CalendarIcon, Clock, Search, MapPin, Camera, Video, Link as LinkIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -35,8 +35,9 @@ import { Textarea } from "./ui/textarea";
 import { Switch } from "./ui/switch";
 import { Separator } from "./ui/separator";
 import { apiClient } from "@/lib/api-client";
-import type { CreateMatchDraftDto, CreateMatchDraftResponse } from "@/lib/models";
+import type { CreateMatchDraftDto } from "@/lib/models";
 import { useToast } from "@/hooks/use-toast";
+import type { Match } from "@/lib/data";
 
 const createMatchSchema = z.object({
   category: z.enum(["Friendly", "Cup", "League", "Other"]),
@@ -65,8 +66,11 @@ const createMatchSchema = z.object({
   private: z.boolean().default(false),
 });
 
-export function CreateMatchForm() {
-  const router = useRouter();
+interface CreateMatchFormProps {
+  onMatchCreated: (newMatch: Match) => void;
+}
+
+export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
   const { toast } = useToast();
   
   const form = useForm<z.infer<typeof createMatchSchema>>({
@@ -136,17 +140,20 @@ export function CreateMatchForm() {
         isPrivate: values.private,
       };
 
-      const newMatch = await apiClient<CreateMatchDraftResponse>('/matches', {
+      const newMatchResponse = await apiClient<Match>('/matches', {
         method: 'POST',
         body: payload,
       });
+      
+      // Fetch the full match details to pass to the parent
+      const newMatchDetails = await apiClient<Match>(`/matches/${newMatchResponse.id}`);
 
       toast({
         title: "Match Draft Created!",
-        description: "Your new match has been successfully created as a draft.",
+        description: "You can now fill out the rest of the match details in the tabs.",
       });
 
-      router.push(`/matches/${newMatch.id}`);
+      onMatchCreated(newMatchDetails);
 
     } catch (error) {
       console.error("Failed to create match draft:", error);
@@ -571,7 +578,7 @@ export function CreateMatchForm() {
         </div>
 
         <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white" disabled={form.formState.isSubmitting}>
-          {form.formState.isSubmitting ? 'Saving...' : 'Save'}
+          {form.formState.isSubmitting ? 'Saving...' : 'Save Draft & Continue'}
         </Button>
       </form>
     </Form>
