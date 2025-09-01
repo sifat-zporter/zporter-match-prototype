@@ -8,14 +8,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Textarea } from "./ui/textarea";
 import { Button } from "./ui/button";
-import { Camera, Video, Plus, List, ChevronUp, ChevronDown, CheckSquare, Loader2 } from "lucide-react";
+import { Plus, Loader2 } from "lucide-react";
 import { FootballPitchIcon } from "./icons";
-import { Switch } from "./ui/switch";
-import { ScrollArea, ScrollBar } from "./ui/scroll-area";
+import { ScrollArea } from "./ui/scroll-area";
 import { Separator } from "./ui/separator";
 import { apiClient } from "@/lib/api-client";
-import type { PlanTabModel } from "@/lib/models";
+import type { MatchPlanDto } from "@/lib/models";
 import { useToast } from "@/hooks/use-toast";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { Label } from "./ui/label";
 
 // Mock data, in a real app this would come from an API
 const invitedPlayers = [
@@ -48,14 +49,15 @@ export function MatchPlan({ matchId }: { matchId: string }) {
     const { toast } = useToast();
     const [isLoading, setIsLoading] = useState(false);
     // In a real app, this state would be initialized by fetching the existing plan for the matchId
-    const [plan, setPlan] = useState<PlanTabModel>({});
+    const [plan, setPlan] = useState<MatchPlanDto>({});
 
     const handleSave = async () => {
         setIsLoading(true);
         try {
+            // The new DTO for the PATCH request is now MatchPlanDto
             await apiClient(`/matches/${matchId}`, {
                 method: 'PATCH',
-                body: { plan },
+                body: { tacticsNotes: plan },
             });
             toast({
                 title: "Plan Saved!",
@@ -73,6 +75,67 @@ export function MatchPlan({ matchId }: { matchId: string }) {
         }
     };
 
+    const handleTacticChange = (section: 'offense' | 'defense', field: string, value: string, subField?: string) => {
+        setPlan(p => {
+            const newPlan = { ...p };
+            if (subField) {
+                // @ts-ignore
+                if (!newPlan[section]) newPlan[section] = {};
+                // @ts-ignore
+                if (!newPlan[section][field]) newPlan[section][field] = {};
+                // @ts-ignore
+                newPlan[section][field][subField] = value;
+            } else {
+                 // @ts-ignore
+                if (!newPlan[section]) newPlan[section] = {};
+                 // @ts-ignore
+                newPlan[section][field] = value;
+            }
+            return newPlan;
+        });
+    }
+
+    const TacticSection = ({ title, section, fields }: { title: string, section: 'offense' | 'defense', fields: string[] }) => (
+        <Card>
+            <CardHeader><CardTitle>{title}</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+                {fields.map(field => (
+                    <div key={field} className="space-y-2">
+                        <Label className="capitalize">{field.replace(/([A-Z])/g, ' $1')}</Label>
+                        <Textarea 
+                            placeholder={`Notes on ${field.toLowerCase()}...`}
+                            // @ts-ignore
+                            value={plan[section]?.[field] || ''}
+                            onChange={(e) => handleTacticChange(section, field, e.target.value)}
+                        />
+                    </div>
+                ))}
+            </CardContent>
+        </Card>
+    );
+
+     const SetPiecesSection = ({ title, section }: { title: string, section: 'offense' | 'defense' }) => {
+        const setPieceFields = ["penalties", "corners", "freeKicks", "throwIns", "goalKicks", "other"];
+        return (
+            <Card>
+                <CardHeader><CardTitle>{title}</CardTitle></CardHeader>
+                <CardContent className="space-y-4">
+                     {setPieceFields.map(field => (
+                        <div key={field} className="space-y-2">
+                            <Label className="capitalize">{field.replace(/([A-Z])/g, ' $1')}</Label>
+                            <Textarea 
+                                placeholder={`Notes on ${field.toLowerCase()}...`}
+                                // @ts-ignore
+                                value={plan[section]?.setPieces?.[field] || ''}
+                                onChange={(e) => handleTacticChange(section, 'setPieces', e.target.value, field)}
+                             />
+                        </div>
+                    ))}
+                </CardContent>
+            </Card>
+        )
+     };
+
     return (
         <div className="space-y-4">
             <Tabs defaultValue="line-up">
@@ -83,42 +146,50 @@ export function MatchPlan({ matchId }: { matchId: string }) {
                     <TabsTrigger value="defense" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Defense</TabsTrigger>
                     <TabsTrigger value="other" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Other</TabsTrigger>
                 </TabsList>
-                <TabsContent value="line-up">
-                    {/* Placeholder for LineUpPlan component content */}
-                    <div className="text-muted-foreground p-8 text-center">Line Up planning UI goes here.</div>
+                
+                <TabsContent value="opponent" className="pt-4 space-y-4">
+                    <h3 className="font-semibold">Opponent Analysis</h3>
+                    <Textarea 
+                        placeholder="General review of the opponent..." 
+                        rows={4} 
+                        value={plan.opponentTactics || ''}
+                        onChange={(e) => setPlan(p => ({...p, opponentTactics: e.target.value}))}
+                    />
                 </TabsContent>
-                <TabsContent value="offense">
-                    <div className="text-muted-foreground p-8 text-center">Offense planning UI goes here.</div>
+
+                <TabsContent value="line-up" className="pt-4 space-y-4">
+                    <Card>
+                        <CardHeader><CardTitle>Starting Lineup & Formation</CardTitle></CardHeader>
+                        <CardContent>
+                            <div className="flex justify-center items-center">
+                                <FootballPitchIcon className="w-full h-auto text-primary" />
+                            </div>
+                        </CardContent>
+                    </Card>
+                     <Card>
+                        <CardHeader><CardTitle>Invited Players</CardTitle></CardHeader>
+                        <CardContent>
+                            <ScrollArea>
+                                <div className="flex space-x-4 pb-4">
+                                    {invitedPlayers.map(p => <PlayerOnPitch key={p.id} player={p} />)}
+                                </div>
+                                <ScrollBar orientation="horizontal" />
+                            </ScrollArea>
+                        </CardContent>
+                    </Card>
                 </TabsContent>
-                <TabsContent value="defense">
-                    <div className="text-muted-foreground p-8 text-center">Defense planning UI goes here.</div>
+
+                <TabsContent value="offense" className="pt-4 space-y-4">
+                    <TacticSection title="General Offense" section="offense" fields={["general", "buildUp", "attack", "finishing", "turnovers"]} />
+                    <SetPiecesSection title="Offensive Set Pieces" section="offense" />
                 </TabsContent>
-                <TabsContent value="opponent">
-                    <div className="space-y-4 pt-4">
-                        <h3 className="font-semibold">Opponent Analysis</h3>
-                        <Textarea 
-                            placeholder="General review of the opponent..." 
-                            rows={4} 
-                            value={plan.opponent?.tacticalSummary?.summary || ''}
-                            onChange={(e) => setPlan(p => ({...p, opponent: {...p.opponent, tacticalSummary: {...p.opponent?.tacticalSummary, summary: e.target.value}} }))}
-                        />
-                         <Select
-                            value={plan.opponent?.expectedFormation?.formationName || ''}
-                            onValueChange={(value) => setPlan(p => ({...p, opponent: {...p.opponent, expectedFormation: {...p.opponent?.expectedFormation, formationName: value}}}))}
-                         >
-                            <SelectTrigger>
-                                <SelectValue placeholder="Opponent's Expected Formation" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="4-4-2">4-4-2</SelectItem>
-                                <SelectItem value="4-3-3">4-3-3</SelectItem>
-                                <SelectItem value="3-5-2">3-5-2</SelectItem>
-                                <SelectItem value="5-3-2">5-3-2</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
+                
+                <TabsContent value="defense" className="pt-4 space-y-4">
+                    <TacticSection title="General Defense" section="defense" fields={["general", "highBlock", "midBlock", "lowBlock", "turnovers"]} />
+                    <SetPiecesSection title="Defensive Set Pieces" section="defense" />
                 </TabsContent>
-                <TabsContent value="other">
+
+                <TabsContent value="other" className="pt-4">
                      <div className="text-muted-foreground p-8 text-center">Other planning UI goes here.</div>
                 </TabsContent>
             </Tabs>

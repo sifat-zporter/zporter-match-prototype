@@ -13,7 +13,7 @@ export type TeamRef = {
 export type LocationDto = {
   name: string;
   address: string;
-  coordinates: {
+  coordinates?: {
     latitude: number;
     longitude: number;
   };
@@ -24,30 +24,31 @@ export type LocationDto = {
 /**
  * @model CreateMatchDraftDto
  * @description The main DTO for creating a match draft (POST /api/matches).
+ * This has been simplified to match the backend's validation rules.
  */
 export type CreateMatchDraftDto = {
-  homeTeam: TeamRef;
-  awayTeam: TeamRef;
+  yourTeamName: string;
+  opponentTeamName: string;
+  homeTeamId: string; // Backend expects this flat field
   matchDate: string; // YYYY-MM-DD
   startTime: string; // HH:MM
-  location: LocationDto;
+  location: string; // Backend expects a simple string
   category: "Friendly" | "Cup" | "League" | "Other";
   format: "11v11" | "9v9" | "8v8" | "7v7" | "5v5" | "3v3" | "2v2" | "1v1" | "Futsal" | "Futnet" | "Panna" | "Teqball" | "Other";
   contestId?: string;
-  isNeutral?: boolean;
-  numberOfPeriods?: number;
-  periodTime?: number;
-  pauseTime?: number;
+  numberOfPeriods: number;
+  periodTime: number;
+  pauseTime: number;
   headline?: string;
   description?: string;
-  gatheringTime?: string; // ISO 8601
-  fullDayScheduling?: boolean;
-  endTime?: string; // ISO 8601
-  isRecurring?: boolean;
+  gatheringTime: string; // ISO 8601
+  fullDayScheduling: boolean;
+  endTime: string; // ISO 8601
+  isRecurring: boolean;
   recurringUntil?: string; // YYYY-MM-DD
-  notificationMinutesBefore?: number;
-  markAsOccupied?: boolean;
-  isPrivate?: boolean;
+  notificationMinutesBefore: number;
+  markAsOccupied: boolean;
+  isPrivate: boolean;
 };
 
 /**
@@ -60,7 +61,7 @@ export type CreateMatchDraftResponse = {
   awayTeam: TeamRef;
   matchDate: string;
   startTime: string;
-  location: LocationDto;
+  location: { name: string; address: string; };
   status: 'draft';
   createdAt: string;
   updatedAt: string;
@@ -131,6 +132,44 @@ export type CreateMatchReviewDto = {
   playerReviews: PlayerReviewDto[];
 };
 
+/**
+ * @model MatchPlanDto
+ * @description Corresponds to the `tacticsNotes` object within PATCH /api/matches/{id}
+ */
+export type MatchPlanDto = {
+  offense?: {
+    general?: string;
+    buildUp?: string;
+    attack?: string;
+    finishing?: string;
+    turnovers?: string;
+    setPieces?: {
+      penalties?: string;
+      corners?: string;
+      freeKicks?: string;
+      throwIns?: string;
+      goalKicks?: string;
+      other?: string;
+    }
+  };
+  defense?: {
+    general?: string;
+    highBlock?: string;
+    midBlock?: string;
+    lowBlock?: string;
+    turnovers?: string;
+    setPieces?: {
+      penalties?: string;
+      corners?: string;
+      freeKicks?: string;
+      throwIns?: string;
+      goalKicks?: string;
+      other?: string;
+    }
+  };
+  opponentTactics?: string;
+}
+
 
 /**
  * @model LogMatchEventDto
@@ -157,12 +196,4 @@ export type LogMatchEventResponse = {
     goals?: { home: number; away: number; };
     shots?: { home: number; away: number; };
   };
-};
-
-// --- Temporary Player type until full model is available ---
-export type Player = {
-  id: string;
-  name: string;
-  avatarUrl: string;
-  role?: string;
 };
