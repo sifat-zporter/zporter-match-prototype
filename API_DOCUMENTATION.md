@@ -225,7 +225,7 @@ Returns a comprehensive match object containing all associated data like notes, 
 
 #### Request Body (`application/json`)
 
-The body can contain any subset of the fields below. Only provided fields will be updated.
+The body can contain any subset of the fields below. Only provided fields will be updated. The example below shows the structure for the **'Plan' tab**.
 
 ```json
 {
@@ -241,7 +241,7 @@ The body can contain any subset of the fields below. Only provided fields will b
   }
 }
 ```
-*(Note: The full `PATCH` body can be much larger, including `lineups`, `tacticsNotes`, etc. The example above is for the currently implemented 'Plan' tab.)*
+*(Note: As other tabs like 'Invites' or detailed 'Lineups' are implemented in the UI, their corresponding data structures will be added here under the `PATCH` body specification.)*
 
 #### Success Response (`200 OK`)
 
