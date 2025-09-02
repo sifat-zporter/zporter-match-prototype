@@ -9,17 +9,30 @@ All API endpoints are prefixed with `/api`.
 **Development:** `http://localhost:3000/api`
 
 ---
+## Workflow: Creating a Match
+
+Creating a full match is a two-step process:
+
+1.  **Create a Draft**: First, you send the core match details (teams, date, time, etc.) to the `POST /api/matches` endpoint. The server creates a "draft" match and returns its unique `id`.
+2.  **Update with Details**: Once you have the `id`, you use it to make subsequent requests to add more detailed information.
+    *   The **Plan** tab is saved using `PATCH /api/matches/{id}`.
+    *   The **Notes** tab is updated by sending new notes to `POST /api/matches/{id}/notes`.
+    *   The **Reviews** tab is updated by submitting reviews to `POST /api/matches/{id}/reviews`.
+
+---
 
 ## 1. Matches
 
-### 1.1. Create Match Draft
+### 1.1. Create Match Draft (Step 1)
 
-This endpoint creates the initial draft of a match. After a successful creation, the client receives a unique `id` for the new match. This `id` is then used to update the match with more detailed information (like plans, invites, notes) via the `PATCH /api/matches/{id}` endpoint.
+This endpoint creates the initial draft of a match. After a successful creation, the client receives a unique `id` for the new match. This `id` is then used for all subsequent updates.
 
 - **Endpoint**: `POST /api/matches`
-- **Description**: Creates a new match draft with the core details. This is the first step in the match creation workflow.
+- **Description**: Creates a new match draft with the core details from the "Details" tab.
 
 #### Request Body (`application/json`)
+
+This is the payload sent when the user saves the initial details.
 
 ```json
 {
@@ -50,7 +63,7 @@ This endpoint creates the initial draft of a match. After a successful creation,
 
 #### Success Response (`201 Created`)
 
-Returns the newly created match object. The `id` from this response should be used for subsequent updates.
+Returns the newly created match object. The `id` from this response must be used for all subsequent updates.
 
 ```json
 {
@@ -75,28 +88,143 @@ Returns the newly created match object. The `id` from this response should be us
 }
 ```
 
-#### Error Response (`400 Bad Request`)
+---
 
-Occurs if the request body fails validation. The response will detail the missing or invalid fields.
+### 1.2. Update Match Details (Step 2)
+
+- **Endpoint**: `PATCH /api/matches/{id}`
+- **Description**: Updates various details of an existing match. This is used for saving the **"Plan" tab** and other detailed settings after a match draft has been created.
+
+#### Path Parameters
+
+-   `id` (required, `string`): The unique identifier of the match to update.
+
+#### Request Body for "Plan" Tab (`application/json`)
+
+This is the payload sent when the user saves the "Plan" tab. Note that only the `tacticsNotes` field is sent.
 
 ```json
 {
-    "statusCode": 400,
-    "message": [
-      "homeTeamId should not be empty",
-      "opponentTeamName must be a string",
-      "location must be a string"
-    ],
-    "error": "Bad Request"
+  "tacticsNotes": {
+    "offense": {
+      "general": "string",
+      "buildUp": "string",
+      "attack": "string",
+      "finishing": "string",
+      "turnovers": "string",
+      "setPieces": {
+        "penalties": "string",
+        "corners": "string",
+        "freeKicks": "string",
+        "throwIns": "string",
+        "goalKicks": "string",
+        "other": "string"
+      }
+    },
+    "defense": {
+      "general": "string",
+      "highBlock": "string",
+      "midBlock": "string",
+      "lowBlock": "string",
+      "turnovers": "string",
+      "setPieces": {
+        "penalties": "string",
+        "corners": "string",
+        "freeKicks": "string",
+        "throwIns": "string",
+        "goalKicks": "string",
+        "other": "string"
+      }
+    },
+    "opponentTactics": "string"
+  }
+}
+```
+*(Note: As other tabs like 'Invites' are implemented, their corresponding data structures will be added here.)*
+
+#### Success Response (`200 OK`)
+
+Returns the updated match object.
+
+```json
+{
+  "id": "string",
+  "updatedAt": "string (ISO 8601)",
+  // ... other updated match fields
 }
 ```
 
 ---
 
-### 1.2. Get Matches
+### 1.3. Add Match Note (Step 2)
+
+- **Endpoint**: `POST /api/matches/{id}/notes`
+- **Description**: Adds a new text note to a match. This is used for the **"Notes" tab**.
+
+#### Path Parameters
+
+-   `id` (required, `string`): The unique identifier of the match.
+
+#### Request Body (`application/json`)
+
+```json
+{
+  "content": "string"
+}
+```
+
+#### Success Response (`201 Created`)
+
+```json
+{
+  "id": "string",
+  "matchId": "string",
+  "author": "string",
+  "content": "string",
+  "createdAt": "string (ISO 8601)"
+}
+```
+
+---
+
+### 1.4. Submit Match Review (Step 2)
+
+- **Endpoint**: `POST /api/matches/{id}/reviews`
+- **Description**: Submits a post-match review, including team and individual player ratings. This is used for the **"Reviews" tab**.
+
+#### Path Parameters
+
+-   `id` (required, `string`): The unique identifier of the match.
+
+#### Request Body (`application/json`)
+
+```json
+{
+  "authorId": "string",
+  "reviewType": "string (e.g., 'home-team')",
+  "starPlayerId": "string" (optional),
+  "overallReview": "string",
+  "teamRating": "number (1-5)",
+  "playerReviews": [
+    {
+      "playerId": "string",
+      "rating": "number (1-5)",
+      "notes": "string"
+    }
+  ]
+}
+```
+
+#### Success Response (`201 Created`)
+
+Returns the created review object.
+
+---
+
+### 1.5. Get Matches
 
 - **Endpoint**: `GET /api/matches`
-- **Description**: Retrieves a paginated list of all matches, including both user-created and external (e.g., Sportmonks) matches.
+- **Description**: Retrieves a paginated list of all matches.
 
 #### Query Parameters
 
@@ -148,7 +276,7 @@ Occurs if the request body fails validation. The response will detail the missin
 
 ---
 
-### 1.3. Get Match by ID
+### 1.6. Get Match by ID
 
 - **Endpoint**: `GET /api/matches/{id}`
 - **Description**: Retrieves detailed information for a single match.
@@ -214,114 +342,6 @@ Returns a comprehensive match object containing all associated data like notes, 
 
 ---
 
-### 1.4. Update Match Details (Plan, Invites, etc.)
-
-- **Endpoint**: `PATCH /api/matches/{id}`
-- **Description**: Updates various details of an existing match. This is used for saving the 'Plan' tab, 'Invites' tab, and other detailed information after a match draft has been created.
-
-#### Path Parameters
-
--   `id` (required, `string`): The unique identifier of the match to update.
-
-#### Request Body (`application/json`)
-
-The body can contain any subset of the fields below. Only provided fields will be updated. The example below shows the structure for the **'Plan' tab**.
-
-```json
-{
-  "plan": {
-    "opponent": {
-      "tacticalSummary": {
-        "summary": "string"
-      },
-      "expectedFormation": {
-        "formationName": "string"
-      }
-    }
-  }
-}
-```
-*(Note: As other tabs like 'Invites' or detailed 'Lineups' are implemented in the UI, their corresponding data structures will be added here under the `PATCH` body specification.)*
-
-#### Success Response (`200 OK`)
-
-Returns the updated match object.
-
-```json
-{
-  "id": "string",
-  "updatedAt": "string (ISO 8601)",
-  // ... other updated match fields
-}
-```
-
----
-
-### 1.5. Add Match Note
-
-- **Endpoint**: `POST /api/matches/{id}/notes`
-- **Description**: Adds a new text note to a match.
-
-#### Path Parameters
-
--   `id` (required, `string`): The unique identifier of the match.
-
-#### Request Body (`application/json`)
-
-```json
-{
-  "content": "string"
-}
-```
-
-#### Success Response (`201 Created`)
-
-```json
-{
-  "id": "string",
-  "matchId": "string",
-  "author": "string",
-  "content": "string",
-  "createdAt": "string (ISO 8601)"
-}
-```
-
----
-
-### 1.6. Submit Match Review
-
-- **Endpoint**: `POST /api/matches/{id}/reviews`
-- **Description**: Submits a post-match review, including team and individual player ratings.
-
-#### Path Parameters
-
--   `id` (required, `string`): The unique identifier of the match.
-
-#### Request Body (`application/json`)
-
-```json
-{
-  "authorId": "string",
-  "reviewType": "string (e.g., 'home-team')",
-  "starPlayerId": "string" (optional),
-  "overallReview": "string",
-  "teamRating": "number (1-5)",
-  "playerReviews": [
-    {
-      "playerId": "string",
-      "rating": "number (1-5)",
-      "notes": "string"
-    }
-  ]
-}
-```
-
-#### Success Response (`201 Created`)
-
-Returns the created review object.
-
----
-
 ### 1.7. Log Live Match Event
 
 - **Endpoint**: `POST /api/matches/{id}/log-event`
@@ -344,8 +364,6 @@ The payload structure varies based on the `eventType`.
   "isGoal": "boolean",
   "xG": "number"
 }
-
-// Other event types like 'GOAL', 'YELLOW_CARD', etc., have different structures.
 ```
 
 #### Success Response (`201 Created`)
@@ -357,12 +375,11 @@ The payload structure varies based on the `eventType`.
     "matchId": "string",
     "eventType": "string",
     "timestamp": "string (ISO 8601)",
-    "details": {} // Object containing event-specific data
+    "details": {}
   },
   "updatedStats": {
     "goals": { "home": "number", "away": "number" },
     "shots": { "home": "number", "away": "number" }
-    // ... other stats may be returned
   }
 }
 ```
