@@ -7,10 +7,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Textarea } from "./ui/textarea";
 import { Button } from "./ui/button";
-import { Plus, Camera, Video, Loader2 } from "lucide-react";
+import { Plus, Camera, Video, Loader2, ListFilter, Mic } from "lucide-react";
 import { Switch } from "./ui/switch";
 import { Card, CardContent } from "./ui/card";
 import { Label } from "./ui/label";
+import { ScrollArea, ScrollBar } from "./ui/scroll-area";
+import { ZaiIcon } from "./icons";
+
 
 // Mock data, in a real app this would come from an API
 const pastOpponentReviews = [
@@ -32,7 +35,15 @@ const opponentLineup = [
     { id: 'p11', name: 'Casillas', avatar: 'https://placehold.co/40x40.png', rating: 173, number: 1, position: 'GK' },
 ];
 
-const PlayerOnPitch = ({ player }: { player: typeof opponentLineup[0] }) => (
+const invitedPlayers = [
+    { id: 'p1', name: 'Ronaldinho', avatar: 'https://placehold.co/64x64.png', rating: 173, number: 15 },
+    { id: 'p2', name: 'Iniesta', avatar: 'https://placehold.co/64x64.png', rating: 173, number: 9 },
+    { id: 'p3', name: 'Iniesta', avatar: 'https://placehold.co/64x64.png', rating: 173, number: 21 },
+    { id: 'p4', name: 'Ronaldinho', avatar: 'https://placehold.co/64x64.png', rating: 173, number: 18 },
+    { id: 'p5', name: 'Sterling', avatar: 'https://placehold.co/64x64.png', rating: 173, number: 27 },
+];
+
+const PlayerOnPitch = ({ player }: { player: { name: string; avatar: string; rating: number; number: number } }) => (
     <div className="flex flex-col items-center justify-center gap-1 text-center w-16">
         <div className="relative">
             <Image src={player.avatar} alt={player.name} width={40} height={40} className="rounded-full" data-ai-hint="player avatar" />
@@ -42,6 +53,12 @@ const PlayerOnPitch = ({ player }: { player: typeof opponentLineup[0] }) => (
         <p className="text-xs font-semibold truncate w-full">{player.name}</p>
     </div>
 );
+
+const EmptySlot = () => (
+    <div className="w-16 h-[60px] bg-card/50 border-2 border-dashed border-muted-foreground/50 rounded-md flex items-center justify-center">
+        <Plus className="w-6 h-6 text-muted-foreground" />
+    </div>
+)
 
 // Main Component
 export function PlanTabMockup() {
@@ -168,8 +185,125 @@ export function PlanTabMockup() {
 
                 <TabsContent value="line-up" className="pt-4 space-y-4">
                      <Card>
-                        <CardContent className="p-4">
-                            <div className="text-muted-foreground p-8 text-center">Line Up planning UI goes here.</div>
+                        <CardContent className="p-4 space-y-4">
+                            <div className="flex justify-between items-center">
+                                <Select defaultValue="new-plan">
+                                    <SelectTrigger className="w-[180px]">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="new-plan">New Plan</SelectItem>
+                                        <SelectItem value="plan-a">Plan A</SelectItem>
+                                        <SelectItem value="plan-b">Plan B</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <Button variant="ghost" size="icon"><Mic className="w-5 h-5"/></Button>
+                            </div>
+
+                            <div>
+                                <Label>General Tactics</Label>
+                                <Textarea placeholder="Match plan summary." rows={3} />
+                                <div className="flex items-center gap-2 mt-2">
+                                    <Button type="button" variant="outline" size="icon"><Camera className="w-4 h-4" /></Button>
+                                    <Button type="button" variant="outline" size="icon"><Video className="w-4 h-4" /></Button>
+                                    <Button type="button" variant="outline" size="icon"><Plus className="w-4 h-4" /></Button>
+                                    <Button type="button" variant="outline" size="icon"><ZaiIcon className="w-4 h-4" /></Button>
+                                </div>
+                            </div>
+                            
+                            <div className="space-y-2">
+                                <div className="flex justify-between items-center">
+                                    <Label>Invited - 22 Players</Label>
+                                    <Button variant="ghost" size="icon"><ListFilter className="w-5 h-5"/></Button>
+                                </div>
+                                <ScrollArea className="w-full whitespace-nowrap">
+                                    <div className="flex gap-4 pb-4">
+                                        {invitedPlayers.map(p => (
+                                            <div key={p.id} className="flex flex-col items-center justify-center gap-1 text-center w-16 flex-shrink-0">
+                                                <div className="relative">
+                                                    <Image src={p.avatar} alt={p.name} width={48} height={48} className="rounded-full" data-ai-hint="player avatar" />
+                                                    <div className="absolute -top-1 -left-2 text-xs font-semibold text-purple-400">{p.rating}</div>
+                                                    <div className="absolute -top-1 -right-2 text-xs font-semibold">{p.number}</div>
+                                                </div>
+                                                <p className="text-xs font-semibold truncate w-full">{p.name}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <ScrollBar orientation="horizontal" />
+                                </ScrollArea>
+                            </div>
+                            
+                            <div className="space-y-2">
+                                <div className="flex justify-between items-center">
+                                    <Label>Line up - 11v11</Label>
+                                     <Button variant="ghost" size="icon"><ListFilter className="w-5 h-5"/></Button>
+                                </div>
+                                <div className="relative h-[600px] bg-center bg-no-repeat bg-contain" style={{backgroundImage: "url('/football-pitch.svg')"}}>
+                                    {/* Forwards */}
+                                    <div className="absolute top-[8%] left-[50%] -translate-x-1/2 grid grid-cols-3 gap-x-8 gap-y-2">
+                                        <EmptySlot />
+                                        <EmptySlot />
+                                        <EmptySlot />
+                                    </div>
+                                    {/* Midfielders */}
+                                    <div className="absolute top-[28%] left-[50%] -translate-x-1/2 grid grid-cols-3 gap-x-12 gap-y-4">
+                                        <EmptySlot />
+                                        <PlayerOnPitch player={invitedPlayers[4]} />
+                                        <EmptySlot />
+                                    </div>
+                                    {/* Defenders */}
+                                    <div className="absolute top-[52%] left-[50%] -translate-x-1/2 grid grid-cols-4 gap-x-4 gap-y-4">
+                                        <EmptySlot />
+                                        <EmptySlot />
+                                        <EmptySlot />
+                                        <EmptySlot />
+                                    </div>
+                                    {/* Goalkeeper */}
+                                    <div className="absolute top-[78%] left-[50%] -translate-x-1/2">
+                                         <EmptySlot />
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div className="space-y-4 pt-4">
+                                <div className="flex items-center justify-between">
+                                    <Label>Planned exchanges</Label>
+                                    <Switch />
+                                </div>
+                                <div className="flex items-center justify-between gap-2">
+                                    <div className="flex flex-col items-center gap-1">
+                                        <Label className="text-xs">In</Label>
+                                        <EmptySlot />
+                                    </div>
+                                    <div className="flex flex-col items-center gap-1">
+                                        <Label className="text-xs">Time</Label>
+                                        <div className="w-16 h-[60px] bg-card/50 border-2 border-muted-foreground/50 rounded-md flex items-center justify-center text-xl font-bold">65</div>
+                                    </div>
+                                     <div className="flex flex-col items-center gap-1">
+                                        <Label className="text-xs">Out</Label>
+                                        <EmptySlot />
+                                    </div>
+                                    <Button size="icon" className="rounded-full self-end"><Plus /></Button>
+                                </div>
+                            </div>
+                            
+                            <div className="space-y-4 pt-4">
+                                <div className="flex items-center justify-between">
+                                    <Label>Line-Up Publishing, before match start</Label>
+                                    <Switch />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <Label className="text-xs">Internally</Label>
+                                        <Select defaultValue="-4h"><SelectTrigger><SelectValue/></SelectTrigger><SelectContent><SelectItem value="-4h">- 4h</SelectItem></SelectContent></Select>
+                                    </div>
+                                     <div>
+                                        <Label className="text-xs">Public</Label>
+                                        <Select defaultValue="-1h"><SelectTrigger><SelectValue/></SelectTrigger><SelectContent><SelectItem value="-1h">- 1h</SelectItem></SelectContent></Select>
+                                    </div>
+                                </div>
+                            </div>
+
                         </CardContent>
                     </Card>
                 </TabsContent>
