@@ -526,8 +526,37 @@ export function PlanTabMockup() {
 
                 <TabsContent value="other" className="pt-4">
                      <Card>
-                        <CardContent className="p-4">
-                             <div className="text-muted-foreground p-8 text-center">Other planning UI goes here.</div>
+                        <CardContent className="p-4 space-y-4">
+                             <div className="space-y-2">
+                                <Label>Choose Plan</Label>
+                                <Select>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="New Plan" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="new-plan">New Plan</SelectItem>
+                                        <SelectItem value="other-plan-a">Other Plan A</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                             </div>
+                             <div className="space-y-2">
+                                <Label>Tactics summary</Label>
+                                <Textarea rows={4} />
+                             </div>
+                             <div className="flex items-center gap-2">
+                                <Button type="button" variant="outline" size="icon"><Camera className="w-4 h-4" /></Button>
+                                <Button type="button" variant="outline" size="icon"><Video className="w-4 h-4" /></Button>
+                                <Button type="button" variant="outline" size="icon"><Plus className="w-4 h-4" /></Button>
+                                <Button type="button" variant="outline" size="icon"><ZaiIcon className="w-4 h-4" /></Button>
+                            </div>
+                            <div className="flex items-center justify-between pt-4">
+                                <Label>Line up</Label>
+                                <Switch />
+                            </div>
+                            <div className="flex items-center justify-between pt-4">
+                                <Label>Set plays</Label>
+                                <Switch />
+                            </div>
                         </CardContent>
                     </Card>
                 </TabsContent>
