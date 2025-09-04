@@ -87,7 +87,28 @@ export function PlanTabMockup() {
                 other: { selectedReviewId: '', summary: '', attachedMedia: [] },
             }
         },
-        // ... other tabs data would go here
+        offenseTactics: {
+            lineup: {
+                formation: "4-3-3",
+                playerPositions: [
+                    { playerId: 'p1', position: 'LW' }, { playerId: 'p2', position: 'ST' }, { playerId: 'p3', position: 'RW' },
+                    { playerId: 'p4', position: 'LCM' }, { playerId: 'p5', position: 'RCM' },
+                    { playerId: 'p6', position: 'CDM' },
+                    { playerId: 'p7', position: 'LB' }, { playerId: 'p8', position: 'LCB' }, { playerId: 'p9', position: 'RCB' }, { playerId: 'p10', position: 'RB' }
+                ],
+            },
+        },
+        defenseTactics: {
+            lineup: {
+                formation: "5-3-2",
+                playerPositions: [
+                    { playerId: 'p2', position: 'ST' },
+                    { playerId: 'p1', position: 'LCB' }, { playerId: 'p4', position: 'CB' }, { playerId: 'p5', position: 'RCB' }, { playerId: 'p10', position: 'RWB' },
+                    { playerId: 'p7', position: 'LWB' }, { playerId: 'p8', position: 'LCM' }, { playerId: 'p9', position: 'CM' }, { playerId: 'p3', position: 'RCM' },
+                    { playerId: 'p6', position: 'GK' }, { playerId: 'p11', position: 'SUB' }
+                ],
+            },
+        },
     });
 
     const handleOpponentTacticChange = (
@@ -130,8 +151,8 @@ export function PlanTabMockup() {
         }, 1000);
     };
     
-    const renderPlayerOnPitch = (position: string) => {
-        const playerPos = planData.opponentAnalysis.lineup.playerPositions.find(p => p.position === position);
+    const renderPlayerOnPitch = (position: string, lineupProvider: typeof planData.opponentAnalysis.lineup) => {
+        const playerPos = lineupProvider.playerPositions.find(p => p.position === position);
         if (playerPos) {
             // @ts-ignore
             const playerDetails = opponentPlayers[playerPos.playerId];
@@ -247,25 +268,25 @@ export function PlanTabMockup() {
                                 
                                 <div className="relative h-[600px] bg-center bg-no-repeat bg-contain mt-4" style={{backgroundImage: "url('/football-pitch.svg')"}}>
                                     <div className="absolute top-[8%] left-[50%] -translate-x-1/2 grid grid-cols-3 gap-x-8 gap-y-2">
-                                        {renderPlayerOnPitch('LW')}
-                                        {renderPlayerOnPitch('ST')}
-                                        {renderPlayerOnPitch('RW')}
+                                        {renderPlayerOnPitch('LW', planData.opponentAnalysis.lineup)}
+                                        {renderPlayerOnPitch('ST', planData.opponentAnalysis.lineup)}
+                                        {renderPlayerOnPitch('RW', planData.opponentAnalysis.lineup)}
                                     </div>
                                     <div className="absolute top-[25%] left-[50%] -translate-x-1/2 grid grid-cols-2 gap-x-20 gap-y-4">
-                                        {renderPlayerOnPitch('LCM')}
-                                        {renderPlayerOnPitch('RCM')}
+                                        {renderPlayerOnPitch('LCM', planData.opponentAnalysis.lineup)}
+                                        {renderPlayerOnPitch('RCM', planData.opponentAnalysis.lineup)}
                                     </div>
                                     <div className="absolute top-[40%] left-[50%] -translate-x-1/2">
-                                        {renderPlayerOnPitch('CDM')}
+                                        {renderPlayerOnPitch('CDM', planData.opponentAnalysis.lineup)}
                                     </div>
                                     <div className="absolute top-[55%] left-[50%] -translate-x-1/2 grid grid-cols-4 gap-x-4 gap-y-4">
-                                        {renderPlayerOnPitch('LB')}
-                                        {renderPlayerOnPitch('LCB')}
-                                        {renderPlayerOnPitch('RCB')}
-                                        {renderPlayerOnPitch('RB')}
+                                        {renderPlayerOnPitch('LB', planData.opponentAnalysis.lineup)}
+                                        {renderPlayerOnPitch('LCB', planData.opponentAnalysis.lineup)}
+                                        {renderPlayerOnPitch('RCB', planData.opponentAnalysis.lineup)}
+                                        {renderPlayerOnPitch('RB', planData.opponentAnalysis.lineup)}
                                     </div>
                                     <div className="absolute top-[78%] left-[50%] -translate-x-1/2">
-                                        {renderPlayerOnPitch('GK')}
+                                        {renderPlayerOnPitch('GK', planData.opponentAnalysis.lineup)}
                                     </div>
                                 </div>
                             </div>
@@ -459,22 +480,22 @@ export function PlanTabMockup() {
 
                                     <div className="relative h-[600px] bg-center bg-no-repeat bg-contain" style={{backgroundImage: "url('/football-pitch.svg')"}}>
                                         <div className="absolute top-[8%] left-[50%] -translate-x-1/2 grid grid-cols-3 gap-x-8 gap-y-2">
-                                            <PlayerOnPitch player={opponentPlayers['p1']} />
-                                            <PlayerOnPitch player={opponentPlayers['p2']} />
-                                            <PlayerOnPitch player={opponentPlayers['p3']} />
+                                            {renderPlayerOnPitch('LW', planData.offenseTactics.lineup)}
+                                            {renderPlayerOnPitch('ST', planData.offenseTactics.lineup)}
+                                            {renderPlayerOnPitch('RW', planData.offenseTactics.lineup)}
                                         </div>
                                          <div className="absolute top-[25%] left-[50%] -translate-x-1/2 grid grid-cols-2 gap-x-20 gap-y-4">
-                                            <PlayerOnPitch player={opponentPlayers['p4']} />
-                                            <PlayerOnPitch player={opponentPlayers['p5']} />
+                                            {renderPlayerOnPitch('LCM', planData.offenseTactics.lineup)}
+                                            {renderPlayerOnPitch('RCM', planData.offenseTactics.lineup)}
                                         </div>
                                          <div className="absolute top-[40%] left-[50%] -translate-x-1/2">
-                                             <PlayerOnPitch player={opponentPlayers['p6']} />
+                                             {renderPlayerOnPitch('CDM', planData.offenseTactics.lineup)}
                                         </div>
                                          <div className="absolute top-[55%] left-[50%] -translate-x-1/2 grid grid-cols-4 gap-x-4 gap-y-4">
-                                            <PlayerOnPitch player={opponentPlayers['p7']} />
-                                            <PlayerOnPitch player={opponentPlayers['p8']} />
-                                            <PlayerOnPitch player={opponentPlayers['p9']} />
-                                            <PlayerOnPitch player={opponentPlayers['p10']} />
+                                            {renderPlayerOnPitch('LB', planData.offenseTactics.lineup)}
+                                            {renderPlayerOnPitch('LCB', planData.offenseTactics.lineup)}
+                                            {renderPlayerOnPitch('RCB', planData.offenseTactics.lineup)}
+                                            {renderPlayerOnPitch('RB', planData.offenseTactics.lineup)}
                                         </div>
                                     </div>
 
@@ -566,23 +587,23 @@ export function PlanTabMockup() {
 
                                     <div className="relative h-[600px] bg-center bg-no-repeat bg-contain" style={{backgroundImage: "url('/football-pitch.svg')"}}>
                                         <div className="absolute top-[28%] left-[50%] -translate-x-1/2">
-                                             <PlayerOnPitch player={opponentPlayers['p2']} />
+                                             {renderPlayerOnPitch('ST', planData.defenseTactics.lineup)}
                                         </div>
                                          <div className="absolute top-[52%] left-[50%] -translate-x-1/2 grid grid-cols-4 gap-x-4 gap-y-4">
-                                            <PlayerOnPitch player={opponentPlayers['p1']} />
-                                            <PlayerOnPitch player={opponentPlayers['p4']} />
-                                            <PlayerOnPitch player={opponentPlayers['p5']} />
-                                            <PlayerOnPitch player={opponentPlayers['p10']} />
+                                            {renderPlayerOnPitch('LCB', planData.defenseTactics.lineup)}
+                                            {renderPlayerOnPitch('CB', planData.defenseTactics.lineup)}
+                                            {renderPlayerOnPitch('RCB', planData.defenseTactics.lineup)}
+                                            {renderPlayerOnPitch('RWB', planData.defenseTactics.lineup)}
                                         </div>
                                          <div className="absolute top-[68%] left-[50%] -translate-x-1/2 grid grid-cols-4 gap-x-4 gap-y-4">
-                                            <PlayerOnPitch player={opponentPlayers['p7']} />
-                                            <PlayerOnPitch player={opponentPlayers['p8']} />
-                                            <PlayerOnPitch player={opponentPlayers['p9']} />
-                                            <PlayerOnPitch player={opponentPlayers['p3']} />
+                                            {renderPlayerOnPitch('LWB', planData.defenseTactics.lineup)}
+                                            {renderPlayerOnPitch('LCM', planData.defenseTactics.lineup)}
+                                            {renderPlayerOnPitch('CM', planData.defenseTactics.lineup)}
+                                            {renderPlayerOnPitch('RCM', planData.defenseTactics.lineup)}
                                         </div>
                                          <div className="absolute top-[84%] left-[50%] -translate-x-1/2 grid grid-cols-2 gap-x-20 gap-y-4">
-                                            <PlayerOnPitch player={opponentPlayers['p6']} />
-                                            <PlayerOnPitch player={opponentPlayers['p11']} />
+                                            {renderPlayerOnPitch('GK', planData.defenseTactics.lineup)}
+                                            {renderPlayerOnPitch('SUB', planData.defenseTactics.lineup)}
                                         </div>
                                     </div>
 
