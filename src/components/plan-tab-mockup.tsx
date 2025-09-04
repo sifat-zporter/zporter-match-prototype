@@ -309,9 +309,92 @@ export function PlanTabMockup() {
                 </TabsContent>
 
                 <TabsContent value="offense" className="pt-4 space-y-4">
-                     <Card>
-                        <CardContent className="p-4">
-                            <div className="text-muted-foreground p-8 text-center">Offense planning UI goes here.</div>
+                    <Card>
+                        <CardContent className="p-4 space-y-4">
+                             <Select>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Choose Plan" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="plan-a">Plan A - Maj FC - IFK Norrköping</SelectItem>
+                                </SelectContent>
+                            </Select>
+
+                            <Tabs defaultValue="general" className="w-full">
+                                <TabsList className="grid w-full grid-cols-4">
+                                    <TabsTrigger value="general">General</TabsTrigger>
+                                    <TabsTrigger value="build-up">Build up</TabsTrigger>
+                                    <TabsTrigger value="attack">Attack</TabsTrigger>
+                                    <TabsTrigger value="finishing">Finishing</TabsTrigger>
+                                </TabsList>
+                                <TabsContent value="general" className="pt-4 space-y-4">
+                                    <div>
+                                        <Label>Tactics summary</Label>
+                                        <Textarea placeholder="Offense tactics from another match" rows={3}/>
+                                    </div>
+
+                                    <div className="flex gap-2">
+                                        <div className="w-24 h-24 bg-card border border-input rounded-md flex items-center justify-center">
+                                            <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center text-primary-foreground">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                                            </div>
+                                        </div>
+                                        <div className="w-24 h-24 bg-card border border-input rounded-md flex items-center justify-center">
+                                            <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center text-primary-foreground">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="flex items-center gap-2">
+                                        <Button type="button" variant="outline" size="icon"><Camera className="w-4 h-4" /></Button>
+                                        <Button type="button" variant="outline" size="icon"><Video className="w-4 h-4" /></Button>
+                                        <Button type="button" variant="outline" size="icon"><Plus className="w-4 h-4" /></Button>
+                                        <Button type="button" variant="outline" size="icon"><ZaiIcon className="w-4 h-4" /></Button>
+                                    </div>
+
+                                    <div className="flex items-center justify-between pt-4">
+                                        <Label>Line up</Label>
+                                        <Switch defaultChecked/>
+                                    </div>
+
+                                    <div className="relative h-[600px] bg-center bg-no-repeat bg-contain" style={{backgroundImage: "url('/football-pitch.svg')"}}>
+                                        <div className="absolute top-[8%] left-[50%] -translate-x-1/2 grid grid-cols-3 gap-x-8 gap-y-2">
+                                            <PlayerOnPitch player={opponentLineup[0]} />
+                                            <PlayerOnPitch player={opponentLineup[1]} />
+                                            <PlayerOnPitch player={opponentLineup[2]} />
+                                        </div>
+                                         <div className="absolute top-[25%] left-[50%] -translate-x-1/2 grid grid-cols-2 gap-x-20 gap-y-4">
+                                            <PlayerOnPitch player={opponentLineup[3]} />
+                                            <PlayerOnPitch player={opponentLineup[4]} />
+                                        </div>
+                                         <div className="absolute top-[40%] left-[50%] -translate-x-1/2">
+                                             <PlayerOnPitch player={opponentLineup[5]} />
+                                        </div>
+                                         <div className="absolute top-[55%] left-[50%] -translate-x-1/2 grid grid-cols-4 gap-x-4 gap-y-4">
+                                            <PlayerOnPitch player={opponentLineup[6]} />
+                                            <PlayerOnPitch player={opponentLineup[7]} />
+                                            <PlayerOnPitch player={opponentLineup[8]} />
+                                            <PlayerOnPitch player={opponentLineup[9]} />
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center justify-between pt-4">
+                                        <Label>Set plays</Label>
+                                        <Switch />
+                                    </div>
+
+                                </TabsContent>
+                                <TabsContent value="build-up" className="pt-4">
+                                    <p className="text-center text-muted-foreground p-8">Build up tactics UI goes here.</p>
+                                </TabsContent>
+                                <TabsContent value="attack" className="pt-4">
+                                    <p className="text-center text-muted-foreground p-8">Attack tactics UI goes here.</p>
+                                </TabsContent>
+                                <TabsContent value="finishing" className="pt-4">
+                                    <p className="text-center text-muted-foreground p-8">Finishing tactics UI goes here.</p>
+                                </TabsContent>
+                            </Tabs>
                         </CardContent>
                     </Card>
                 </TabsContent>
@@ -341,3 +424,5 @@ export function PlanTabMockup() {
         </div>
     );
 }
+
+    
