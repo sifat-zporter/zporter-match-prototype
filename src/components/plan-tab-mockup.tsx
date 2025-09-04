@@ -97,6 +97,7 @@ export function PlanTabMockup() {
                     { playerId: 'p7', position: 'LB' }, { playerId: 'p8', position: 'LCB' }, { playerId: 'p9', position: 'RCB' }, { playerId: 'p10', position: 'RB' }
                 ],
             },
+            // other offense tactics would go here
         },
         defenseTactics: {
             lineup: {
@@ -108,7 +109,17 @@ export function PlanTabMockup() {
                     { playerId: 'p6', position: 'GK' }, { playerId: 'p11', position: 'SUB' }
                 ],
             },
+            // other defense tactics would go here
         },
+        otherTactics: {
+            summary: "",
+            isLineupVisible: false,
+            areSetPlaysVisible: false,
+            lineup: {
+                formation: "",
+                playerPositions: []
+            }
+        }
     });
 
     const handleOpponentTacticChange = (
