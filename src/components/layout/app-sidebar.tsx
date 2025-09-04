@@ -17,6 +17,7 @@ import {
   Settings,
   UserCircle,
   FilePenLine,
+  ClipboardList,
 } from "lucide-react";
 import { ZporterLogo } from "@/components/icons";
 import Link from 'next/link';
@@ -63,6 +64,14 @@ export function AppSidebar() {
             <SidebarMenuButton>
               <BarChart2 />
               Stats
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+           <SidebarMenuItem>
+            <SidebarMenuButton asChild isActive={pathname.startsWith('/plan')}>
+              <Link href="/plan">
+                <ClipboardList />
+                Plan Tab
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
