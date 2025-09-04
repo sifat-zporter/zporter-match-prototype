@@ -13,6 +13,7 @@ import { Card, CardContent } from "./ui/card";
 import { Label } from "./ui/label";
 import { ScrollArea, ScrollBar } from "./ui/scroll-area";
 import { ZaiIcon } from "./icons";
+import { cn } from "@/lib/utils";
 
 
 // Mock data, in a real app this would come from an API
@@ -33,17 +34,6 @@ const opponentPlayers = {
     'p9': { id: 'p9', name: 'Ramos', avatar: 'https://placehold.co/40x40.png', rating: 173, number: 4 },
     'p10': { id: 'p10', name: 'Alves', avatar: 'https://placehold.co/40x40.png', rating: 173, number: 2 },
     'p11': { id: 'p11', name: 'Casillas', avatar: 'https://placehold.co/40x40.png', rating: 173, number: 1 },
-};
-
-const initialOpponentLineup = {
-    formation: "4-3-3",
-    playerPositions: [
-      { playerId: "p1", position: "LW" }, { playerId: "p2", position: "ST" }, { playerId: "p3", position: "RW" },
-      { playerId: "p4", position: "LCM" }, { playerId: "p5", position: "RCM" },
-      { playerId: "p6", position: "CDM" },
-      { playerId: "p7", position: "LB" }, { playerId: "p8", position: "LCB" }, { playerId: "p9", position: "RCB" }, { playerId: "p10", position: "RB" },
-      { playerId: "p11", position: "GK" },
-    ]
 };
 
 const invitedPlayers = [
@@ -80,7 +70,16 @@ export function PlanTabMockup() {
         opponentAnalysis: {
             isLineupVisible: true,
             areSetPlaysVisible: false,
-            lineup: initialOpponentLineup,
+            lineup: {
+                formation: "4-3-3",
+                playerPositions: [
+                  { playerId: "p1", position: "LW" }, { playerId: "p2", position: "ST" }, { playerId: "p3", position: "RW" },
+                  { playerId: "p4", position: "LCM" }, { playerId: "p5", position: "RCM" },
+                  { playerId: "p6", position: "CDM" },
+                  { playerId: "p7", position: "LB" }, { playerId: "p8", position: "LCB" }, { playerId: "p9", position: "RCB" }, { playerId: "p10", position: "RB" },
+                  { playerId: "p11", position: "GK" },
+                ]
+            },
             tacticalBreakdown: {
                 general: { selectedReviewId: '', summary: '', attachedMedia: [] },
                 offense: { selectedReviewId: '', summary: '', attachedMedia: [] },
