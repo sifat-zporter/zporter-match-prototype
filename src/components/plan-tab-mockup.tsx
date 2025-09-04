@@ -21,19 +21,30 @@ const pastOpponentReviews = [
     { id: 'review-2', date: '2023/09/28 18:30', teams: 'AIK - IFK Norrköping', summary: 'They played a very defensive 5-3-2 formation, absorbing pressure and looking for set-piece opportunities.' },
 ];
 
-const opponentLineup = [
-    { id: 'p1', name: 'Sterling', avatar: 'https://placehold.co/40x40.png', rating: 173, number: 11, position: 'LW' },
-    { id: 'p2', name: 'Ronaldinho', avatar: 'https://placehold.co/40x40.png', rating: 173, number: 14, position: 'ST' },
-    { id: 'p3', name: 'Iniesta', avatar: 'https://placehold.co/40x40.png', rating: 173, number: 10, position: 'RW' },
-    { id: 'p4', name: 'Sterling', avatar: 'https://placehold.co/40x40.png', rating: 173, number: 8, position: 'LCM' },
-    { id: 'p5', name: 'Iniesta', avatar: 'https://placehold.co/40x40.png', rating: 173, number: 19, position: 'RCM' },
-    { id: 'p6', name: 'Xavi', avatar: 'https://placehold.co/40x40.png', rating: 173, number: 6, position: 'CDM' },
-    { id: 'p7', name: 'Alba', avatar: 'https://placehold.co/40x40.png', rating: 173, number: 3, position: 'LB' },
-    { id: 'p8', name: 'Pique', avatar: 'https://placehold.co/40x40.png', rating: 177, number: 5, position: 'LCB' },
-    { id: 'p9', name: 'Ramos', avatar: 'https://placehold.co/40x40.png', rating: 173, number: 4, position: 'RCB' },
-    { id: 'p10', name: 'Alves', avatar: 'https://placehold.co/40x40.png', rating: 173, number: 2, position: 'RB' },
-    { id: 'p11', name: 'Casillas', avatar: 'https://placehold.co/40x40.png', rating: 173, number: 1, position: 'GK' },
-];
+const opponentPlayers = {
+    'p1': { id: 'p1', name: 'Sterling', avatar: 'https://placehold.co/40x40.png', rating: 173, number: 11 },
+    'p2': { id: 'p2', name: 'Ronaldinho', avatar: 'https://placehold.co/40x40.png', rating: 173, number: 14 },
+    'p3': { id: 'p3', name: 'Iniesta', avatar: 'https://placehold.co/40x40.png', rating: 173, number: 10 },
+    'p4': { id: 'p4', name: 'Sterling', avatar: 'https://placehold.co/40x40.png', rating: 173, number: 8 },
+    'p5': { id: 'p5', name: 'Iniesta', avatar: 'https://placehold.co/40x40.png', rating: 173, number: 19 },
+    'p6': { id: 'p6', name: 'Xavi', avatar: 'https://placehold.co/40x40.png', rating: 173, number: 6 },
+    'p7': { id: 'p7', name: 'Alba', avatar: 'https://placehold.co/40x40.png', rating: 173, number: 3 },
+    'p8': { id: 'p8', name: 'Pique', avatar: 'https://placehold.co/40x40.png', rating: 177, number: 5 },
+    'p9': { id: 'p9', name: 'Ramos', avatar: 'https://placehold.co/40x40.png', rating: 173, number: 4 },
+    'p10': { id: 'p10', name: 'Alves', avatar: 'https://placehold.co/40x40.png', rating: 173, number: 2 },
+    'p11': { id: 'p11', name: 'Casillas', avatar: 'https://placehold.co/40x40.png', rating: 173, number: 1 },
+};
+
+const initialOpponentLineup = {
+    formation: "4-3-3",
+    playerPositions: [
+      { playerId: "p1", position: "LW" }, { playerId: "p2", position: "ST" }, { playerId: "p3", position: "RW" },
+      { playerId: "p4", position: "LCM" }, { playerId: "p5", position: "RCM" },
+      { playerId: "p6", position: "CDM" },
+      { playerId: "p7", position: "LB" }, { playerId: "p8", position: "LCB" }, { playerId: "p9", position: "RCB" }, { playerId: "p10", position: "RB" },
+      { playerId: "p11", position: "GK" },
+    ]
+};
 
 const invitedPlayers = [
     { id: 'p1', name: 'Ronaldinho', avatar: 'https://placehold.co/64x64.png', rating: 173, number: 15 },
@@ -63,15 +74,73 @@ const EmptySlot = () => (
 // Main Component
 export function PlanTabMockup() {
     const [isLoading, setIsLoading] = useState(false);
-    const [opponentTacticsSummary, setOpponentTacticsSummary] = useState('');
+    
+    // State to hold the entire plan data, mirroring the final JSON structure
+    const [planData, setPlanData] = useState({
+        opponentAnalysis: {
+            isLineupVisible: true,
+            areSetPlaysVisible: false,
+            lineup: initialOpponentLineup,
+            tacticalBreakdown: {
+                general: { selectedReviewId: '', summary: '', attachedMedia: [] },
+                offense: { selectedReviewId: '', summary: '', attachedMedia: [] },
+                defense: { selectedReviewId: '', summary: '', attachedMedia: [] },
+                other: { selectedReviewId: '', summary: '', attachedMedia: [] },
+            }
+        },
+        // ... other tabs data would go here
+    });
+
+    const handleOpponentTacticChange = (
+        subTab: 'general' | 'offense' | 'defense' | 'other', 
+        field: 'summary' | 'selectedReviewId', 
+        value: string
+    ) => {
+        setPlanData(prev => ({
+            ...prev,
+            opponentAnalysis: {
+                ...prev.opponentAnalysis,
+                tacticalBreakdown: {
+                    ...prev.opponentAnalysis.tacticalBreakdown,
+                    [subTab]: {
+                        ...prev.opponentAnalysis.tacticalBreakdown[subTab],
+                        [field]: value
+                    }
+                }
+            }
+        }));
+    };
+    
+    const handleOpponentSwitchChange = (field: 'isLineupVisible' | 'areSetPlaysVisible', value: boolean) => {
+        setPlanData(prev => ({
+            ...prev,
+            opponentAnalysis: {
+                ...prev.opponentAnalysis,
+                [field]: value
+            }
+        }));
+    };
 
     const handleSave = async () => {
         setIsLoading(true);
+        console.log("Saving Plan Data:", JSON.stringify(planData, null, 2));
         // Mock save action
         setTimeout(() => {
             setIsLoading(false);
-            console.log("Data saved (mock)");
+            
         }, 1000);
+    };
+    
+    const renderPlayerOnPitch = (position: string) => {
+        const playerPos = planData.opponentAnalysis.lineup.playerPositions.find(p => p.position === position);
+        if (playerPos) {
+            // @ts-ignore
+            const playerDetails = opponentPlayers[playerPos.playerId];
+            if (playerDetails) {
+                return <PlayerOnPitch player={playerDetails} />;
+            }
+        }
+        return <EmptySlot />;
     };
 
     return (
@@ -88,30 +157,6 @@ export function PlanTabMockup() {
                 <TabsContent value="opponent" className="pt-4 space-y-4">
                     <Card>
                         <CardContent className="p-4 space-y-4">
-                            <div>
-                                <Label>Choose Opponent review</Label>
-                                <Select onValueChange={(value) => {
-                                    const selectedReview = pastOpponentReviews.find(r => r.id === value);
-                                    if (selectedReview) {
-                                        setOpponentTacticsSummary(selectedReview.summary);
-                                    }
-                                }}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select a past match for analysis" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {pastOpponentReviews.map(r => (
-                                            <SelectItem key={r.id} value={r.id}>
-                                                <div className="flex flex-col">
-                                                    <span className="text-xs text-muted-foreground">{r.date}</span>
-                                                    <span>{r.teams}</span>
-                                                </div>
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            
                             <Tabs defaultValue="general" className="w-full">
                                 <TabsList className="grid w-full grid-cols-4">
                                     <TabsTrigger value="general">General</TabsTrigger>
@@ -119,13 +164,33 @@ export function PlanTabMockup() {
                                     <TabsTrigger value="defense">Defense</TabsTrigger>
                                     <TabsTrigger value="other">Other</TabsTrigger>
                                 </TabsList>
-                                <TabsContent value="general" className="pt-4">
+                                <TabsContent value="general" className="pt-4 space-y-2">
+                                    <Label>Choose Opponent review</Label>
+                                    <Select onValueChange={(value) => {
+                                        const selectedReview = pastOpponentReviews.find(r => r.id === value);
+                                        handleOpponentTacticChange('general', 'summary', selectedReview?.summary || '');
+                                        handleOpponentTacticChange('general', 'selectedReviewId', value);
+                                    }}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select a past match for analysis" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {pastOpponentReviews.map(r => (
+                                                <SelectItem key={r.id} value={r.id}>
+                                                    <div className="flex flex-col">
+                                                        <span className="text-xs text-muted-foreground">{r.date}</span>
+                                                        <span>{r.teams}</span>
+                                                    </div>
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                     <Label>Tactics summary</Label>
                                     <Textarea 
                                         placeholder="General review from another match which a coach could use to create his own opponent analysis from." 
                                         rows={4} 
-                                        value={opponentTacticsSummary}
-                                        onChange={(e) => setOpponentTacticsSummary(e.target.value)}
+                                        value={planData.opponentAnalysis.tacticalBreakdown.general.summary}
+                                        onChange={(e) => handleOpponentTacticChange('general', 'summary', e.target.value)}
                                     />
                                      <div className="flex items-center gap-2 mt-2">
                                         <Button type="button" variant="outline" size="icon"><Camera className="w-4 h-4" /></Button>
@@ -133,13 +198,44 @@ export function PlanTabMockup() {
                                         <Button type="button" variant="outline" size="icon"><Plus className="w-4 h-4" /></Button>
                                     </div>
                                 </TabsContent>
+                                 <TabsContent value="offense" className="pt-4 space-y-2">
+                                    <Label>Tactics summary</Label>
+                                    <Textarea 
+                                        placeholder="Describe opponent's offensive tactics." 
+                                        rows={4} 
+                                        value={planData.opponentAnalysis.tacticalBreakdown.offense.summary}
+                                        onChange={(e) => handleOpponentTacticChange('offense', 'summary', e.target.value)}
+                                    />
+                                </TabsContent>
+                                 <TabsContent value="defense" className="pt-4 space-y-2">
+                                    <Label>Tactics summary</Label>
+                                    <Textarea 
+                                        placeholder="Describe opponent's defensive tactics." 
+                                        rows={4} 
+                                        value={planData.opponentAnalysis.tacticalBreakdown.defense.summary}
+                                        onChange={(e) => handleOpponentTacticChange('defense', 'summary', e.target.value)}
+                                    />
+                                </TabsContent>
+                                 <TabsContent value="other" className="pt-4 space-y-2">
+                                    <Label>Tactics summary</Label>
+                                    <Textarea 
+                                        placeholder="Other notes on opponent's tactics." 
+                                        rows={4} 
+                                        value={planData.opponentAnalysis.tacticalBreakdown.other.summary}
+                                        onChange={(e) => handleOpponentTacticChange('other', 'summary', e.target.value)}
+                                    />
+                                </TabsContent>
                             </Tabs>
 
                             <div className="flex items-center justify-between pt-4">
                                <Label>Line up</Label>
-                               <Switch />
+                               <Switch 
+                                   checked={planData.opponentAnalysis.isLineupVisible} 
+                                   onCheckedChange={(value) => handleOpponentSwitchChange('isLineupVisible', value)} 
+                                />
                             </div>
-                            <div>
+                            
+                            <div className={cn(!planData.opponentAnalysis.isLineupVisible && "hidden")}>
                                 <Label>Choose Opponent line up</Label>
                                 <Select>
                                     <SelectTrigger>
@@ -149,35 +245,39 @@ export function PlanTabMockup() {
                                       {/* Options would be populated from API */}
                                     </SelectContent>
                                 </Select>
-                            </div>
-                            
-                            <div className="relative h-[600px] bg-center bg-no-repeat bg-contain" style={{backgroundImage: "url('/football-pitch.svg')"}}>
-                                <div className="absolute top-[8%] left-[50%] -translate-x-1/2 grid grid-cols-3 gap-x-8 gap-y-2">
-                                    <PlayerOnPitch player={opponentLineup[0]} />
-                                    <PlayerOnPitch player={opponentLineup[1]} />
-                                    <PlayerOnPitch player={opponentLineup[2]} />
-                                </div>
-                                 <div className="absolute top-[25%] left-[50%] -translate-x-1/2 grid grid-cols-2 gap-x-20 gap-y-4">
-                                    <PlayerOnPitch player={opponentLineup[3]} />
-                                    <PlayerOnPitch player={opponentLineup[4]} />
-                                </div>
-                                <div className="absolute top-[40%] left-[50%] -translate-x-1/2">
-                                     <PlayerOnPitch player={opponentLineup[5]} />
-                                </div>
-                                 <div className="absolute top-[55%] left-[50%] -translate-x-1/2 grid grid-cols-4 gap-x-4 gap-y-4">
-                                    <PlayerOnPitch player={opponentLineup[6]} />
-                                    <PlayerOnPitch player={opponentLineup[7]} />
-                                    <PlayerOnPitch player={opponentLineup[8]} />
-                                    <PlayerOnPitch player={opponentLineup[9]} />
-                                </div>
-                                <div className="absolute top-[78%] left-[50%] -translate-x-1/2">
-                                     <PlayerOnPitch player={opponentLineup[10]} />
+                                
+                                <div className="relative h-[600px] bg-center bg-no-repeat bg-contain mt-4" style={{backgroundImage: "url('/football-pitch.svg')"}}>
+                                    <div className="absolute top-[8%] left-[50%] -translate-x-1/2 grid grid-cols-3 gap-x-8 gap-y-2">
+                                        {renderPlayerOnPitch('LW')}
+                                        {renderPlayerOnPitch('ST')}
+                                        {renderPlayerOnPitch('RW')}
+                                    </div>
+                                    <div className="absolute top-[25%] left-[50%] -translate-x-1/2 grid grid-cols-2 gap-x-20 gap-y-4">
+                                        {renderPlayerOnPitch('LCM')}
+                                        {renderPlayerOnPitch('RCM')}
+                                    </div>
+                                    <div className="absolute top-[40%] left-[50%] -translate-x-1/2">
+                                        {renderPlayerOnPitch('CDM')}
+                                    </div>
+                                    <div className="absolute top-[55%] left-[50%] -translate-x-1/2 grid grid-cols-4 gap-x-4 gap-y-4">
+                                        {renderPlayerOnPitch('LB')}
+                                        {renderPlayerOnPitch('LCB')}
+                                        {renderPlayerOnPitch('RCB')}
+                                        {renderPlayerOnPitch('RB')}
+                                    </div>
+                                    <div className="absolute top-[78%] left-[50%] -translate-x-1/2">
+                                        {renderPlayerOnPitch('GK')}
+                                    </div>
                                 </div>
                             </div>
 
+
                              <div className="flex items-center justify-between pt-4">
                                <Label>Set plays</Label>
-                               <Switch />
+                               <Switch 
+                                   checked={planData.opponentAnalysis.areSetPlaysVisible} 
+                                   onCheckedChange={(value) => handleOpponentSwitchChange('areSetPlaysVisible', value)}
+                                />
                             </div>
                         </CardContent>
                     </Card>
@@ -360,22 +460,22 @@ export function PlanTabMockup() {
 
                                     <div className="relative h-[600px] bg-center bg-no-repeat bg-contain" style={{backgroundImage: "url('/football-pitch.svg')"}}>
                                         <div className="absolute top-[8%] left-[50%] -translate-x-1/2 grid grid-cols-3 gap-x-8 gap-y-2">
-                                            <PlayerOnPitch player={opponentLineup[0]} />
-                                            <PlayerOnPitch player={opponentLineup[1]} />
-                                            <PlayerOnPitch player={opponentLineup[2]} />
+                                            <PlayerOnPitch player={opponentPlayers['p1']} />
+                                            <PlayerOnPitch player={opponentPlayers['p2']} />
+                                            <PlayerOnPitch player={opponentPlayers['p3']} />
                                         </div>
                                          <div className="absolute top-[25%] left-[50%] -translate-x-1/2 grid grid-cols-2 gap-x-20 gap-y-4">
-                                            <PlayerOnPitch player={opponentLineup[3]} />
-                                            <PlayerOnPitch player={opponentLineup[4]} />
+                                            <PlayerOnPitch player={opponentPlayers['p4']} />
+                                            <PlayerOnPitch player={opponentPlayers['p5']} />
                                         </div>
                                          <div className="absolute top-[40%] left-[50%] -translate-x-1/2">
-                                             <PlayerOnPitch player={opponentLineup[5]} />
+                                             <PlayerOnPitch player={opponentPlayers['p6']} />
                                         </div>
                                          <div className="absolute top-[55%] left-[50%] -translate-x-1/2 grid grid-cols-4 gap-x-4 gap-y-4">
-                                            <PlayerOnPitch player={opponentLineup[6]} />
-                                            <PlayerOnPitch player={opponentLineup[7]} />
-                                            <PlayerOnPitch player={opponentLineup[8]} />
-                                            <PlayerOnPitch player={opponentLineup[9]} />
+                                            <PlayerOnPitch player={opponentPlayers['p7']} />
+                                            <PlayerOnPitch player={opponentPlayers['p8']} />
+                                            <PlayerOnPitch player={opponentPlayers['p9']} />
+                                            <PlayerOnPitch player={opponentPlayers['p10']} />
                                         </div>
                                     </div>
 
@@ -467,23 +567,23 @@ export function PlanTabMockup() {
 
                                     <div className="relative h-[600px] bg-center bg-no-repeat bg-contain" style={{backgroundImage: "url('/football-pitch.svg')"}}>
                                         <div className="absolute top-[28%] left-[50%] -translate-x-1/2">
-                                             <PlayerOnPitch player={opponentLineup[1]} />
+                                             <PlayerOnPitch player={opponentPlayers['p2']} />
                                         </div>
                                          <div className="absolute top-[52%] left-[50%] -translate-x-1/2 grid grid-cols-4 gap-x-4 gap-y-4">
-                                            <PlayerOnPitch player={opponentLineup[0]} />
-                                            <PlayerOnPitch player={opponentLineup[3]} />
-                                            <PlayerOnPitch player={opponentLineup[4]} />
-                                            <PlayerOnPitch player={opponentLineup[9]} />
+                                            <PlayerOnPitch player={opponentPlayers['p1']} />
+                                            <PlayerOnPitch player={opponentPlayers['p4']} />
+                                            <PlayerOnPitch player={opponentPlayers['p5']} />
+                                            <PlayerOnPitch player={opponentPlayers['p10']} />
                                         </div>
                                          <div className="absolute top-[68%] left-[50%] -translate-x-1/2 grid grid-cols-4 gap-x-4 gap-y-4">
-                                            <PlayerOnPitch player={opponentLineup[6]} />
-                                            <PlayerOnPitch player={opponentLineup[7]} />
-                                            <PlayerOnPitch player={opponentLineup[8]} />
-                                            <PlayerOnPitch player={opponentLineup[2]} />
+                                            <PlayerOnPitch player={opponentPlayers['p7']} />
+                                            <PlayerOnPitch player={opponentPlayers['p8']} />
+                                            <PlayerOnPitch player={opponentPlayers['p9']} />
+                                            <PlayerOnPitch player={opponentPlayers['p3']} />
                                         </div>
                                          <div className="absolute top-[84%] left-[50%] -translate-x-1/2 grid grid-cols-2 gap-x-20 gap-y-4">
-                                            <PlayerOnPitch player={opponentLineup[5]} />
-                                            <PlayerOnPitch player={opponentLineup[10]} />
+                                            <PlayerOnPitch player={opponentPlayers['p6']} />
+                                            <PlayerOnPitch player={opponentPlayers['p11']} />
                                         </div>
                                     </div>
 
@@ -570,5 +670,7 @@ export function PlanTabMockup() {
         </div>
     );
 }
+
+    
 
     
