@@ -68,23 +68,48 @@ export function PlanTabMockup() {
     // State to hold the entire plan data, mirroring the final JSON structure
     const [planData, setPlanData] = useState({
         opponentAnalysis: {
-            isLineupVisible: true,
-            areSetPlaysVisible: false,
-            lineup: {
-                formation: "4-3-3",
-                playerPositions: [
-                  { playerId: "p1", position: "LW" }, { playerId: "p2", position: "ST" }, { playerId: "p3", position: "RW" },
-                  { playerId: "p4", position: "LCM" }, { playerId: "p5", position: "RCM" },
-                  { playerId: "p6", position: "CDM" },
-                  { playerId: "p7", position: "LB" }, { playerId: "p8", position: "LCB" }, { playerId: "p9", position: "RCB" }, { playerId: "p10", position: "RB" },
-                  { playerId: "p11", position: "GK" },
-                ]
-            },
             tacticalBreakdown: {
-                general: { selectedReviewId: '', summary: '', attachedMedia: [] },
-                offense: { selectedReviewId: '', summary: '', attachedMedia: [] },
-                defense: { selectedReviewId: '', summary: '', attachedMedia: [] },
-                other: { selectedReviewId: '', summary: '', attachedMedia: [] },
+                general: { 
+                    selectedReviewId: '', 
+                    summary: '', 
+                    attachedMedia: [],
+                    isLineupVisible: true,
+                    areSetPlaysVisible: false,
+                    lineup: {
+                        formation: "4-3-3",
+                        playerPositions: [
+                          { playerId: "p1", position: "LW" }, { playerId: "p2", position: "ST" }, { playerId: "p3", position: "RW" },
+                          { playerId: "p4", position: "LCM" }, { playerId: "p5", position: "RCM" },
+                          { playerId: "p6", position: "CDM" },
+                          { playerId: "p7", position: "LB" }, { playerId: "p8", position: "LCB" }, { playerId: "p9", position: "RCB" }, { playerId: "p10", position: "RB" },
+                          { playerId: "p11", position: "GK" },
+                        ]
+                    },
+                },
+                offense: { 
+                    selectedReviewId: '', 
+                    summary: '', 
+                    attachedMedia: [],
+                    isLineupVisible: true,
+                    areSetPlaysVisible: false,
+                    lineup: { formation: "4-3-3", playerPositions: [] },
+                },
+                defense: { 
+                    selectedReviewId: '', 
+                    summary: '', 
+                    attachedMedia: [],
+                    isLineupVisible: true,
+                    areSetPlaysVisible: false,
+                    lineup: { formation: "4-3-3", playerPositions: [] },
+                },
+                other: { 
+                    selectedReviewId: '', 
+                    summary: '', 
+                    attachedMedia: [],
+                    isLineupVisible: true,
+                    areSetPlaysVisible: false,
+                    lineup: { formation: "4-3-3", playerPositions: [] },
+                },
             }
         },
         offenseTactics: {
@@ -124,34 +149,16 @@ export function PlanTabMockup() {
 
     const handleOpponentTacticChange = (
         subTab: 'general' | 'offense' | 'defense' | 'other', 
-        field: 'summary' | 'selectedReviewId', 
-        value: string
+        field: 'summary' | 'selectedReviewId' | 'isLineupVisible' | 'areSetPlaysVisible', 
+        value: string | boolean
     ) => {
-        setPlanData(prev => ({
-            ...prev,
-            opponentAnalysis: {
-                ...prev.opponentAnalysis,
-                tacticalBreakdown: {
-                    ...prev.opponentAnalysis.tacticalBreakdown,
-                    [subTab]: {
-                        ...prev.opponentAnalysis.tacticalBreakdown[subTab],
-                        [field]: value
-                    }
-                }
-            }
-        }));
+        setPlanData(prev => {
+            const newState = JSON.parse(JSON.stringify(prev)); // Deep copy
+            newState.opponentAnalysis.tacticalBreakdown[subTab][field] = value;
+            return newState;
+        });
     };
     
-    const handleOpponentSwitchChange = (field: 'isLineupVisible' | 'areSetPlaysVisible', value: boolean) => {
-        setPlanData(prev => ({
-            ...prev,
-            opponentAnalysis: {
-                ...prev.opponentAnalysis,
-                [field]: value
-            }
-        }));
-    };
-
     const handleSave = async () => {
         setIsLoading(true);
         console.log("Saving Plan Data:", JSON.stringify(planData, null, 2));
@@ -162,7 +169,7 @@ export function PlanTabMockup() {
         }, 1000);
     };
     
-    const renderPlayerOnPitch = (position: string, lineupProvider: typeof planData.opponentAnalysis.lineup) => {
+    const renderPlayerOnPitch = (position: string, lineupProvider: typeof planData.opponentAnalysis.tacticalBreakdown.general.lineup) => {
         const playerPos = lineupProvider.playerPositions.find(p => p.position === position);
         if (playerPos) {
             // @ts-ignore
@@ -173,6 +180,104 @@ export function PlanTabMockup() {
         }
         return <EmptySlot />;
     };
+    
+    const OpponentTacticContent = ({ subTab }: { subTab: 'general' | 'offense' | 'defense' | 'other' }) => {
+        const currentTactic = planData.opponentAnalysis.tacticalBreakdown[subTab];
+        
+        return (
+             <div className="pt-4 space-y-4">
+                <div className="space-y-2">
+                    <Label>Choose Opponent review</Label>
+                    <Select onValueChange={(value) => {
+                        const selectedReview = pastOpponentReviews.find(r => r.id === value);
+                        handleOpponentTacticChange(subTab, 'summary', selectedReview?.summary || '');
+                        handleOpponentTacticChange(subTab, 'selectedReviewId', value);
+                    }}
+                    value={currentTactic.selectedReviewId}
+                    >
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select a past match for analysis" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {pastOpponentReviews.map(r => (
+                                <SelectItem key={r.id} value={r.id}>
+                                    <div className="flex flex-col">
+                                        <span className="text-xs text-muted-foreground">{r.date}</span>
+                                        <span>{r.teams}</span>
+                                    </div>
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                    <Label>Tactics summary</Label>
+                    <Textarea 
+                        placeholder="General review from another match which a coach could use to create his own opponent analysis from." 
+                        rows={4} 
+                        value={currentTactic.summary}
+                        onChange={(e) => handleOpponentTacticChange(subTab, 'summary', e.target.value)}
+                    />
+                        <div className="flex items-center gap-2 mt-2">
+                        <Button type="button" variant="outline" size="icon"><Camera className="w-4 h-4" /></Button>
+                        <Button type="button" variant="outline" size="icon"><Video className="w-4 h-4" /></Button>
+                        <Button type="button" variant="outline" size="icon"><Plus className="w-4 h-4" /></Button>
+                    </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-4">
+                    <Label>Line up</Label>
+                    <Switch 
+                        checked={currentTactic.isLineupVisible} 
+                        onCheckedChange={(value) => handleOpponentTacticChange(subTab, 'isLineupVisible', value)} 
+                    />
+                </div>
+                
+                <div className={cn(!currentTactic.isLineupVisible && "hidden")}>
+                    <Label>Choose Opponent line up</Label>
+                    <Select>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select opponent lineup" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {/* Options would be populated from API */}
+                        </SelectContent>
+                    </Select>
+                    
+                    <div className="relative h-[600px] bg-center bg-no-repeat bg-contain mt-4" style={{backgroundImage: "url('/football-pitch.svg')"}}>
+                        <div className="absolute top-[8%] left-[50%] -translate-x-1/2 grid grid-cols-3 gap-x-8 gap-y-2">
+                            {renderPlayerOnPitch('LW', currentTactic.lineup)}
+                            {renderPlayerOnPitch('ST', currentTactic.lineup)}
+                            {renderPlayerOnPitch('RW', currentTactic.lineup)}
+                        </div>
+                        <div className="absolute top-[25%] left-[50%] -translate-x-1/2 grid grid-cols-2 gap-x-20 gap-y-4">
+                            {renderPlayerOnPitch('LCM', currentTactic.lineup)}
+                            {renderPlayerOnPitch('RCM', currentTactic.lineup)}
+                        </div>
+                        <div className="absolute top-[40%] left-[50%] -translate-x-1/2">
+                            {renderPlayerOnPitch('CDM', currentTactic.lineup)}
+                        </div>
+                        <div className="absolute top-[55%] left-[50%] -translate-x-1/2 grid grid-cols-4 gap-x-4 gap-y-4">
+                            {renderPlayerOnPitch('LB', currentTactic.lineup)}
+                            {renderPlayerOnPitch('LCB', currentTactic.lineup)}
+                            {renderPlayerOnPitch('RCB', currentTactic.lineup)}
+                            {renderPlayerOnPitch('RB', currentTactic.lineup)}
+                        </div>
+                        <div className="absolute top-[78%] left-[50%] -translate-x-1/2">
+                            {renderPlayerOnPitch('GK', currentTactic.lineup)}
+                        </div>
+                    </div>
+                </div>
+
+
+                    <div className="flex items-center justify-between pt-4">
+                    <Label>Set plays</Label>
+                    <Switch 
+                        checked={currentTactic.areSetPlaysVisible} 
+                        onCheckedChange={(value) => handleOpponentTacticChange(subTab, 'areSetPlaysVisible', value)}
+                    />
+                </div>
+            </div>
+        )
+    }
 
     return (
         <div className="space-y-4">
@@ -195,121 +300,11 @@ export function PlanTabMockup() {
                                     <TabsTrigger value="defense">Defense</TabsTrigger>
                                     <TabsTrigger value="other">Other</TabsTrigger>
                                 </TabsList>
-                                <TabsContent value="general" className="pt-4 space-y-2">
-                                    <Label>Choose Opponent review</Label>
-                                    <Select onValueChange={(value) => {
-                                        const selectedReview = pastOpponentReviews.find(r => r.id === value);
-                                        handleOpponentTacticChange('general', 'summary', selectedReview?.summary || '');
-                                        handleOpponentTacticChange('general', 'selectedReviewId', value);
-                                    }}>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select a past match for analysis" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {pastOpponentReviews.map(r => (
-                                                <SelectItem key={r.id} value={r.id}>
-                                                    <div className="flex flex-col">
-                                                        <span className="text-xs text-muted-foreground">{r.date}</span>
-                                                        <span>{r.teams}</span>
-                                                    </div>
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                    <Label>Tactics summary</Label>
-                                    <Textarea 
-                                        placeholder="General review from another match which a coach could use to create his own opponent analysis from." 
-                                        rows={4} 
-                                        value={planData.opponentAnalysis.tacticalBreakdown.general.summary}
-                                        onChange={(e) => handleOpponentTacticChange('general', 'summary', e.target.value)}
-                                    />
-                                     <div className="flex items-center gap-2 mt-2">
-                                        <Button type="button" variant="outline" size="icon"><Camera className="w-4 h-4" /></Button>
-                                        <Button type="button" variant="outline" size="icon"><Video className="w-4 h-4" /></Button>
-                                        <Button type="button" variant="outline" size="icon"><Plus className="w-4 h-4" /></Button>
-                                    </div>
-                                </TabsContent>
-                                 <TabsContent value="offense" className="pt-4 space-y-2">
-                                    <Label>Tactics summary</Label>
-                                    <Textarea 
-                                        placeholder="Describe opponent's offensive tactics." 
-                                        rows={4} 
-                                        value={planData.opponentAnalysis.tacticalBreakdown.offense.summary}
-                                        onChange={(e) => handleOpponentTacticChange('offense', 'summary', e.target.value)}
-                                    />
-                                </TabsContent>
-                                 <TabsContent value="defense" className="pt-4 space-y-2">
-                                    <Label>Tactics summary</Label>
-                                    <Textarea 
-                                        placeholder="Describe opponent's defensive tactics." 
-                                        rows={4} 
-                                        value={planData.opponentAnalysis.tacticalBreakdown.defense.summary}
-                                        onChange={(e) => handleOpponentTacticChange('defense', 'summary', e.target.value)}
-                                    />
-                                </TabsContent>
-                                 <TabsContent value="other" className="pt-4 space-y-2">
-                                    <Label>Tactics summary</Label>
-                                    <Textarea 
-                                        placeholder="Other notes on opponent's tactics." 
-                                        rows={4} 
-                                        value={planData.opponentAnalysis.tacticalBreakdown.other.summary}
-                                        onChange={(e) => handleOpponentTacticChange('other', 'summary', e.target.value)}
-                                    />
-                                </TabsContent>
+                                <TabsContent value="general"><OpponentTacticContent subTab="general" /></TabsContent>
+                                <TabsContent value="offense"><OpponentTacticContent subTab="offense" /></TabsContent>
+                                <TabsContent value="defense"><OpponentTacticContent subTab="defense" /></TabsContent>
+                                <TabsContent value="other"><OpponentTacticContent subTab="other" /></TabsContent>
                             </Tabs>
-
-                            <div className="flex items-center justify-between pt-4">
-                               <Label>Line up</Label>
-                               <Switch 
-                                   checked={planData.opponentAnalysis.isLineupVisible} 
-                                   onCheckedChange={(value) => handleOpponentSwitchChange('isLineupVisible', value)} 
-                                />
-                            </div>
-                            
-                            <div className={cn(!planData.opponentAnalysis.isLineupVisible && "hidden")}>
-                                <Label>Choose Opponent line up</Label>
-                                <Select>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select opponent lineup" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      {/* Options would be populated from API */}
-                                    </SelectContent>
-                                </Select>
-                                
-                                <div className="relative h-[600px] bg-center bg-no-repeat bg-contain mt-4" style={{backgroundImage: "url('/football-pitch.svg')"}}>
-                                    <div className="absolute top-[8%] left-[50%] -translate-x-1/2 grid grid-cols-3 gap-x-8 gap-y-2">
-                                        {renderPlayerOnPitch('LW', planData.opponentAnalysis.lineup)}
-                                        {renderPlayerOnPitch('ST', planData.opponentAnalysis.lineup)}
-                                        {renderPlayerOnPitch('RW', planData.opponentAnalysis.lineup)}
-                                    </div>
-                                    <div className="absolute top-[25%] left-[50%] -translate-x-1/2 grid grid-cols-2 gap-x-20 gap-y-4">
-                                        {renderPlayerOnPitch('LCM', planData.opponentAnalysis.lineup)}
-                                        {renderPlayerOnPitch('RCM', planData.opponentAnalysis.lineup)}
-                                    </div>
-                                    <div className="absolute top-[40%] left-[50%] -translate-x-1/2">
-                                        {renderPlayerOnPitch('CDM', planData.opponentAnalysis.lineup)}
-                                    </div>
-                                    <div className="absolute top-[55%] left-[50%] -translate-x-1/2 grid grid-cols-4 gap-x-4 gap-y-4">
-                                        {renderPlayerOnPitch('LB', planData.opponentAnalysis.lineup)}
-                                        {renderPlayerOnPitch('LCB', planData.opponentAnalysis.lineup)}
-                                        {renderPlayerOnPitch('RCB', planData.opponentAnalysis.lineup)}
-                                        {renderPlayerOnPitch('RB', planData.opponentAnalysis.lineup)}
-                                    </div>
-                                    <div className="absolute top-[78%] left-[50%] -translate-x-1/2">
-                                        {renderPlayerOnPitch('GK', planData.opponentAnalysis.lineup)}
-                                    </div>
-                                </div>
-                            </div>
-
-
-                             <div className="flex items-center justify-between pt-4">
-                               <Label>Set plays</Label>
-                               <Switch 
-                                   checked={planData.opponentAnalysis.areSetPlaysVisible} 
-                                   onCheckedChange={(value) => handleOpponentSwitchChange('areSetPlaysVisible', value)}
-                                />
-                            </div>
                         </CardContent>
                     </Card>
                 </TabsContent>
