@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/sidebar";
 import {
   Home,
-  PlusCircle,
   BarChart2,
   Settings,
   UserCircle,
@@ -43,14 +42,6 @@ export function AppSidebar() {
               <Link href="/">
                 <Home />
                 Matches
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={pathname.startsWith('/matches/create')}>
-              <Link href="/matches/create">
-                <PlusCircle />
-                Create Match
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
