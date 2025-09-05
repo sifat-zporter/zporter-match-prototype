@@ -197,3 +197,34 @@ export type LogMatchEventResponse = {
     shots?: { home: number; away: number; };
   };
 };
+
+// --- Match Category Models ---
+
+/**
+ * @model MatchCategory
+ * @description Represents a match category object.
+ */
+export type MatchCategory = {
+  id: string;
+  name: string;
+  description: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+/**
+ * @model CreateMatchCategoryDto
+ * @description DTO for creating a new match category.
+ */
+export type CreateMatchCategoryDto = {
+  name: string;
+  description?: string;
+  isActive?: boolean;
+};
+
+/**
+ * @model UpdateMatchCategoryDto
+ * @description DTO for updating an existing match category.
+ */
+export type UpdateMatchCategoryDto = Partial<CreateMatchCategoryDto>;

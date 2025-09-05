@@ -19,6 +19,7 @@ import {
   ClipboardList,
   KeyRound,
   FilePlus2,
+  LayoutGrid,
 } from "lucide-react";
 import { ZporterLogo } from "@/components/icons";
 import Link from 'next/link';
@@ -72,6 +73,14 @@ export function AppSidebar() {
               <Link href="/plan">
                 <ClipboardList />
                 Plan Tab
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild isActive={pathname.startsWith('/match-category')}>
+              <Link href="/match-category">
+                <LayoutGrid />
+                Match Category
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
