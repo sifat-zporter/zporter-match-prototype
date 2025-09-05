@@ -5,9 +5,13 @@
  * authentication headers, and consistent error handling.
  */
 
-// Retrieves the auth token from the environment variables.
+// Retrieves the auth token from localStorage.
 const getAuthToken = (): string | null => {
-  return process.env.NEXT_PUBLIC_API_AUTH_TOKEN || null;
+  // Ensure this code runs only on the client-side
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem("zporter-api-token") || null;
+  }
+  return null;
 };
 
 // The base URL for the API, configured via environment variables.

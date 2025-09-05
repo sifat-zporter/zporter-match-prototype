@@ -18,6 +18,8 @@ import {
   UserCircle,
   FilePenLine,
   ClipboardList,
+  KeyRound,
+  FilePlus2,
 } from "lucide-react";
 import { ZporterLogo } from "@/components/icons";
 import Link from 'next/link';
@@ -52,6 +54,14 @@ export function AppSidebar() {
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild isActive={pathname.startsWith('/matches/create-v2')}>
+              <Link href="/matches/create-v2">
+                <FilePlus2 />
+                Create Match V2
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
            <SidebarMenuItem>
             <SidebarMenuButton asChild isActive={pathname.startsWith('/matches/log')}>
               <Link href="/matches/log/select">
@@ -78,6 +88,14 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
+           <SidebarMenuItem>
+            <SidebarMenuButton asChild isActive={pathname.startsWith('/api-token')}>
+              <Link href="/api-token">
+                <KeyRound />
+                API Token
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton>
               <Settings />
