@@ -22,33 +22,33 @@ export type LocationDto = {
 // --- API DTOs for Match Creation & Updates ---
 
 /**
- * @model CreateMatchDraftDto
+ * @model CreateMatchDto
  * @description The main DTO for creating a match draft (POST /api/matches).
- * This has been simplified to match the backend's validation rules.
  */
-export type CreateMatchDraftDto = {
-  yourTeamName: string;
-  opponentTeamName: string;
-  homeTeamId: string; // Backend expects this flat field
+export type CreateMatchDto = {
+  categoryId: string;
+  formatId: string;
+  contestId: string;
+  matchType: "HOME" | "AWAY";
   matchDate: string; // YYYY-MM-DD
-  startTime: string; // HH:MM
-  location: string; // Backend expects a simple string
-  category: "Friendly" | "Cup" | "League" | "Other";
-  format: "11v11" | "9v9" | "8v8" | "7v7" | "5v5" | "3v3" | "2v2" | "1v1" | "Futsal" | "Futnet" | "Panna" | "Teqball" | "Other";
-  contestId?: string;
-  numberOfPeriods: number;
-  periodTime: number;
-  pauseTime: number;
-  headline?: string;
-  description?: string;
-  gatheringTime: string; // ISO 8601
-  fullDayScheduling: boolean;
-  endTime: string; // ISO 8601
-  isRecurring: boolean;
-  recurringUntil?: string; // YYYY-MM-DD
-  notificationMinutesBefore: number;
-  markAsOccupied: boolean;
-  isPrivate: boolean;
+  matchStartTime: string; // HH:MM
+  matchPeriod: number;
+  matchTime: number;
+  matchPause: number;
+  homeTeamId: string;
+  awayTeamId: string;
+  matchHeadLine: string;
+  matchLocation: string;
+  matchArena: string;
+  matchFiles?: string[];
+  matchIsAllDay?: boolean;
+  matchEnd?: string; // YYYY-MM-DD
+  matchEndTime?: string; // HH:MM
+  matchRecurringType?: "DOES_NOT_REPEAT" | "DAILY" | "WEEKLY" | "MONTHLY";
+  isNotificationOn?: boolean;
+  notificationSendBefore?: number;
+  isOccupied?: boolean;
+  isPrivate?: boolean;
 };
 
 
@@ -71,22 +71,6 @@ export type CreateMatchLogDto = {
   apiToken: string; // Added for authentication
 };
 
-
-/**
- * @model CreateMatchDraftResponse
- * @description The response DTO from the POST /api/matches endpoint.
- */
-export type CreateMatchDraftResponse = {
-  id: string;
-  homeTeam: TeamRef;
-  awayTeam: TeamRef;
-  matchDate: string;
-  startTime: string;
-  location: { name: string; address: string; };
-  status: 'draft';
-  createdAt: string;
-  updatedAt: string;
-};
 
 /**
  * @model GetMatchesResponse
@@ -217,6 +201,23 @@ export type LogMatchEventResponse = {
     goals?: { home: number; away: number; };
     shots?: { home: number; away: number; };
   };
+};
+
+/**
+ * @model MatchEntity
+ * @description The response DTO from POST /api/matches
+ */
+export type MatchEntity = {
+    id: string;
+    status: string;
+    startDate: string; // ISO
+    homeTeam: { id: string; name: string; logoUrl: string };
+    awayTeam: { id: string; name: string; logoUrl: string };
+    venue: { name: string };
+    userGeneratedData: {
+        eventDetails: any; // Contains the original DTO
+    };
+    // Add other fields as necessary from the large response object
 };
 
 // --- Match Category Models ---

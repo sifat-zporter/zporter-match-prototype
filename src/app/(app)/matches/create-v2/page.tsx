@@ -7,31 +7,44 @@ import { InvitePlayers } from "@/components/invite-players";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, MoreVertical } from "lucide-react";
 import Link from "next/link";
-import { PlanTabMockup } from "@/components/plan-tab-mockup";
+import { MatchPlan } from "@/components/match-plan";
 import { MatchNotes } from "@/components/match-notes";
 import { ReviewsPanel } from "@/components/reviews-panel";
 import type { Match } from "@/lib/data";
 import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function CreateMatchV2Page() {
-    // Mock a match object to pass to child components that require it.
-    const [mockMatch] = useState<Match>(() => ({
-        id: 'draft-v2-placeholder',
-        homeTeam: { id: 'home-v2', name: 'Home Team', logoUrl: 'https://placehold.co/40x40.png' },
-        awayTeam: { id: 'away-v2', name: 'Away Team', logoUrl: 'https://placehold.co/40x40.png' },
-        matchDate: new Date().toISOString().split('T')[0],
-        startTime: '12:00',
-        location: { name: 'Stadium', address: '123 Pitch Lane' },
-        status: 'draft',
-        events: [],
-        notes: [],
-        reviews: [],
-        eventDetails: {} as any,
-        scheduleDetails: {} as any,
-        settings: {} as any,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-    }));
+    const { toast } = useToast();
+    const [match, setMatch] = useState<Match | null>(null);
+
+    const handleMatchCreated = (newMatch: Match) => {
+        setMatch(newMatch);
+        toast({
+            title: "Match Draft Created!",
+            description: "You can now fill out the rest of the match details in the other tabs.",
+        });
+    };
+
+    const renderTabContent = (component: React.ReactNode, title: string) => {
+        if (match) {
+            return component;
+        }
+        return (
+            <Card className="mt-4">
+                <CardHeader>
+                    <CardTitle>{title}</CardTitle>
+                    <CardDescription>
+                        Please save the match details on the &quot;Event&quot; tab first to unlock this section.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-muted-foreground">This tab is disabled until a match draft is created.</p>
+                </CardContent>
+            </Card>
+        );
+    };
 
   return (
     <div className="flex flex-col h-full">
@@ -50,27 +63,26 @@ export default function CreateMatchV2Page() {
         <Tabs defaultValue="event" className="w-full">
           <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="event">Event</TabsTrigger>
-            <TabsTrigger value="invites">Invites</TabsTrigger>
-            <TabsTrigger value="plan">Plan</TabsTrigger>
-            <TabsTrigger value="notes">Notes</TabsTrigger>
-            <TabsTrigger value="reviews">Reviews</TabsTrigger>
+            <TabsTrigger value="invites" disabled={!match}>Invites</TabsTrigger>
+            <TabsTrigger value="plan" disabled={!match}>Plan</TabsTrigger>
+            <TabsTrigger value="notes" disabled={!match}>Notes</TabsTrigger>
+            <TabsTrigger value="reviews" disabled={!match}>Reviews</TabsTrigger>
           </TabsList>
           
           <TabsContent value="event" className="pt-4">
-            <CreateMatchForm onMatchCreated={() => {}} />
+            <CreateMatchForm onMatchCreated={handleMatchCreated} />
           </TabsContent>
           <TabsContent value="invites" className="pt-4">
-            <InvitePlayers />
+             {renderTabContent(<InvitePlayers />, "Invites")}
           </TabsContent>
           <TabsContent value="plan" className="pt-4">
-            {/* The PlanTabMockup doesn't need any props for now */}
-            <PlanTabMockup />
+            {renderTabContent(match ? <MatchPlan matchId={match.id} /> : null, "Plan")}
           </TabsContent>
           <TabsContent value="notes" className="pt-4">
-            <MatchNotes matchId={mockMatch.id} initialNotes={mockMatch.notes} />
+            {renderTabContent(match ? <MatchNotes matchId={match.id} initialNotes={[]} /> : null, "Notes")}
           </TabsContent>
           <TabsContent value="reviews" className="pt-4">
-            <ReviewsPanel match={mockMatch} />
+             {renderTabContent(match ? <ReviewsPanel match={match} /> : null, "Reviews")}
           </TabsContent>
         </Tabs>
       </main>
