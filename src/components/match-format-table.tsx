@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import type { MatchFormat } from "@/lib/models";
-import { format } from "date-fns";
+import { format as formatDate } from "date-fns";
 
 interface MatchFormatTableProps {
   formats: MatchFormat[];
@@ -54,7 +54,7 @@ export function MatchFormatTable({ formats, onEdit, onDelete }: MatchFormatTable
                     {format.isActive ? "Active" : "Inactive"}
                     </Badge>
                 </TableCell>
-                <TableCell>{format(new Date(format.updatedAt), "PPP")}</TableCell>
+                <TableCell>{formatDate(new Date(format.updatedAt), "PPP")}</TableCell>
                 <TableCell className="text-right">
                     <DropdownMenu>
                     <DropdownMenuTrigger asChild>
