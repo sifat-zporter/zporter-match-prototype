@@ -249,3 +249,36 @@ export type CreateMatchCategoryDto = {
  * @description DTO for updating an existing match category.
  */
 export type UpdateMatchCategoryDto = Partial<CreateMatchCategoryDto>;
+
+// --- Match Format Models ---
+
+/**
+ * @model MatchFormat
+ * @description Represents a match format object.
+ */
+export type MatchFormat = {
+  id: string;
+  name: string;
+  playerCount: number;
+  description: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+/**
+ * @model CreateMatchFormatDto
+ * @description DTO for creating a new match format.
+ */
+export type CreateMatchFormatDto = {
+  name: string;
+  playerCount: number;
+  description?: string;
+  isActive?: boolean;
+};
+
+/**
+ * @model UpdateMatchFormatDto
+ * @description DTO for updating an existing match format.
+ */
+export type UpdateMatchFormatDto = Partial<CreateMatchFormatDto>;

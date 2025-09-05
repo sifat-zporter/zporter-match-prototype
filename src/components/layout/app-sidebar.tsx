@@ -20,6 +20,7 @@ import {
   KeyRound,
   FilePlus2,
   LayoutGrid,
+  Users,
 } from "lucide-react";
 import { ZporterLogo } from "@/components/icons";
 import Link from 'next/link';
@@ -81,6 +82,14 @@ export function AppSidebar() {
               <Link href="/match-category">
                 <LayoutGrid />
                 Match Category
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild isActive={pathname.startsWith('/match-format')}>
+              <Link href="/match-format">
+                <Users />
+                Match Format
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
