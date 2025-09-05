@@ -51,6 +51,27 @@ export type CreateMatchDraftDto = {
   isPrivate: boolean;
 };
 
+
+/**
+ * @model CreateMatchLogDto
+ * @description The DTO for creating a match specifically for logging (POST /api/matches/match-logs)
+ */
+export type CreateMatchLogDto = {
+  contestName: string;
+  homeClub: string;
+  homeTeam: string;
+  awayClub: string;
+  awayTeam: string;
+  matchDate: string; // YYYY-MM-DD
+  startTime: string; // HH:MM
+  periods: number;
+  periodDurationMinutes: number;
+  pauseDurationMinutes: number;
+  location: string;
+  apiToken: string; // Added for authentication
+};
+
+
 /**
  * @model CreateMatchDraftResponse
  * @description The response DTO from the POST /api/matches endpoint.
