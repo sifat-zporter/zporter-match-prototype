@@ -35,7 +35,6 @@ import { apiClient } from "@/lib/api-client";
 import { useToast } from "@/hooks/use-toast";
 import type { CreateMatchLogDto } from "@/lib/models";
 import type { Match } from "@/lib/data";
-import { useEffect, useState } from "react";
 
 const createMatchLogSchema = z.object({
   contestName: z.string().min(1, "Contest name is required"),
@@ -54,14 +53,6 @@ const createMatchLogSchema = z.object({
 export function CreateMatchLogForm() {
   const router = useRouter();
   const { toast } = useToast();
-  const [apiToken, setApiToken] = useState<string | null>(null);
-
-  useEffect(() => {
-    // Client-side only: retrieve token from localStorage
-    const token = localStorage.getItem("zporter-api-token");
-    setApiToken(token);
-  }, []);
-
 
   const form = useForm<z.infer<typeof createMatchLogSchema>>({
     resolver: zodResolver(createMatchLogSchema),
@@ -81,6 +72,9 @@ export function CreateMatchLogForm() {
   });
 
   async function onSubmit(values: z.infer<typeof createMatchLogSchema>) {
+    // Read token directly from localStorage at the time of submission
+    const apiToken = localStorage.getItem("zporter-api-token");
+
     if (!apiToken) {
       toast({
         variant: "destructive",
