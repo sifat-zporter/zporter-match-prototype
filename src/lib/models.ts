@@ -282,3 +282,40 @@ export type CreateMatchFormatDto = {
  * @description DTO for updating an existing match format.
  */
 export type UpdateMatchFormatDto = Partial<CreateMatchFormatDto>;
+
+// --- Match Contest Models ---
+
+/**
+ * @model MatchContest
+ * @description Represents a match contest object.
+ */
+export type MatchContest = {
+  id: string;
+  name: string;
+  season: string;
+  type: "LEAGUE" | "CUP" | "TOURNAMENT";
+  logoUrl?: string;
+  participatingTeams?: string[];
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+/**
+ * @model CreateMatchContestDto
+ * @description DTO for creating a new match contest.
+ */
+export type CreateMatchContestDto = {
+  name: string;
+  season: string;
+  type: "LEAGUE" | "CUP" | "TOURNAMENT";
+  logoUrl?: string;
+  participatingTeams?: string[];
+  isActive?: boolean;
+};
+
+/**
+ * @model UpdateMatchContestDto
+ * @description DTO for updating an existing match contest.
+ */
+export type UpdateMatchContestDto = Partial<CreateMatchContestDto>;

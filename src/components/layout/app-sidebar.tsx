@@ -21,6 +21,7 @@ import {
   FilePlus2,
   LayoutGrid,
   Users,
+  Trophy,
 } from "lucide-react";
 import { ZporterLogo } from "@/components/icons";
 import Link from 'next/link';
@@ -90,6 +91,14 @@ export function AppSidebar() {
               <Link href="/match-format">
                 <Users />
                 Match Format
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+           <SidebarMenuItem>
+            <SidebarMenuButton asChild isActive={pathname.startsWith('/match-contest')}>
+              <Link href="/match-contest">
+                <Trophy />
+                Match Contest
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
