@@ -47,16 +47,16 @@ export default function CreateMatchV2Page() {
         </div>
       </header>
       <main className="flex-1 overflow-y-auto p-4">
-        <Tabs defaultValue="details" className="w-full">
+        <Tabs defaultValue="event" className="w-full">
           <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="details">Details</TabsTrigger>
+            <TabsTrigger value="event">Event</TabsTrigger>
             <TabsTrigger value="invites">Invites</TabsTrigger>
             <TabsTrigger value="plan">Plan</TabsTrigger>
             <TabsTrigger value="notes">Notes</TabsTrigger>
             <TabsTrigger value="reviews">Reviews</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="details" className="pt-4">
+          <TabsContent value="event" className="pt-4">
             <CreateMatchForm onMatchCreated={() => {}} />
           </TabsContent>
           <TabsContent value="invites" className="pt-4">
