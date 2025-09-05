@@ -66,6 +66,13 @@ export async function apiClient<T>(path: string, options: ApiClientOptions = {})
     config.body = JSON.stringify(body);
   }
 
+  // Log the outgoing request
+  console.log(`[API REQUEST - ${method} ${path}]:`, {
+    headers: config.headers,
+    body: body ? JSON.stringify(body, null, 2) : 'No body',
+  });
+
+
   const response = await fetch(`${API_BASE_URL}${path}`, config);
 
   if (!response.ok) {
