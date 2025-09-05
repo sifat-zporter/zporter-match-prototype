@@ -95,7 +95,7 @@ export function CreateMatchLogForm() {
         apiToken: apiToken,
       };
       
-      const newMatchLog = await apiClient<Match>('/matches/match-logs', {
+      const newMatchLog = await apiClient<Match>('/api/matches/match-logs', {
         method: 'POST',
         body: payload,
       });

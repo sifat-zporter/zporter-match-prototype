@@ -45,7 +45,7 @@ export function MatchNotes({ matchId, initialNotes }: MatchNotesProps) {
             const payload: CreateMatchNoteDto = {
                 content: noteContent,
             };
-            const newNote = await apiClient<MatchNoteResponse>(`/matches/${matchId}/notes`, {
+            const newNote = await apiClient<MatchNoteResponse>(`/api/matches/${matchId}/notes`, {
                 method: 'POST',
                 body: payload,
             });

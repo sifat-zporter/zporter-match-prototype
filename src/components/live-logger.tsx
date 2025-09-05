@@ -46,7 +46,7 @@ export function LiveLogger({ matchId, initialEvents }: LiveLoggerProps) {
   const handleAddEvent = async (eventPayload: LogMatchEventDto) => {
     setIsSubmitting(true);
     try {
-      const response = await apiClient<LogMatchEventResponse>(`/matches/${matchId}/log-event`, {
+      const response = await apiClient<LogMatchEventResponse>(`/api/matches/${matchId}/log-event`, {
         method: 'POST',
         body: eventPayload,
       });

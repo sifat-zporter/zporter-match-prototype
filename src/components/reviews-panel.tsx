@@ -117,7 +117,7 @@ function HomeReviews({ match }: { match: Match }) {
         };
 
         try {
-            await apiClient(`/matches/${match.id}/reviews`, {
+            await apiClient(`/api/matches/${match.id}/reviews`, {
                 method: 'POST',
                 body: payload,
             });

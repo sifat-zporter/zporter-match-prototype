@@ -20,7 +20,7 @@ export default function MatchContestPage() {
   const fetchContests = async () => {
     try {
       setIsLoading(true);
-      const data = await apiClient<MatchContest[]>("/match-contests");
+      const data = await apiClient<MatchContest[]>("/api/match-contests");
       setContests(data);
     } catch (error) {
       toast({
@@ -51,7 +51,7 @@ export default function MatchContestPage() {
     if (!confirm("Are you sure you want to deactivate this contest?")) return;
 
     try {
-      await apiClient(`/match-contests/${contestId}`, { method: "DELETE" });
+      await apiClient(`/api/match-contests/${contestId}`, { method: "DELETE" });
       toast({
         title: "Success",
         description: "Match contest deactivated successfully.",
@@ -70,7 +70,7 @@ export default function MatchContestPage() {
     try {
       if (editingContest) {
         // Update
-        await apiClient(`/match-contests/${editingContest.id}`, {
+        await apiClient(`/api/match-contests/${editingContest.id}`, {
           method: "PATCH",
           body: values,
         });
@@ -80,7 +80,7 @@ export default function MatchContestPage() {
         });
       } else {
         // Create
-        await apiClient("/match-contests", {
+        await apiClient("/api/match-contests", {
           method: "POST",
           body: values,
         });

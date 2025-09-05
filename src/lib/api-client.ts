@@ -15,7 +15,7 @@ const getAuthToken = (): string | null => {
 };
 
 // The base URL for the API, configured via environment variables.
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 type ApiClientOptions = {
   method?: 'GET' | 'POST' | 'PATCH' | 'DELETE';
@@ -37,7 +37,7 @@ class ApiError extends Error {
 
 /**
  * Performs a request to the backend API.
- * @param path The endpoint path (e.g., '/matches').
+ * @param path The endpoint path (e.g., '/api/matches').
  * @param options Configuration for the request (method, body, headers).
  * @returns A promise that resolves with the JSON response from the API.
  * @throws {ApiError} If the API response is not successful.

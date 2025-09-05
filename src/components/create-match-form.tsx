@@ -85,9 +85,9 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
       try {
         setIsLoading(true);
         const [catData, formatData, contestData] = await Promise.all([
-          apiClient<MatchCategory[]>("/match-category"),
-          apiClient<MatchFormat[]>("/match-format"),
-          apiClient<MatchContest[]>("/match-contests"),
+          apiClient<MatchCategory[]>("/api/match-category"),
+          apiClient<MatchFormat[]>("/api/match-format"),
+          apiClient<MatchContest[]>("/api/match-contests"),
         ]);
         setCategories(catData);
         setFormats(formatData);
@@ -160,7 +160,7 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
         isPrivate: values.isPrivate,
       };
       
-      const newMatchResponse = await apiClient<MatchEntity>('/matches', {
+      const newMatchResponse = await apiClient<MatchEntity>('/api/matches', {
         method: 'POST',
         body: payload as any,
       });
@@ -590,5 +590,3 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
     </Form>
   )
 }
-
-    

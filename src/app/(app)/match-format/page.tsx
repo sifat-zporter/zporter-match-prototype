@@ -20,7 +20,7 @@ export default function MatchFormatPage() {
   const fetchFormats = async () => {
     try {
       setIsLoading(true);
-      const data = await apiClient<MatchFormat[]>("/match-format");
+      const data = await apiClient<MatchFormat[]>("/api/match-format");
       setFormats(data);
     } catch (error) {
       toast({
@@ -51,7 +51,7 @@ export default function MatchFormatPage() {
     if (!confirm("Are you sure you want to deactivate this format?")) return;
 
     try {
-      await apiClient(`/match-format/${formatId}`, { method: "DELETE" });
+      await apiClient(`/api/match-format/${formatId}`, { method: "DELETE" });
       toast({
         title: "Success",
         description: "Match format deactivated successfully.",
@@ -70,7 +70,7 @@ export default function MatchFormatPage() {
     try {
       if (editingFormat) {
         // Update
-        await apiClient(`/match-format/${editingFormat.id}`, {
+        await apiClient(`/api/match-format/${editingFormat.id}`, {
           method: "PATCH",
           body: values,
         });
@@ -80,7 +80,7 @@ export default function MatchFormatPage() {
         });
       } else {
         // Create
-        await apiClient("/match-format", {
+        await apiClient("/api/match-format", {
           method: "POST",
           body: values,
         });

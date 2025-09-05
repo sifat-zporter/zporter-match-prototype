@@ -17,7 +17,7 @@ import { apiClient } from "@/lib/api-client";
 // This is now a Server Component that fetches data once.
 async function getMatchById(id: string): Promise<Match | null> {
     try {
-        const match = await apiClient<Match>(`/matches/${id}`);
+        const match = await apiClient<Match>(`/api/matches/${id}`);
         // Add compatibility fields for components that haven't been fully refactored yet
         return {
             ...match,

@@ -1,5 +1,4 @@
 
-
 "use client"
 
 import { useState } from "react";
@@ -57,7 +56,7 @@ export function MatchPlan({ matchId }: { matchId: string }) {
     const handleSave = async () => {
         setIsLoading(true);
         try {
-            await apiClient(`/matches/${matchId}`, {
+            await apiClient(`/api/matches/${matchId}`, {
                 method: 'PATCH',
                 body: { tacticsNotes: plan }, // This matches the old API structure, adjust if backend changes
             });
@@ -261,4 +260,3 @@ export function MatchPlan({ matchId }: { matchId: string }) {
         </div>
     );
 }
-
