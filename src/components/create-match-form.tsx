@@ -85,9 +85,9 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
       try {
         setIsLoading(true);
         const [catData, formatData, contestData] = await Promise.all([
-          apiClient<MatchCategory[]>("/api/match-category"),
-          apiClient<MatchFormat[]>("/api/match-format"),
-          apiClient<MatchContest[]>("/api/match-contests"),
+          apiClient<MatchCategory[]>("/match-category"),
+          apiClient<MatchFormat[]>("/match-format"),
+          apiClient<MatchContest[]>("/match-contests"),
         ]);
         setCategories(catData);
         setFormats(formatData);

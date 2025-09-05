@@ -20,7 +20,7 @@ export default function MatchCategoryPage() {
   const fetchCategories = async () => {
     try {
       setIsLoading(true);
-      const data = await apiClient<MatchCategory[]>("/api/match-category");
+      const data = await apiClient<MatchCategory[]>("/match-category");
       setCategories(data);
     } catch (error) {
       toast({
@@ -51,7 +51,7 @@ export default function MatchCategoryPage() {
     if (!confirm("Are you sure you want to deactivate this category?")) return;
 
     try {
-      await apiClient(`/api/match-category/${categoryId}`, { method: "DELETE" });
+      await apiClient(`/match-category/${categoryId}`, { method: "DELETE" });
       toast({
         title: "Success",
         description: "Match category deactivated successfully.",
@@ -70,7 +70,7 @@ export default function MatchCategoryPage() {
     try {
       if (editingCategory) {
         // Update
-        await apiClient(`/api/match-category/${editingCategory.id}`, {
+        await apiClient(`/match-category/${editingCategory.id}`, {
           method: "PATCH",
           body: values,
         });
@@ -80,7 +80,7 @@ export default function MatchCategoryPage() {
         });
       } else {
         // Create
-        await apiClient("/api/match-category", {
+        await apiClient("/match-category", {
           method: "POST",
           body: values,
         });
