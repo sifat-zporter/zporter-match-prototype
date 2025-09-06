@@ -320,3 +320,49 @@ export type CreateMatchContestDto = {
  * @description DTO for updating an existing match contest.
  */
 export type UpdateMatchContestDto = Partial<CreateMatchContestDto>;
+
+// --- Invite Models ---
+
+/**
+ * @model CreateInviteDto
+ * @description DTO for sending a new invitation.
+ */
+export type CreateInviteDto = {
+  inviteeId: string;
+  role: 'PLAYER_HOME' | 'COACH_AWAY' | 'REFEREE' | 'HOST' | 'ADMIN';
+  inviteDaysBefore: number;
+  reminderDaysBefore: number;
+};
+
+/**
+ * @model UpdateInviteStatusDto
+ * @description DTO for updating an invitation's status.
+ */
+export type UpdateInviteStatusDto = {
+  status: 'SCHEDULED' | 'PENDING' | 'ACCEPTED' | 'DECLINED';
+};
+
+/**
+ * @model Invite
+ * @description Represents an invitation object.
+ */
+export type Invite = {
+  id: string;
+  matchId: string;
+  inviteeId: string;
+  inviterId: string;
+  role: string;
+  status: string;
+  inviteDaysBefore: number;
+  reminderDaysBefore: number;
+  createdAt: string;
+  updatedAt: string;
+  matchDetails: {
+    id: string;
+    name: string;
+    startDate: string;
+    homeTeam: { id: string, name: string };
+    awayTeam: { id: string, name: string };
+    competition: { id: string, name: string };
+  }
+};

@@ -73,7 +73,7 @@ export default function CreateMatchV2Page() {
             <CreateMatchForm onMatchCreated={handleMatchCreated} />
           </TabsContent>
           <TabsContent value="invites" className="pt-4">
-             {renderTabContent(<InvitePlayers />, "Invites")}
+             {renderTabContent(match ? <InvitePlayers matchId={match.id} /> : null, "Invites")}
           </TabsContent>
           <TabsContent value="plan" className="pt-4">
             {renderTabContent(match ? <MatchPlan matchId={match.id} /> : null, "Plan")}
