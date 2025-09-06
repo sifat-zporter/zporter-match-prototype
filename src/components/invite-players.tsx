@@ -1,3 +1,4 @@
+
 // src/components/invite-players.tsx
 "use client";
 
@@ -8,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Search, Info, Loader2, Plus, ArrowUpDown, ListFilter, ChevronUp, ChevronDown, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiClient } from "@/lib/api-client";
-import type { UserSearchResult, Invite, CreateInviteDto, TeamRef, InviteUserSearchResult } from "@/lib/models";
+import type { Invite, CreateInviteDto, TeamRef, InviteUserSearchResult } from "@/lib/models";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
 import { ApiDocumentationViewer } from "./api-documentation-viewer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
@@ -71,7 +72,7 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
     const fetchInvitedUsers = useCallback(async () => {
         if (!matchId) return;
         try {
-            const invites = await apiClient<Invite[]>(`/api/matches/${matchId}/invites`);
+            const invites = await apiClient<Invite[]>(`/matches/${matchId}/invites`);
             setInvitedUsers(invites);
         } catch (error) {
             toast({ variant: "destructive", title: "Error", description: "Could not fetch existing invites." });
@@ -83,7 +84,7 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
         setIsLoading(true);
         setSearchResults([]);
         try {
-            let url = `/api/matches/${matchId}/invites/search-users?`;
+            let url = `/matches/${matchId}/invites/search-users?`;
             const params = new URLSearchParams();
 
             if (query) {
@@ -170,7 +171,7 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
                     inviteeId: userId,
                     type: type as any,
                 };
-                return apiClient(`/api/matches/${matchId}/invites`, { method: 'POST', body: payload });
+                return apiClient(`/matches/${matchId}/invites`, { method: 'POST', body: payload });
             });
             await Promise.all(invitePromises);
             toast({ title: "Invites Sent!", description: `Successfully invited ${newlySelectedIds.size} new person(s).` });
@@ -289,7 +290,7 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
                         <ApiDocumentationViewer
                             title="Search Users to Invite"
                             description="A single endpoint to find users, either by team ID or by name."
-                            endpoint="/api/matches/:matchId/invites/search-users"
+                            endpoint="/matches/:matchId/invites/search-users"
                             method="GET"
                             notes="Use ?teamId={id}&role=PLAYER to get team members, or ?name={query} to search for referees/hosts."
                             response={`[
@@ -305,7 +306,7 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
                         <ApiDocumentationViewer
                             title="Send an Invitation"
                             description="Called when the 'Save' button is clicked for each newly selected user."
-                            endpoint="/api/matches/:matchId/invites"
+                            endpoint="/matches/:matchId/invites"
                             method="POST"
                             requestPayload={`{
   "inviteeId": "user-id-to-invite",
@@ -322,7 +323,7 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
                          <ApiDocumentationViewer
                             title="List Match Invitations"
                             description="Called when the tab loads to show who has already been invited."
-                            endpoint="/api/matches/:matchId/invites"
+                            endpoint="/matches/:matchId/invites"
                             method="GET"
                             response={`[
   {
