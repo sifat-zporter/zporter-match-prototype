@@ -432,14 +432,17 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
                         }}><X className="w-4 h-4" /></Button>
                     </div>
                 ) : (
-                    <Popover open={homeSearchQuery.length > 0}>
+                    <Popover open={homeSearchQuery.length > 1 && homeSearchResults.length > 0}>
                         <PopoverTrigger asChild>
-                            <Input
-                                icon={Search}
-                                placeholder="Search your team..."
-                                value={homeSearchQuery}
-                                onChange={(e) => setHomeSearchQuery(e.target.value)}
-                            />
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                <Input
+                                    placeholder="Search your team..."
+                                    className="pl-9"
+                                    value={homeSearchQuery}
+                                    onChange={(e) => setHomeSearchQuery(e.target.value)}
+                                />
+                            </div>
                         </PopoverTrigger>
                         <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
                             <Command>
@@ -471,14 +474,17 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
                         }}><X className="w-4 h-4" /></Button>
                     </div>
                 ) : (
-                    <Popover open={awaySearchQuery.length > 0}>
+                    <Popover open={awaySearchQuery.length > 1 && awaySearchResults.length > 0}>
                         <PopoverTrigger asChild>
-                            <Input
-                                icon={Search}
-                                placeholder="Search opponent team..."
-                                value={awaySearchQuery}
-                                onChange={(e) => setAwaySearchQuery(e.target.value)}
-                            />
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                <Input
+                                    placeholder="Search opponent team..."
+                                    className="pl-9"
+                                    value={awaySearchQuery}
+                                    onChange={(e) => setAwaySearchQuery(e.target.value)}
+                                />
+                            </div>
                         </PopoverTrigger>
                             <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
                             <Command>
@@ -801,151 +807,55 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
                         method="POST"
                         notes="This is the first and most critical step. The 'id' returned in the response is required to save data in all other tabs (Invites, Plan, Notes, etc.)."
                         requestPayload={`{
-  "categoryId": "some-category-id",
-  "formatId": "some-format-id",
-  "contestId": "some-contest-id",
+  "categoryId": "string",
+  "formatId": "string",
+  "contestId": "string",
   "matchType": "HOME",
-  "matchDate": "2025-09-05",
-  "matchStartTime": "18:00",
-  "matchPeriod": 2,
-  "matchTime": 45,
-  "matchPause": 15,
-  "homeTeamId": "team-home-123",
-  "awayTeamId": "team-away-456",
-  "matchHeadLine": "Exciting Match Between Home and Away Teams",
-  "matchFiles": ["http://example.com/file1.pdf", "http://example.com/image1.png"],
-  "matchIsAllDay": false,
-  "matchEnd": "2025-09-05",
-  "matchEndTime": "20:00",
-  "matchRecurringType": "DOES_NOT_REPEAT",
-  "matchLocation": "City Stadium",
-  "matchArena": "Main Arena",
-  "isNotificationOn": true,
-  "notificationSendBefore": 60,
-  "isOccupied": false,
-  "isPrivate": false
+  "matchDate": "string (YYYY-MM-DD)",
+  "matchStartTime": "string (HH:MM)",
+  "matchPeriod": "number",
+  "matchTime": "number",
+  "matchPause": "number",
+  "homeTeamId": "string",
+  "awayTeamId": "string",
+  "matchHeadLine": "string",
+  "description": "string" (optional),
+  "gatheringDate": "string (ISO 8601)",
+  "fullDayScheduling": "boolean",
+  "endTime": "string (ISO 8601)",
+  "isRecurring": "boolean",
+  "recurringUntil": "string (YYYY-MM-DD)" (optional),
+  "notificationMinutesBefore": "number",
+  "markAsOccupied": "boolean",
+  "isPrivate": "boolean",
+  "yourTeamName": "string",
+  "opponentTeamName": "string",
+  "homeTeamId": "string",
+  "location": "string",
+  "numberOfPeriods": "number",
+  "periodTime": "number",
+  "pauseTime": "number",
+  "gatheringTime": "string (ISO 8601, e.g., YYYY-MM-DDTHH:MM:SSZ)"
 }`}
                         response={`{
   "id": "string",
-  "source": "user-generated",
-  "sourceId": null,
-  "createdBy": "string",
-  "status": "draft",
-  "createdAt": "string (ISO 8601 date)",
-  "updatedAt": "string (ISO 8601 date)",
-  "name": "string",
-  "description": "string",
-  "startDate": "string (ISO 8601 date)",
-  "endDate": "string (ISO 8601 date)",
-  "timezone": "string",
-  "duration": "number",
   "homeTeam": {
     "id": "string",
-    "source": "user-generated",
-    "sourceId": null,
-    "name": "string",
-    "shortName": "string",
-    "code": "string",
-    "logoUrl": "string",
-    "country": "string",
-    "founded": null,
-    "isNational": false,
-    "venue": null,
-    "players": []
+    "name": "string"
   },
   "awayTeam": {
     "id": "string",
-    "source": "user-generated",
-    "sourceId": null,
+    "name": "string"
+  },
+  "matchDate": "string (YYYY-MM-DD)",
+  "startTime": "string (HH:MM)",
+  "location": {
     "name": "string",
-    "shortName": "string",
-    "code": "string",
-    "logoUrl": "string",
-    "country": "string",
-    "founded": null,
-    "isNational": false,
-    "venue": null,
-    "players": []
+    "address": "string"
   },
-  "competition": {
-    "id": "string",
-    "source": "user-generated",
-    "sourceId": null,
-    "name": "string",
-    "shortName": "string",
-    "type": "string",
-    "country": "string",
-    "logoUrl": "string",
-    "tier": 0
-  },
-  "season": null,
-  "stage": null,
-  "round": null,
-  "scores": {
-    "home": 0,
-    "away": 0,
-    "homePeriod1": 0,
-    "awayPeriod1": 0,
-    "homePeriod2": 0,
-    "awayExtraTime": 0,
-    "awayExtraTime": 0,
-    "homePenalties": 0,
-    "awayPenalties": 0,
-    "winner": null
-  },
-  "venue": {
-    "id": null,
-    "sourceId": null,
-    "name": "string",
-    "city": "string",
-    "country": "string",
-    "capacity": 0,
-    "surface": "string",
-    "coordinates": {
-      "lat": 0,
-      "lng": 0
-    }
-  },
-  "referee": null,
-  "assistantReferees": [],
-  "fourthOfficial": null,
-  "attendance": 0,
-  "weather": {
-    "temperature": 0,
-    "humidity": 0,
-    "windSpeed": 0,
-    "description": "string"
-  },
-  "featuredPlayers": [],
-  "isFeatured": false,
-  "isPrivate": false,
-  "likes": 0,
-  "followers": 0,
-  "sportmonksData": {
-    "raw": null,
-    "lastChanged": null,
-    "hasLineup": false,
-    "hasEvents": false,
-    "hasStats": false,
-    "live": false
-  },
-  "userGeneratedData": {
-    "notes": [],
-    "reviews": [],
-    "invites": [],
-    "tacticalPlan": null,
-    "eventDetails": {},
-    "scheduleDetails": null,
-    "settings": {}
-  },
-  "liveLog": {
-    "events": [],
-    "stats": {},
-    "isActive": false
-  },
-  "tags": [],
-  "popularity": "number",
-  "version": 1
+  "status": "draft",
+  "createdAt": "string (ISO 8601)",
+  "updatedAt": "string (ISO 8601)"
 }`}
                     />
                 </AccordionContent>
@@ -954,5 +864,3 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
     </div>
   )
 }
-
-    
