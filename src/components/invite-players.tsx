@@ -1,4 +1,3 @@
-
 // src/components/invite-players.tsx
 "use client";
 
@@ -8,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Search, Info, Loader2, Plus, ArrowUpDown, ListFilter, ChevronUp, ChevronDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiClient } from "@/lib/api-client";
-import type { Invite, CreateInviteDto, TeamRef, InviteUserSearchResult } from "@/lib/models";
+import type { Invite, CreateInviteDto, TeamRef, InviteUserSearchResult, InvitationRole } from "@/lib/models";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
 import { ApiDocumentationViewer } from "./api-documentation-viewer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
@@ -85,8 +84,8 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
         if (!matchId) return;
         setIsLoading(true);
         setSearchResults([]);
+        setSelectedUserIds(new Set()); // Clear selections on new search
         try {
-            let url = `/matches/${matchId}/invites/search-users?`;
             const params = new URLSearchParams();
 
             if (query) {
@@ -110,7 +109,7 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
                 }
             }
            
-            const data = await apiClient<InviteUserSearchResult[]>(url + params.toString());
+            const data = await apiClient<InviteUserSearchResult[]>(`/matches/${matchId}/invites/search-users?${params.toString()}`);
             setSearchResults(data);
         } catch (error) {
             toast({ variant: "destructive", title: "Error", description: "Failed to search for users." });
@@ -158,12 +157,12 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
         return new Set([...selectedUserIds].filter(id => !invitedUserIds.has(id)))
     }, [selectedUserIds, invitedUserIds]);
 
-    const getRoleForTab = (tab: string): string => {
+    const getRoleForTab = (tab: string): InvitationRole => {
         switch (tab) {
             case 'home':
                 return 'PLAYER_HOME';
             case 'away':
-                return 'COACH_AWAY'; // Using COACH_AWAY as per enum for away team context
+                return 'COACH_AWAY';
             case 'referees':
                 return 'REFEREE';
             case 'hosts':
