@@ -1,4 +1,3 @@
-
 // src/components/invite-players.tsx
 "use client";
 
@@ -72,7 +71,7 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
     const fetchInvitedUsers = useCallback(async () => {
         if (!matchId) return;
         try {
-            const invites = await apiClient<Invite[]>(`/api/invites/match/${matchId}`);
+            const invites = await apiClient<Invite[]>(`/api/matches/${matchId}/invites`);
             setInvitedUsers(invites);
         } catch (error) {
             toast({ variant: "destructive", title: "Error", description: "Could not fetch existing invites." });
@@ -163,17 +162,15 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
         }
         setIsSubmitting(true);
         
-        // This assumes the role maps directly from the active tab
         const type = activeTab === 'home' || activeTab === 'away' ? 'player' : activeTab.slice(0, -1);
 
         try {
             const invitePromises = Array.from(newlySelectedIds).map(userId => {
                 const payload: CreateInviteDto = {
-                    matchId,
                     inviteeId: userId,
                     type: type as any,
                 };
-                return apiClient('/api/invites', { method: 'POST', body: payload });
+                return apiClient(`/api/matches/${matchId}/invites`, { method: 'POST', body: payload });
             });
             await Promise.all(invitePromises);
             toast({ title: "Invites Sent!", description: `Successfully invited ${newlySelectedIds.size} new person(s).` });
@@ -308,10 +305,9 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
                         <ApiDocumentationViewer
                             title="Send an Invitation"
                             description="Called when the 'Save' button is clicked for each newly selected user."
-                            endpoint="/api/invites"
+                            endpoint="/api/matches/:matchId/invites"
                             method="POST"
                             requestPayload={`{
-  "matchId": "your-match-id",
   "inviteeId": "user-id-to-invite",
   "type": "player | referee | host"
 }`}
@@ -326,7 +322,7 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
                          <ApiDocumentationViewer
                             title="List Match Invitations"
                             description="Called when the tab loads to show who has already been invited."
-                            endpoint="/api/invites/match/:matchId"
+                            endpoint="/api/matches/:matchId/invites"
                             method="GET"
                             response={`[
   {

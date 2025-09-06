@@ -21,10 +21,12 @@ export type LocationDto = {
 };
 
 export type TeamDto = {
-  teamId: string;
-  teamName: string;
+  id: string;
+  name: string;
   logoUrl?: string;
   clubId?: string;
+  teamId?: string; // Adding this to reconcile different team object shapes
+  teamName?: string; // Adding this to reconcile different team object shapes
 };
 
 
@@ -382,7 +384,6 @@ export type InviteUserSearchResult = {
  * @description DTO for sending a new invitation.
  */
 export type CreateInviteDto = {
-  matchId: string;
   inviteeId: string;
   type: 'player' | 'referee' | 'host' | 'team';
 };
