@@ -16,7 +16,7 @@ export function InviteUserListItem({ user, isChecked, onCheckedChange, isInvited
   return (
       <div className={cn("flex items-center p-2 rounded-md hover:bg-accent", isInvited && "opacity-50")}>
         <div className="flex items-center gap-3 flex-1">
-          <Image src={user.faceImage || 'https://placehold.co/64x64.png'} alt={user.name} width={48} height={48} className="rounded-md" data-ai-hint="player avatar" />
+          <Image src={user.faceImage || 'https://placehold.co/64x64.png'} alt={user.name || user.username || 'User avatar'} width={48} height={48} className="rounded-md" data-ai-hint="player avatar" />
           <div className="grid grid-cols-2 items-center text-xs gap-x-3 gap-y-1">
             <p className="font-semibold col-span-2 text-sm text-left">{user.name}</p>
             <p className="text-muted-foreground">@{user.username}</p>
