@@ -21,6 +21,12 @@ const nextConfig: NextConfig = {
         hostname: 'cdn.sportmonks.com',
         port: '',
         pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'firebasestorage.googleapis.com',
+        port: '',
+        pathname: '/**',
       }
     ],
   },
