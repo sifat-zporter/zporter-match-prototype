@@ -612,7 +612,9 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
     "id": "string",
     "name": "string",
     "description": "string",
-    "isActive": true
+    "isActive": true,
+    "createdAt": "string (ISO 8601)",
+    "updatedAt": "string (ISO 8601)"
   }
 ]`}
                     />
@@ -627,7 +629,10 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
     "id": "string",
     "name": "string",
     "playerCount": "number",
-    "isActive": true
+    "description": "string",
+    "isActive": true,
+    "createdAt": "string (ISO 8601)",
+    "updatedAt": "string (ISO 8601)"
   }
 ]`}
                     />
@@ -642,7 +647,11 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
     "id": "string",
     "name": "string",
     "season": "string",
-    "type": "string"
+    "type": "LEAGUE | CUP | TOURNAMENT",
+    "logoUrl": "string",
+    "isActive": true,
+    "createdAt": "string (ISO 8601)",
+    "updatedAt": "string (ISO 8601)"
   }
 ]`}
                     />
@@ -656,24 +665,37 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
   "categoryId": "string",
   "formatId": "string",
   "contestId": "string",
-  "matchType": "HOME" | "AWAY",
-  "matchDate": "string (YYYY-MM-DD)",
-  "matchStartTime": "string (HH:MM)",
-  "matchPeriod": "number",
-  "matchTime": "number",
-  "matchPause": "number",
-  "homeTeamId": "string",
-  "awayTeamId": "string",
-  "matchHeadLine": "string",
-  "matchLocation": "string",
-  "matchArena": "string"
+  "matchType": "HOME",
+  "matchDate": "2025-09-05",
+  "matchStartTime": "18:00",
+  "matchPeriod": 2,
+  "matchTime": 45,
+  "matchPause": 15,
+  "homeTeamId": "team-home-123",
+  "awayTeamId": "team-away-456",
+  "matchHeadLine": "Exciting Match",
+  "matchLocation": "City Stadium",
+  "matchArena": "Main Arena",
+  "matchIsAllDay": false,
+  "matchEnd": "2025-09-05",
+  "matchEndTime": "20:00",
+  "matchRecurringType": "DOES_NOT_REPEAT",
+  "notificationSendBefore": 60,
+  "isOccupied": false,
+  "isPrivate": false
 }`}
                         response={`{
-  "id": "string",
+  "id": "match-draft-12345",
   "status": "draft",
-  "homeTeam": { "id": "string", "name": "string" },
-  "awayTeam": { "id": "string", "name": "string" },
-  // ...and many other fields
+  "homeTeam": { "id": "team-home-123", "name": "Home Team" },
+  "awayTeam": { "id": "team-away-456", "name": "Away Team" },
+  "startDate": "2025-09-05T18:00:00Z",
+  "venue": { "name": "City Stadium" },
+  "userGeneratedData": {
+    "eventDetails": {
+      "matchHeadLine": "Exciting Match"
+    }
+  }
 }`}
                     />
                 </AccordionContent>

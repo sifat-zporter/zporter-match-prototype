@@ -3,12 +3,14 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Loader2 } from "lucide-react";
+import { PlusCircle, Loader2, Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiClient } from "@/lib/api-client";
 import type { MatchFormat, CreateMatchFormatDto, UpdateMatchFormatDto } from "@/lib/models";
 import { MatchFormatTable } from "@/components/match-format-table";
 import { MatchFormatForm } from "@/components/match-format-form";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { ApiDocumentationViewer } from "@/components/api-documentation-viewer";
 
 export default function MatchFormatPage() {
   const { toast } = useToast();
@@ -109,7 +111,7 @@ export default function MatchFormatPage() {
           Add New Format
         </Button>
       </header>
-      <main className="flex-1 overflow-y-auto p-4">
+      <main className="flex-1 overflow-y-auto p-4 space-y-6">
         {isLoading ? (
           <div className="flex justify-center items-center h-64">
             <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
@@ -121,6 +123,89 @@ export default function MatchFormatPage() {
             onDelete={handleDelete}
           />
         )}
+        
+        <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="api-docs">
+                <AccordionTrigger>
+                    <div className="flex items-center gap-2">
+                        <Info className="w-5 h-5 text-blue-400" />
+                        <span className="font-semibold">Match Format API Documentation</span>
+                    </div>
+                </AccordionTrigger>
+                <AccordionContent className="space-y-4 pt-4">
+                    <ApiDocumentationViewer
+                        title="Get All Active Match Formats"
+                        description="Called on page load to populate the table."
+                        endpoint="/match-format"
+                        method="GET"
+                        response={`[
+  {
+    "id": "string",
+    "name": "string",
+    "playerCount": "number",
+    "description": "string",
+    "isActive": true,
+    "createdAt": "string (ISO 8601)",
+    "updatedAt": "string (ISO 8601)"
+  }
+]`}
+                    />
+                    <ApiDocumentationViewer
+                        title="Create New Match Format"
+                        description="Called when submitting the 'Add New Format' form."
+                        endpoint="/match-format"
+                        method="POST"
+                        requestPayload={`{
+  "name": "string (required)",
+  "playerCount": "number (required, positive)",
+  "description": "string (optional)",
+  "isActive": "boolean (optional)"
+}`}
+                        response={`{
+  "id": "string",
+  "name": "string",
+  "playerCount": "number",
+  "description": "string",
+  "isActive": true,
+  "createdAt": "string (ISO 8601)",
+  "updatedAt": "string (ISO 8601)"
+}`}
+                    />
+                    <ApiDocumentationViewer
+                        title="Update Match Format"
+                        description="Called when submitting the form after clicking 'Edit'."
+                        endpoint="/match-format/:id"
+                        method="PATCH"
+                        requestPayload={`{
+  "name": "string (optional)",
+  "playerCount": "number (optional, positive)",
+  "description": "string (optional)",
+  "isActive": "boolean (optional)"
+}`}
+                        response={`{
+  "id": "string",
+  "name": "string",
+  "playerCount": "number",
+  "description": "string",
+  "isActive": true,
+  "createdAt": "string (ISO 8601)",
+  "updatedAt": "string (ISO 8601)"
+}`}
+                    />
+                     <ApiDocumentationViewer
+                        title="Deactivate Match Format"
+                        description="Called when clicking the 'Deactivate' action in the table."
+                        endpoint="/match-format/:id"
+                        method="DELETE"
+                        response={`{
+  "id": "string",
+  "message": "Match format successfully deactivated."
+}`}
+                    />
+                </AccordionContent>
+            </AccordionItem>
+        </Accordion>
+
       </main>
       <MatchFormatForm
         isOpen={isFormOpen}

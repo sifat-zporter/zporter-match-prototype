@@ -3,12 +3,14 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Loader2 } from "lucide-react";
+import { PlusCircle, Loader2, Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiClient } from "@/lib/api-client";
 import type { MatchContest, CreateMatchContestDto, UpdateMatchContestDto } from "@/lib/models";
 import { MatchContestTable } from "@/components/match-contest-table";
 import { MatchContestForm } from "@/components/match-contest-form";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { ApiDocumentationViewer } from "@/components/api-documentation-viewer";
 
 export default function MatchContestPage() {
   const { toast } = useToast();
@@ -109,7 +111,7 @@ export default function MatchContestPage() {
           Add New Contest
         </Button>
       </header>
-      <main className="flex-1 overflow-y-auto p-4">
+      <main className="flex-1 overflow-y-auto p-4 space-y-6">
         {isLoading ? (
           <div className="flex justify-center items-center h-64">
             <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
@@ -121,6 +123,99 @@ export default function MatchContestPage() {
             onDelete={handleDelete}
           />
         )}
+        
+        <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="api-docs">
+                <AccordionTrigger>
+                    <div className="flex items-center gap-2">
+                        <Info className="w-5 h-5 text-blue-400" />
+                        <span className="font-semibold">Match Contest API Documentation</span>
+                    </div>
+                </AccordionTrigger>
+                <AccordionContent className="space-y-4 pt-4">
+                    <ApiDocumentationViewer
+                        title="Get All Active Match Contests"
+                        description="Called on page load to populate the table."
+                        endpoint="/match-contests"
+                        method="GET"
+                        response={`[
+  {
+    "id": "string",
+    "name": "string",
+    "season": "string",
+    "type": "LEAGUE | CUP | TOURNAMENT",
+    "logoUrl": "string",
+    "participatingTeams": ["string"],
+    "isActive": true,
+    "createdAt": "string (ISO 8601)",
+    "updatedAt": "string (ISO 8601)"
+  }
+]`}
+                    />
+                    <ApiDocumentationViewer
+                        title="Create New Match Contest"
+                        description="Called when submitting the 'Add New Contest' form."
+                        endpoint="/match-contests"
+                        method="POST"
+                        requestPayload={`{
+  "name": "string (required)",
+  "season": "string (required)",
+  "type": "LEAGUE | CUP | TOURNAMENT (required)",
+  "logoUrl": "string (optional, URL)",
+  "participatingTeams": ["string"] (optional),
+  "isActive": "boolean (optional)"
+}`}
+                        response={`{
+  "id": "string",
+  "name": "string",
+  "season": "string",
+  "type": "string",
+  "logoUrl": "string",
+  "participatingTeams": ["string"],
+  "isActive": true,
+  "createdAt": "string (ISO 8601)",
+  "updatedAt": "string (ISO 8601)"
+}`}
+                    />
+                    <ApiDocumentationViewer
+                        title="Update Match Contest"
+                        description="Called when submitting the form after clicking 'Edit'."
+                        endpoint="/match-contests/:id"
+                        method="PATCH"
+                        requestPayload={`{
+  "name": "string (optional)",
+  "season": "string (optional)",
+  "type": "LEAGUE | CUP | TOURNAMENT (optional)",
+  "logoUrl": "string (optional, URL)",
+  "participatingTeams": ["string"] (optional),
+  "isActive": "boolean (optional)"
+}`}
+                        response={`{
+  "id": "string",
+  "name": "string",
+  "season": "string",
+  "type": "string",
+  "logoUrl": "string",
+  "participatingTeams": ["string"],
+  "isActive": true,
+  "createdAt": "string (ISO 8601)",
+  "updatedAt": "string (ISO 8601)"
+}`}
+                    />
+                     <ApiDocumentationViewer
+                        title="Deactivate Match Contest"
+                        description="Called when clicking the 'Deactivate' action in the table."
+                        endpoint="/match-contests/:id"
+                        method="DELETE"
+                        response={`{
+  "id": "string",
+  "message": "Match contest successfully deactivated."
+}`}
+                    />
+                </AccordionContent>
+            </AccordionItem>
+        </Accordion>
+
       </main>
       <MatchContestForm
         isOpen={isFormOpen}

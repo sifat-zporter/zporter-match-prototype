@@ -3,12 +3,14 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Loader2 } from "lucide-react";
+import { PlusCircle, Loader2, Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiClient } from "@/lib/api-client";
 import type { MatchCategory, CreateMatchCategoryDto, UpdateMatchCategoryDto } from "@/lib/models";
 import { MatchCategoryTable } from "@/components/match-category-table";
 import { MatchCategoryForm } from "@/components/match-category-form";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { ApiDocumentationViewer } from "@/components/api-documentation-viewer";
 
 export default function MatchCategoryPage() {
   const { toast } = useToast();
@@ -109,7 +111,7 @@ export default function MatchCategoryPage() {
           Add New Category
         </Button>
       </header>
-      <main className="flex-1 overflow-y-auto p-4">
+      <main className="flex-1 overflow-y-auto p-4 space-y-6">
         {isLoading ? (
           <div className="flex justify-center items-center h-64">
             <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
@@ -121,6 +123,84 @@ export default function MatchCategoryPage() {
             onDelete={handleDelete}
           />
         )}
+
+        <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="api-docs">
+                <AccordionTrigger>
+                    <div className="flex items-center gap-2">
+                        <Info className="w-5 h-5 text-blue-400" />
+                        <span className="font-semibold">Match Category API Documentation</span>
+                    </div>
+                </AccordionTrigger>
+                <AccordionContent className="space-y-4 pt-4">
+                    <ApiDocumentationViewer
+                        title="Get All Active Match Categories"
+                        description="Called on page load to populate the table."
+                        endpoint="/match-category"
+                        method="GET"
+                        response={`[
+  {
+    "id": "string",
+    "name": "string",
+    "description": "string",
+    "isActive": true,
+    "createdAt": "string (ISO 8601)",
+    "updatedAt": "string (ISO 8601)"
+  }
+]`}
+                    />
+                    <ApiDocumentationViewer
+                        title="Create New Match Category"
+                        description="Called when submitting the 'Add New Category' form."
+                        endpoint="/match-category"
+                        method="POST"
+                        requestPayload={`{
+  "name": "string (required)",
+  "description": "string (optional)",
+  "isActive": "boolean (optional)"
+}`}
+                        response={`{
+  "id": "string",
+  "name": "string",
+  "description": "string",
+  "isActive": true,
+  "createdAt": "string (ISO 8601)",
+  "updatedAt": "string (ISO 8601)"
+}`}
+                    />
+                    <ApiDocumentationViewer
+                        title="Update Match Category"
+                        description="Called when submitting the form after clicking 'Edit'."
+                        endpoint="/match-category/:id"
+                        method="PATCH"
+                        requestPayload={`{
+  "name": "string (optional)",
+  "description": "string (optional)",
+  "isActive": "boolean (optional)"
+}`}
+                        response={`{
+  "id": "string",
+  "name": "string",
+  "description": "string",
+  "isActive": true,
+  "createdAt": "string (ISO 8601)",
+  "updatedAt": "string (ISO 8601)"
+}`}
+                    />
+                     <ApiDocumentationViewer
+                        title="Deactivate Match Category"
+                        description="Called when clicking the 'Deactivate' action in the table."
+                        endpoint="/match-category/:id"
+                        method="DELETE"
+                        response={`{
+  "id": "string",
+  "message": "Match category successfully deactivated."
+}`}
+                    />
+                </AccordionContent>
+            </AccordionItem>
+        </Accordion>
+
       </main>
       <MatchCategoryForm
         isOpen={isFormOpen}
