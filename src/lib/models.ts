@@ -1,3 +1,4 @@
+
 /**
  * @fileoverview This file contains the TypeScript type definitions for the API request
  * and response models used throughout the Zporter application, based on the new API documentation.
@@ -378,6 +379,8 @@ export type InviteUserSearchResult = {
 
 // --- Invite Models ---
 
+export type InvitationRole = 'PLAYER_HOME' | 'COACH_AWAY' | 'REFEREE' | 'HOST' | 'ADMIN';
+
 /**
  * @model CreateInviteDto
  * @description DTO for sending a new invitation.
@@ -385,7 +388,7 @@ export type InviteUserSearchResult = {
 export type CreateInviteDto = {
   inviteeId: string;
   type: 'player' | 'referee' | 'host' | 'team';
-  role: string;
+  role: InvitationRole;
   inviteDaysBefore: number;
   reminderDaysBefore: number;
 };

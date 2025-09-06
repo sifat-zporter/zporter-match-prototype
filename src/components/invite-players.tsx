@@ -1,3 +1,4 @@
+
 // src/components/invite-players.tsx
 "use client";
 
@@ -160,14 +161,15 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
     const getRoleForTab = (tab: string): string => {
         switch (tab) {
             case 'home':
+                return 'PLAYER_HOME';
             case 'away':
-                return 'PLAYER';
+                return 'COACH_AWAY'; // Using COACH_AWAY as per enum for away team context
             case 'referees':
                 return 'REFEREE';
             case 'hosts':
                 return 'HOST';
             default:
-                return 'PLAYER';
+                return 'PLAYER_HOME';
         }
     };
 
@@ -186,7 +188,7 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
                 const payload: CreateInviteDto = {
                     inviteeId: userId,
                     type: user?.type.toLowerCase() as any || 'player', // 'player', 'referee', 'host'
-                    role: user?.type || 'PLAYER', // e.g. PLAYER, COACH
+                    role: role,
                     inviteDaysBefore: isSchedulingEnabled ? inviteDays : 0,
                     reminderDaysBefore: isSchedulingEnabled ? reminderDays : 0,
                 };
@@ -330,7 +332,7 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
                             requestPayload={`{
   "inviteeId": "user-id-to-invite",
   "type": "player | referee | host",
-  "role": "PLAYER | COACH | REFEREE",
+  "role": "PLAYER_HOME | COACH_AWAY | REFEREE | HOST | ADMIN",
   "inviteDaysBefore": 14,
   "reminderDaysBefore": 12
 }`}
