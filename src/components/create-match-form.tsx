@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import { useForm } from "react-hook-form";
@@ -59,29 +60,27 @@ function useDebounce(value: string, delay: number) {
 
 
 const createMatchSchema = z.object({
-  categoryId: z.string().min(1, "Category is required."),
-  formatId: z.string().min(1, "Format is required."),
-  contestId: z.string().min(1, "Contest is required."),
-  matchType: z.enum(["HOME", "AWAY"]).default("HOME"),
-  matchDate: z.date(),
-  matchStartTime: z.string().default("16:00"),
-  matchPeriod: z.coerce.number().int().positive().default(2),
-  matchTime: z.coerce.number().int().positive().default(45),
-  matchPause: z.coerce.number().int().positive().default(15),
+  yourTeamName: z.string().min(1, "Your team name is required."),
+  opponentTeamName: z.string().min(1, "Opponent team name is required."),
   homeTeamId: z.string().min(1, "Your team is required."),
-  awayTeamId: z.string().min(1, "Opponent team is required."),
-  matchHeadLine: z.string().optional(),
+  matchDate: z.date(),
+  startTime: z.string().default("16:00"),
+  location: z.string().default("Sollentunavallen"),
+  category: z.enum(["Friendly", "Cup", "League", "Other"]),
+  format: z.enum(["11v11", "9v9", "8v8", "7v7", "5v5", "3v3", "2v2", "1v1", "Futsal", "Futnet", "Panna", "Teqball", "Other"]),
+  contestId: z.string().optional(),
+  numberOfPeriods: z.coerce.number().int().positive().default(2),
+  periodTime: z.coerce.number().int().positive().default(45),
+  pauseTime: z.coerce.number().int().positive().default(15),
+  headline: z.string().optional(),
   description: z.string().optional(),
-  gatheringDate: z.date(),
-  gatheringTime: z.string().default("15:00"),
-  matchIsAllDay: z.boolean().default(false),
-  matchEnd: z.date(),
-  matchEndTime: z.string().default("18:00"),
-  matchRecurringType: z.enum(["DOES_NOT_REPEAT", "DAILY", "WEEKLY", "MONTHLY"]).default("DOES_NOT_REPEAT"),
-  matchLocation: z.string().default("Sollentunavallen"),
-  matchArena: z.string().default("Sollentunavägen 101"),
-  notificationSendBefore: z.coerce.number().int().default(60),
-  isOccupied: z.boolean().default(true),
+  gatheringTime: z.date(),
+  fullDayScheduling: z.boolean().default(false),
+  endTime: z.date(),
+  isRecurring: z.boolean().default(false),
+  recurringUntil: z.string().optional(),
+  notificationMinutesBefore: z.coerce.number().int().default(60),
+  markAsOccupied: z.boolean().default(true),
   isPrivate: z.boolean().default(false),
 });
 
@@ -118,9 +117,9 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
           apiClient<MatchFormat[]>("/match-format"),
           apiClient<MatchContest[]>("/match-contests"),
         ]);
-        setCategories(catData);
-        setFormats(formatData);
-        setContests(contestData);
+        setCategories(catData.filter(c => c.name));
+        setFormats(formatData.filter(f => f.name));
+        setContests(contestData.filter(c => c.name));
       } catch (error) {
         toast({
           variant: "destructive",
@@ -142,14 +141,15 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
     setIsLoading(true);
     try {
       const clubId = "phL7vvhFwA3K3jrmN3ha"; // As specified in the instructions
-      const response = await apiClient<{ data: TeamDto[] }>(`/clubs/teams?limit=10&sorted=asc&clubId=${clubId}&searchQuery=${query}&gender=MALE&userType=PLAYER`);
+      const response = await apiClient<TeamDto[]>(`/clubs/teams?limit=10&sorted=asc&clubId=${clubId}&searchQuery=${query}&gender=MALE&userType=PLAYER`);
       
-      // Adapt to the new response structure
-      const resultsWithLogoUrl = response.data.map(team => ({
-        ...team,
-        logoUrl: team.logo, // Map 'logo' to 'logoUrl' for consistency
+      const resultsWithMappedFields = response.map(team => ({
+        id: team.teamId!,
+        name: team.teamName!,
+        logoUrl: team.logoUrl,
+        clubId: team.clubId,
       }));
-      setSearchResults(resultsWithLogoUrl);
+      setSearchResults(resultsWithMappedFields);
 
     } catch (error) {
       toast({
@@ -173,24 +173,25 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
   const form = useForm<z.infer<typeof createMatchSchema>>({
     resolver: zodResolver(createMatchSchema),
     defaultValues: {
-      matchType: "HOME",
+      yourTeamName: "Maj FC",
+      opponentTeamName: "FC Barcelona",
+      homeTeamId: "placeholder-home-id",
       matchDate: new Date(),
-      matchStartTime: "16:00",
-      matchPeriod: 2,
-      matchTime: 45,
-      matchPause: 15,
-      matchHeadLine: "Match Zporter Cup 2023",
+      startTime: "16:00",
+      location: "Sollentunavallen",
+      category: "Friendly",
+      format: "11v11",
+      numberOfPeriods: 2,
+      periodTime: 45,
+      pauseTime: 15,
+      headline: "Match Zporter Cup 2023",
       description: 'Match against FC Barcelona U15 starts at 16.00.',
-      gatheringDate: new Date(),
-      gatheringTime: "15:00",
-      matchIsAllDay: false,
-      matchEnd: new Date(),
-      matchEndTime: "18:00",
-      matchRecurringType: "DOES_NOT_REPEAT",
-      matchLocation: "Sollentunavallen",
-      matchArena: "Sollentunavägen 101, 191 40 Sollentuna",
-      notificationSendBefore: 60,
-      isOccupied: true,
+      gatheringTime: new Date(),
+      fullDayScheduling: false,
+      endTime: new Date(),
+      isRecurring: false,
+      notificationMinutesBefore: 60,
+      markAsOccupied: true,
       isPrivate: false,
     },
   });
@@ -198,41 +199,38 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
   const handleSelectHomeTeam = (team: TeamDto) => {
     setSelectedHomeTeam(team);
     form.setValue("homeTeamId", team.id);
+    form.setValue("yourTeamName", team.name);
     setHomeSearchQuery("");
     setHomeSearchResults([]);
   };
   
   const handleSelectAwayTeam = (team: TeamDto) => {
     setSelectedAwayTeam(team);
-    form.setValue("awayTeamId", team.id);
+    form.setValue("opponentTeamName", team.name);
     setAwaySearchQuery("");
     setAwaySearchResults([]);
   };
 
   async function onSubmit(values: z.infer<typeof createMatchSchema>) {
     try {
+      if (!selectedHomeTeam || !selectedAwayTeam) {
+        toast({
+          variant: "destructive",
+          title: "Team selection missing",
+          description: "Please search and select both teams.",
+        });
+        return;
+      }
+
       const payload: CreateMatchDto = {
-        categoryId: values.categoryId,
-        formatId: values.formatId,
-        contestId: values.contestId,
-        matchType: values.matchType,
+        ...values,
+        homeTeamId: selectedHomeTeam.id,
+        // The API doc uses `opponentTeamName` but let's assume we need an ID for it too
+        // if not, the backend might just use the name. For now, we only have the name for opponent.
+        opponentTeamName: selectedAwayTeam.name,
         matchDate: format(values.matchDate, 'yyyy-MM-dd'),
-        matchStartTime: values.matchStartTime,
-        matchPeriod: values.matchPeriod,
-        matchTime: values.matchTime,
-        matchPause: values.matchPause,
-        homeTeamId: values.homeTeamId,
-        awayTeamId: values.awayTeamId,
-        matchHeadLine: values.matchHeadLine || `${selectedHomeTeam?.name} vs ${selectedAwayTeam?.name}`,
-        matchLocation: values.matchLocation,
-        matchArena: values.matchArena,
-        matchIsAllDay: values.matchIsAllDay,
-        matchEnd: format(values.matchEnd, 'yyyy-MM-dd'),
-        matchEndTime: values.matchEndTime,
-        matchRecurringType: values.matchRecurringType,
-        notificationSendBefore: values.notificationSendBefore,
-        isOccupied: values.isOccupied,
-        isPrivate: values.isPrivate,
+        gatheringTime: values.gatheringTime.toISOString(),
+        endTime: values.endTime.toISOString(),
       };
       
       const newMatchResponse = await apiClient<MatchEntity>('/api/matches', {
@@ -268,6 +266,16 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
     return <div className="flex items-center justify-center h-64"><Loader2 className="w-8 h-8 animate-spin text-muted-foreground" /></div>;
   }
 
+  const getCategoryName = (value: string): "Friendly" | "Cup" | "League" | "Other" => {
+    const found = categories.find(c => c.id === value);
+    return found?.name as "Friendly" | "Cup" | "League" | "Other" || "Other";
+  }
+  const getFormatName = (value: string): "11v11" | "9v9" | "8v8" | "7v7" | "5v5" | "3v3" | "2v2" | "1v1" | "Futsal" | "Futnet" | "Panna" | "Teqball" | "Other" => {
+    const found = formats.find(f => f.id === value);
+    return found?.name as "11v11" | "9v9" | "8v8" | "7v7" | "5v5" | "3v3" | "2v2" | "1v1" | "Futsal" | "Futnet" | "Panna" | "Teqball" | "Other" || "Other";
+  }
+
+
   return (
     <div className="space-y-6">
         <Form {...form}>
@@ -275,11 +283,11 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <FormField
                 control={form.control}
-                name="categoryId"
+                name="category"
                 render={({ field }) => (
                     <FormItem>
                     <FormLabel>Category</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={(value) => field.onChange(getCategoryName(value))} defaultValue={field.value}>
                         <FormControl>
                         <SelectTrigger>
                             <SelectValue placeholder="Select a category..." />
@@ -295,11 +303,11 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
                 />
                 <FormField
                 control={form.control}
-                name="formatId"
+                name="format"
                 render={({ field }) => (
                     <FormItem>
                     <FormLabel>Format</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={(value) => field.onChange(getFormatName(value))} defaultValue={field.value}>
                         <FormControl>
                         <SelectTrigger>
                             <SelectValue placeholder="Select a format..." />
@@ -364,7 +372,7 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
                 />
                 <FormField
                 control={form.control}
-                name="matchStartTime"
+                name="startTime"
                 render={({ field }) => (
                     <FormItem>
                     <FormLabel>Start</FormLabel>
@@ -380,7 +388,7 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
             <div className="grid grid-cols-3 gap-4">
                 <FormField
                 control={form.control}
-                name="matchPeriod"
+                name="numberOfPeriods"
                 render={({ field }) => (
                     <FormItem>
                     <FormLabel>Periods</FormLabel>
@@ -397,7 +405,7 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
                 />
                 <FormField
                 control={form.control}
-                name="matchTime"
+                name="periodTime"
                 render={({ field }) => (
                     <FormItem>
                     <FormLabel>Time</FormLabel>
@@ -412,7 +420,7 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
                 />
                 <FormField
                 control={form.control}
-                name="matchPause"
+                name="pauseTime"
                 render={({ field }) => (
                     <FormItem>
                     <FormLabel>Pause</FormLabel>
@@ -436,6 +444,7 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
                         <Button variant="ghost" size="icon" onClick={() => {
                             setSelectedHomeTeam(null);
                             form.setValue("homeTeamId", "");
+                            form.setValue("yourTeamName", "");
                         }}><X className="w-4 h-4" /></Button>
                     </div>
                 ) : (
@@ -477,7 +486,7 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
                         <span>{selectedAwayTeam.name}</span>
                         <Button variant="ghost" size="icon" onClick={() => {
                             setSelectedAwayTeam(null);
-                            form.setValue("awayTeamId", "");
+                            form.setValue("opponentTeamName", "");
                         }}><X className="w-4 h-4" /></Button>
                     </div>
                 ) : (
@@ -508,12 +517,12 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
                         </PopoverContent>
                     </Popover>
                 )}
-                <p className="text-sm font-medium text-destructive">{form.formState.errors.awayTeamId?.message}</p>
+                <p className="text-sm font-medium text-destructive">{form.formState.errors.opponentTeamName?.message}</p>
             </div>
 
             <FormField
                 control={form.control}
-                name="matchHeadLine"
+                name="headline"
                 render={({ field }) => (
                 <FormItem>
                     <FormLabel>Headline</FormLabel>
@@ -543,10 +552,10 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
             <div className="grid grid-cols-2 gap-4">
                 <FormField
                 control={form.control}
-                name="gatheringDate"
+                name="gatheringTime"
                 render={({ field }) => (
                     <FormItem>
-                    <FormLabel>Gathering Date</FormLabel>
+                    <FormLabel>Gathering</FormLabel>
                     <Popover>
                         <PopoverTrigger asChild>
                         <FormControl>
@@ -554,7 +563,47 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
                             variant={"outline"}
                             className={cn("w-full justify-between text-left font-normal", !field.value && "text-muted-foreground")}
                             >
-                            {field.value ? format(field.value, "yyyy-MM-dd") : <span>Pick a date</span>}
+                            {field.value ? format(field.value, "PPP HH:mm") : <span>Pick a date</span>}
+                            <CalendarIcon className="h-4 w-4 opacity-50" />
+                            </Button>
+                        </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
+                        {/* Simple time picker could be added here */}
+                        </PopoverContent>
+                    </Popover>
+                    </FormItem>
+                )}
+                />
+                 <FormField
+                control={form.control}
+                name="fullDayScheduling"
+                render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm mt-6">
+                        <FormLabel>All day</FormLabel>
+                        <FormControl>
+                            <Switch checked={field.value} onCheckedChange={field.onChange} />
+                        </FormControl>
+                    </FormItem>
+                )}
+                />
+            </div>
+            
+            <FormField
+                control={form.control}
+                name="endTime"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>End</FormLabel>
+                    <Popover>
+                        <PopoverTrigger asChild>
+                        <FormControl>
+                            <Button
+                            variant={"outline"}
+                            className={cn("w-full justify-between text-left font-normal", !field.value && "text-muted-foreground")}
+                            >
+                            {field.value ? format(field.value, "PPP HH:mm") : <span>Pick a date</span>}
                             <CalendarIcon className="h-4 w-4 opacity-50" />
                             </Button>
                         </FormControl>
@@ -566,25 +615,13 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
                     </FormItem>
                 )}
                 />
-                <FormField
-                control={form.control}
-                name="gatheringTime"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>Gathering Time</FormLabel>
-                    <FormControl>
-                        <Input icon={Clock} type="time" {...field} />
-                    </FormControl>
-                    </FormItem>
-                )}
-                />
-            </div>
             
+
             <div className="flex items-center justify-between">
-                <FormLabel>All day</FormLabel>
-                <FormField
+                <FormLabel>Recurring</FormLabel>
+                 <FormField
                 control={form.control}
-                name="matchIsAllDay"
+                name="isRecurring"
                 render={({ field }) => (
                     <FormItem>
                     <FormControl>
@@ -595,85 +632,12 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
                 />
             </div>
             
-            <div className="grid grid-cols-2 gap-4">
-                <FormField
-                control={form.control}
-                name="matchEnd"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>End Date</FormLabel>
-                    <Popover>
-                        <PopoverTrigger asChild>
-                        <FormControl>
-                            <Button
-                            variant={"outline"}
-                            className={cn("w-full justify-between text-left font-normal", !field.value && "text-muted-foreground")}
-                            >
-                            {field.value ? format(field.value, "yyyy-MM-dd") : <span>Pick a date</span>}
-                            <CalendarIcon className="h-4 w-4 opacity-50" />
-                            </Button>
-                        </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
-                        </PopoverContent>
-                    </Popover>
-                    </FormItem>
-                )}
-                />
-                <FormField
-                control={form.control}
-                name="matchEndTime"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>End Time</FormLabel>
-                    <FormControl>
-                        <Input icon={Clock} type="time" {...field} />
-                    </FormControl>
-                    </FormItem>
-                )}
-                />
-            </div>
-
-            <div className="flex items-center justify-between">
-                <FormLabel>Recurring</FormLabel>
-                <FormField
-                control={form.control}
-                name="matchRecurringType"
-                render={({ field }) => (
-                    <FormItem className="w-1/2">
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                        <SelectContent>
-                            <SelectItem value="DOES_NOT_REPEAT">Does not repeat</SelectItem>
-                            <SelectItem value="DAILY">Daily</SelectItem>
-                            <SelectItem value="WEEKLY">Weekly</SelectItem>
-                            <SelectItem value="MONTHLY">Monthly</SelectItem>
-                        </SelectContent>
-                    </Select>
-                    </FormItem>
-                )}
-                />
-            </div>
-            
             <FormField
                 control={form.control}
-                name="matchLocation"
+                name="location"
                 render={({ field }) => (
                 <FormItem>
                     <FormLabel>Location</FormLabel>
-                    <FormControl>
-                    <Input icon={MapPin} {...field} />
-                    </FormControl>
-                </FormItem>
-                )}
-            />
-            <FormField
-                control={form.control}
-                name="matchArena"
-                render={({ field }) => (
-                <FormItem>
-                    <FormLabel>Arena</FormLabel>
                     <FormControl>
                     <Input icon={MapPin} {...field} />
                     </FormControl>
@@ -685,7 +649,7 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
                 <FormLabel>Notification</FormLabel>
                 <FormField
                 control={form.control}
-                name="notificationSendBefore"
+                name="notificationMinutesBefore"
                 render={({ field }) => (
                     <FormItem className="w-1/2">
                     <Select onValueChange={field.onChange} defaultValue={String(field.value)}>
@@ -704,7 +668,7 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
                 <FormLabel>Occupied</FormLabel>
                 <FormField
                 control={form.control}
-                name="isOccupied"
+                name="markAsOccupied"
                 render={({ field }) => (
                     <FormItem><FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl></FormItem>
                 )}
@@ -742,21 +706,14 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
                         endpoint="/clubs/teams?limit=10&sorted=asc&clubId={clubId}&searchQuery={query}&gender=MALE&userType=PLAYER"
                         method="GET"
                         notes="This dynamic search populates the team selection dropdowns. The clubId is currently hardcoded to 'phL7vvhFwA3K3jrmN3ha'."
-                        response={`{
-    "data": [
-        {
-            "id": "string",
-            "name": "string",
-            "logo": "string (URL)",
-            "clubId": "string"
-        }
-    ],
-    "pagination": {
-        "limit": 10,
-        "total": 1,
-        "startAfter": "string"
-    }
-}`}
+                        response={`[
+  {
+    "teamId": "string",
+    "teamName": "string",
+    "logoUrl": "string (URL)",
+    "clubId": "string"
+  }
+]`}
                     />
                     <ApiDocumentationViewer
                         title="Fetch Match Categories"

@@ -22,12 +22,16 @@ export type LocationDto = {
 export type TeamDto = {
   id: string;
   name: string;
-  logoUrl?: string; // Kept for frontend consistency
-  logo?: string; // From new API
+  logoUrl?: string;
   country?: string;
   type?: string;
   clubId?: string;
+  // Raw API fields for mapping
+  teamId?: string;
+  teamName?: string;
+  logo?: string;
 };
+
 
 // --- Authentication Models ---
 
@@ -54,29 +58,28 @@ export type LoginResponse = {
  * @description The main DTO for creating a match draft (POST /api/matches).
  */
 export type CreateMatchDto = {
-  categoryId: string;
-  formatId: string;
-  contestId: string;
-  matchType: "HOME" | "AWAY";
-  matchDate: string; // YYYY-MM-DD
-  matchStartTime: string; // HH:MM
-  matchPeriod: number;
-  matchTime: number;
-  matchPause: number;
+  yourTeamName: string;
+  opponentTeamName: string;
   homeTeamId: string;
-  awayTeamId: string;
-  matchHeadLine: string;
-  matchLocation: string;
-  matchArena: string;
-  matchFiles?: string[];
-  matchIsAllDay?: boolean;
-  matchEnd?: string; // YYYY-MM-DD
-  matchEndTime?: string; // HH:MM
-  matchRecurringType?: "DOES_NOT_REPEAT" | "DAILY" | "WEEKLY" | "MONTHLY";
-  isNotificationOn?: boolean;
-  notificationSendBefore?: number;
-  isOccupied?: boolean;
-  isPrivate?: boolean;
+  matchDate: string; // "YYYY-MM-DD"
+  startTime: string; // "HH:MM"
+  location: string;
+  category: "Friendly" | "Cup" | "League" | "Other";
+  format: "11v11" | "9v9" | "8v8" | "7v7" | "5v5" | "3v3" | "2v2" | "1v1" | "Futsal" | "Futnet" | "Panna" | "Teqball" | "Other";
+  contestId?: string;
+  numberOfPeriods: number;
+  periodTime: number;
+  pauseTime: number;
+  headline?: string;
+  description?: string;
+  gatheringTime: string; // ISO 8601
+  fullDayScheduling: boolean;
+  endTime: string; // ISO 8601
+  isRecurring: boolean;
+  recurringUntil?: string; // "YYYY-MM-DD"
+  notificationMinutesBefore: number;
+  markAsOccupied: boolean;
+  isPrivate: boolean;
 };
 
 
