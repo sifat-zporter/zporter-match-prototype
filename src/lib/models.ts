@@ -1,3 +1,4 @@
+
 /**
  * @fileoverview This file contains the TypeScript type definitions for the API request
  * and response models used throughout the Zporter application, based on the new API documentation.
@@ -20,15 +21,10 @@ export type LocationDto = {
 };
 
 export type TeamDto = {
-  id: string;
-  name: string;
+  teamId: string;
+  teamName: string;
   logoUrl?: string;
-  country?: string;
-  type?: string;
   clubId?: string;
-  // Raw API fields for mapping
-  teamId?: string;
-  teamName?: string;
 };
 
 
@@ -60,7 +56,7 @@ export type CreateMatchDto = {
   yourTeamName: string;
   opponentTeamName: string;
   homeTeamId: string;
-  awayTeamId: string; // Added this field
+  awayTeamId: string;
   matchDate: string; // "YYYY-MM-DD"
   startTime: string; // "HH:MM"
   location: string;
@@ -100,7 +96,7 @@ export type CreateMatchLogDto = {
   periodDurationMinutes: number;
   pauseDurationMinutes: number;
   location: string;
-  apiToken: string; // Added for authentication
+  apiToken: string;
 };
 
 
@@ -249,7 +245,7 @@ export type MatchEntity = {
     userGeneratedData: {
         eventDetails: any; // Contains the original DTO
     };
-    // Add other fields as necessary from the large response object
+    [key: string]: any; // Allow for other fields from the large response object
 };
 
 // --- Match Category Models ---
@@ -353,6 +349,19 @@ export type CreateMatchContestDto = {
  */
 export type UpdateMatchContestDto = Partial<CreateMatchContestDto>;
 
+// --- User Models ---
+
+/**
+ * @model UserSearchResult
+ * @description Represents a user object from the search results.
+ */
+export type UserSearchResult = {
+  id: string;
+  name: string;
+  avatar: string;
+};
+
+
 // --- Invite Models ---
 
 /**
@@ -360,10 +369,9 @@ export type UpdateMatchContestDto = Partial<CreateMatchContestDto>;
  * @description DTO for sending a new invitation.
  */
 export type CreateInviteDto = {
+  matchId: string;
   inviteeId: string;
-  role: 'PLAYER_HOME' | 'COACH_AWAY' | 'REFEREE' | 'HOST' | 'ADMIN';
-  inviteDaysBefore: number;
-  reminderDaysBefore: number;
+  type: 'player' | 'referee' | 'host' | 'team';
 };
 
 /**
@@ -371,30 +379,19 @@ export type CreateInviteDto = {
  * @description DTO for updating an invitation's status.
  */
 export type UpdateInviteStatusDto = {
-  status: 'SCHEDULED' | 'PENDING' | 'ACCEPTED' | 'DECLINED';
+  status: 'accepted' | 'declined';
 };
 
 /**
  * @model Invite
- * @description Represents an invitation object.
+ * @description Represents an invitation object from the API.
  */
 export type Invite = {
   id: string;
   matchId: string;
   inviteeId: string;
-  inviterId: string;
-  role: string;
-  status: string;
-  inviteDaysBefore: number;
-  reminderDaysBefore: number;
-  createdAt: string;
-  updatedAt: string;
-  matchDetails: {
-    id: string;
-    name: string;
-    startDate: string;
-    homeTeam: { id: string, name: string };
-    awayTeam: { id: string, name: string };
-    competition: { id: string, name: string };
-  }
+  type: string;
+  status: 'pending' | 'accepted' | 'declined';
 };
+
+    
