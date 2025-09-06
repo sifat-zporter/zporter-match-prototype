@@ -142,8 +142,16 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
     }
     setIsLoading(true);
     try {
-      const results = await apiClient<TeamDto[]>(`/teams/search?name=${query}`);
-      setSearchResults(results);
+      const clubId = "phL7vvhFwA3K3jrmN3ha"; // As specified in the instructions
+      const response = await apiClient<{ data: TeamDto[] }>(`/clubs/teams?clubId=${clubId}&searchQuery=${query}`);
+      
+      // Adapt to the new response structure
+      const resultsWithLogoUrl = response.data.map(team => ({
+        ...team,
+        logoUrl: team.logo, // Map 'logo' to 'logoUrl' for consistency
+      }));
+      setSearchResults(resultsWithLogoUrl);
+
     } catch (error) {
       toast({
         variant: "destructive",
@@ -731,19 +739,25 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
                 <AccordionContent className="space-y-4 pt-4">
                      <ApiDocumentationViewer
                         title="Search Teams by Name"
-                        description="Called when the user types in the 'Your Team' or 'Opponent' fields to provide a list of selectable teams."
-                        endpoint="/teams/search?name={query}"
+                        description="Called when the user types in the 'Your Team' or 'Opponent' fields. Requires clubId and the search query."
+                        endpoint="/clubs/teams?clubId={clubId}&searchQuery={query}"
                         method="GET"
-                        notes="This dynamic search populates the team selection dropdowns."
-                        response={`[
-  {
-    "id": "string",
-    "name": "string",
-    "logoUrl": "string",
-    "country": "string",
-    "type": "string"
-  }
-]`}
+                        notes="This dynamic search populates the team selection dropdowns. The clubId is currently hardcoded to 'phL7vvhFwA3K3jrmN3ha'."
+                        response={`{
+    "data": [
+        {
+            "id": "string",
+            "name": "string",
+            "logo": "string (URL)",
+            "clubId": "string"
+        }
+    ],
+    "pagination": {
+        "limit": 10,
+        "total": 1,
+        "startAfter": "string"
+    }
+}`}
                     />
                     <ApiDocumentationViewer
                         title="Fetch Match Categories"
@@ -807,35 +821,28 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
                         method="POST"
                         notes="This is the first and most critical step. The 'id' returned in the response is required to save data in all other tabs (Invites, Plan, Notes, etc.)."
                         requestPayload={`{
-  "categoryId": "string",
-  "formatId": "string",
-  "contestId": "string",
-  "matchType": "HOME",
-  "matchDate": "string (YYYY-MM-DD)",
-  "matchStartTime": "string (HH:MM)",
-  "matchPeriod": "number",
-  "matchTime": "number",
-  "matchPause": "number",
+  "yourTeamName": "string",
+  "opponentTeamName": "string",
   "homeTeamId": "string",
-  "awayTeamId": "string",
-  "matchHeadLine": "string",
+  "matchDate": "string (YYYY-MM-DD)",
+  "startTime": "string (HH:MM)",
+  "location": "string",
+  "category": "Friendly | Cup | League | Other",
+  "format": "11v11 | 9v9 | 8v8 | 7v7 | 5v5 | 3v3 | 2v2 | 1v1 | Futsal | Futnet | Panna | Teqball | Other",
+  "contestId": "string" (optional),
+  "numberOfPeriods": "number",
+  "periodTime": "number",
+  "pauseTime": "number",
+  "headline": "string" (optional),
   "description": "string" (optional),
-  "gatheringDate": "string (ISO 8601)",
+  "gatheringTime": "string (ISO 8601, e.g., YYYY-MM-DDTHH:MM:SSZ)",
   "fullDayScheduling": "boolean",
-  "endTime": "string (ISO 8601)",
+  "endTime": "string (ISO 8601, e.g., YYYY-MM-DDTHH:MM:SSZ)",
   "isRecurring": "boolean",
   "recurringUntil": "string (YYYY-MM-DD)" (optional),
   "notificationMinutesBefore": "number",
   "markAsOccupied": "boolean",
-  "isPrivate": "boolean",
-  "yourTeamName": "string",
-  "opponentTeamName": "string",
-  "homeTeamId": "string",
-  "location": "string",
-  "numberOfPeriods": "number",
-  "periodTime": "number",
-  "pauseTime": "number",
-  "gatheringTime": "string (ISO 8601, e.g., YYYY-MM-DDTHH:MM:SSZ)"
+  "isPrivate": "boolean"
 }`}
                         response={`{
   "id": "string",

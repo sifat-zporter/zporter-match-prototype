@@ -22,9 +22,11 @@ export type LocationDto = {
 export type TeamDto = {
   id: string;
   name: string;
-  logoUrl: string;
-  country: string;
-  type: string;
+  logoUrl?: string; // Kept for frontend consistency
+  logo?: string; // From new API
+  country?: string;
+  type?: string;
+  clubId?: string;
 };
 
 // --- Authentication Models ---
