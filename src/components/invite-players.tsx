@@ -84,7 +84,7 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
         if (!matchId) return;
         setIsLoading(true);
         setSearchResults([]);
-        setSelectedUserIds(new Set());
+        
         try {
             const params = new URLSearchParams();
 
@@ -304,7 +304,7 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
                 </div>
             </Tabs>
             
-             <Accordion type="single" collapsible className="w-full pt-4">
+            <Accordion type="single" collapsible className="w-full pt-4">
                 <AccordionItem value="api-docs">
                     <AccordionTrigger>
                         <div className="flex items-center gap-2">
@@ -314,11 +314,11 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
                     </AccordionTrigger>
                     <AccordionContent className="space-y-4 pt-4">
                         <ApiDocumentationViewer
-                            title="Search for Users to Invite"
-                            description="Use this single, powerful endpoint to find any user (player, referee, or host) to invite to the match."
+                            title="1. Search for Users to Invite"
+                            description="Searches for users. It can find all players for a specific team or search for any user by name."
                             endpoint="/matches/:matchId/invites/search-users"
                             method="GET"
-                            notes="Provide a team's ID to get all players on that team, or provide a name to search for specific users like referees."
+                            notes="Example 1: /matches/your-match-id/invites/search-users?teamId=your-team-id&role=PLAYER&#013;Example 2: /matches/your-match-id/invites/search-users?name=RefereeName"
                             response={`[
     {
         "userId": "user-id-abc",
@@ -330,7 +330,7 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
 ]`}
                         />
                         <ApiDocumentationViewer
-                            title="Send an Invitation"
+                            title="2. Send an Invitation"
                             description="Called when the 'Save' button is clicked for each newly selected user."
                             endpoint="/matches/:matchId/invites"
                             method="POST"
@@ -350,7 +350,7 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
 }`}
                         />
                          <ApiDocumentationViewer
-                            title="List All Invitations for a Match"
+                            title="3. List All Invitations for a Match"
                             description="Called when the tab loads to show who has already been invited."
                             endpoint="/matches/:matchId/invites"
                             method="GET"
@@ -365,12 +365,12 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
 ]`}
                         />
                          <ApiDocumentationViewer
-                            title="Respond to an Invitation"
+                            title="4. Respond to an Invitation"
                             description="This endpoint is for the invited user to accept or decline an invitation."
                             endpoint="/matches/:matchId/invites/:inviteId/status"
                             method="PATCH"
                              requestPayload={`{
-  "status": "accepted"
+  "status": "accepted | declined"
 }`}
                             response={`{
   "id": "invite-id-2",
