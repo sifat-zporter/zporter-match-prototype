@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import { useForm } from "react-hook-form";
@@ -223,7 +224,7 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
       }
 
       // Construct the payload with the correct field names for the backend
-      const payload = {
+      const payload: CreateMatchDto = {
         ...values,
         yourTeamName: selectedHomeTeam.name,
         opponentTeamName: selectedAwayTeam.name,
@@ -234,7 +235,7 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
       
       const newMatchResponse = await apiClient<MatchEntity>('/api/matches', {
         method: 'POST',
-        body: payload as any,
+        body: payload,
       });
 
       // Transform the response to the frontend Match type
@@ -458,7 +459,7 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
                     </div>
                 ) : (
                     <Popover open={homeSearchQuery.length > 1 && homeSearchResults.length > 0}>
-                        <PopoverTrigger>
+                        <PopoverTrigger asChild>
                              <div className="relative">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                                 <Input
@@ -500,7 +501,7 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
                     </div>
                 ) : (
                     <Popover open={awaySearchQuery.length > 1 && awaySearchResults.length > 0}>
-                        <PopoverTrigger>
+                        <PopoverTrigger asChild>
                             <div className="relative">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                                 <Input
@@ -825,10 +826,16 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
   "markAsOccupied": "boolean",
   "isPrivate": "boolean"
 }`}
-                        response={`{
+                        response={`
+{
   "id": "string",
   "status": "draft",
+  "createdAt": "string (ISO 8601)",
+  "updatedAt": "string (ISO 8601)",
+  "name": "string",
+  "description": "string",
   "startDate": "string (ISO 8601)",
+  "endDate": "string (ISO 8601)",
   "homeTeam": {
     "id": "string",
     "name": "string",
@@ -839,15 +846,32 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
     "name": "string",
     "logoUrl": "string"
   },
+  "competition": {
+    "id": "string",
+    "name": "string",
+    "type": "string"
+  },
   "venue": {
     "name": "string"
   },
   "userGeneratedData": {
     "eventDetails": {
-      // ... a copy of the request payload
+      "homeTeamId": "string",
+      "awayTeamId": "string",
+      "categoryId": "string",
+      "formatId": "string",
+      "matchDate": "string (YYYY-MM-DD)",
+      "matchStartTime": "string (HH:MM)",
+      "matchType": "HOME | AWAY",
+      "matchPeriod": "number",
+      "matchTime": "number",
+      "matchPause": "number",
+      "matchHeadLine": "string",
+      "matchLocation": "string",
+      "matchArena": "string",
+      "contestId": "string"
     }
   }
-  // ... and many more fields
 }`}
                     />
                 </AccordionContent>
