@@ -65,7 +65,7 @@ const createMatchSchema = z.object({
   formatId: z.string().min(1, "Format is required."),
   matchDate: z.date(),
   matchStartTime: z.string().default("16:00"),
-  matchType: z.enum(["Friendly", "Cup", "League", "Other"]), // Assuming this is an enum
+  matchType: z.enum(["HOME", "AWAY"]),
   matchPeriod: z.coerce.number().int().positive().default(2),
   matchTime: z.coerce.number().int().positive().default(45),
   matchPause: z.coerce.number().int().positive().default(15),
@@ -181,7 +181,7 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
       matchArena: "Main Pitch",
       categoryId: "",
       formatId: "",
-      matchType: "Friendly",
+      matchType: "HOME",
       matchPeriod: 2,
       matchTime: 45,
       matchPause: 15,
@@ -225,8 +225,8 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
       // Construct the payload with the correct field names for the backend
       const payload = {
         ...values,
-        homeTeamName: selectedHomeTeam.name,
-        awayTeamName: selectedAwayTeam.name,
+        yourTeamName: selectedHomeTeam.name,
+        opponentTeamName: selectedAwayTeam.name,
         matchDate: format(values.matchDate, 'yyyy-MM-dd'),
         gatheringTime: values.gatheringTime.toISOString(),
         endTime: values.endTime.toISOString(),
@@ -332,7 +332,28 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
             />
             </div>
             
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
+                 <FormField
+                    control={form.control}
+                    name="matchType"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Home/Away</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select type" />
+                            </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                                <SelectItem value="HOME">Home</SelectItem>
+                                <SelectItem value="AWAY">Away</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
                 <FormField
                 control={form.control}
                 name="matchDate"
@@ -689,7 +710,7 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
             </div>
 
             <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white" disabled={form.formState.isSubmitting}>
-            {form.formState.isSubmitting ? 'Saving...' : 'Save Draft &amp; Continue'}
+            {form.formState.isSubmitting ? 'Saving...' : 'Save Draft & Continue'}
             </Button>
         </form>
         </Form>
@@ -706,7 +727,7 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
                      <ApiDocumentationViewer
                         title="Search Teams by Name"
                         description="Called when the user types in the 'Your Team' or 'Opponent' fields. Requires clubId and other parameters."
-                        endpoint="/clubs/teams?limit=10&amp;sorted=asc&amp;clubId={clubId}&amp;searchQuery={query}&amp;gender=MALE&amp;userType=PLAYER"
+                        endpoint="/clubs/teams?limit=10&sorted=asc&clubId={clubId}&searchQuery={query}&gender=MALE&userType=PLAYER"
                         method="GET"
                         notes="This dynamic search populates the team selection dropdowns. The clubId is currently hardcoded to 'phL7vvhFwA3K3jrmN3ha'."
                         response={`[
@@ -775,7 +796,7 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
                     />
                      <ApiDocumentationViewer
                         title="Create Match Draft"
-                        description="Called when the 'Save Draft &amp; Continue' button is clicked. It creates the initial match record."
+                        description="Called when the 'Save Draft & Continue' button is clicked. It creates the initial match record."
                         endpoint="/api/matches"
                         method="POST"
                         notes="This is the first and most critical step. The 'id' returned in the response is required to save data in all other tabs (Invites, Plan, Notes, etc.)."
@@ -786,7 +807,7 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
   "formatId": "string",
   "matchDate": "string (YYYY-MM-DD)",
   "matchStartTime": "string (HH:MM)",
-  "matchType": "Friendly | Cup | League | Other",
+  "matchType": "HOME | AWAY",
   "matchPeriod": "number",
   "matchTime": "number",
   "matchPause": "number",
@@ -831,5 +852,3 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
     </div>
   )
 }
-
-    
