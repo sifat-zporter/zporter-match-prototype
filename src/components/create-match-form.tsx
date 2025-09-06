@@ -649,6 +649,7 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
     "season": "string",
     "type": "LEAGUE | CUP | TOURNAMENT",
     "logoUrl": "string",
+    "participatingTeams": ["string"],
     "isActive": true,
     "createdAt": "string (ISO 8601)",
     "updatedAt": "string (ISO 8601)"
@@ -662,9 +663,9 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
                         method="POST"
                         notes="This is the first and most critical step. The 'id' returned in the response is required to save data in all other tabs (Invites, Plan, Notes, etc.)."
                         requestPayload={`{
-  "categoryId": "string",
-  "formatId": "string",
-  "contestId": "string",
+  "categoryId": "some-category-id",
+  "formatId": "some-format-id",
+  "contestId": "some-contest-id",
   "matchType": "HOME",
   "matchDate": "2025-09-05",
   "matchStartTime": "18:00",
@@ -673,29 +674,141 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
   "matchPause": 15,
   "homeTeamId": "team-home-123",
   "awayTeamId": "team-away-456",
-  "matchHeadLine": "Exciting Match",
-  "matchLocation": "City Stadium",
-  "matchArena": "Main Arena",
+  "matchHeadLine": "Exciting Match Between Home and Away Teams",
+  "matchFiles": ["http://example.com/file1.pdf", "http://example.com/image1.png"],
   "matchIsAllDay": false,
   "matchEnd": "2025-09-05",
   "matchEndTime": "20:00",
   "matchRecurringType": "DOES_NOT_REPEAT",
+  "matchLocation": "City Stadium",
+  "matchArena": "Main Arena",
+  "isNotificationOn": true,
   "notificationSendBefore": 60,
   "isOccupied": false,
   "isPrivate": false
 }`}
                         response={`{
-  "id": "match-draft-12345",
+  "id": "string",
+  "source": "user-generated",
+  "sourceId": null,
+  "createdBy": "string",
   "status": "draft",
-  "homeTeam": { "id": "team-home-123", "name": "Home Team" },
-  "awayTeam": { "id": "team-away-456", "name": "Away Team" },
-  "startDate": "2025-09-05T18:00:00Z",
-  "venue": { "name": "City Stadium" },
-  "userGeneratedData": {
-    "eventDetails": {
-      "matchHeadLine": "Exciting Match"
+  "createdAt": "string (ISO 8601 date)",
+  "updatedAt": "string (ISO 8601 date)",
+  "name": "string",
+  "description": "string",
+  "startDate": "string (ISO 8601 date)",
+  "endDate": "string (ISO 8601 date)",
+  "timezone": "string",
+  "duration": "number",
+  "homeTeam": {
+    "id": "string",
+    "source": "user-generated",
+    "sourceId": null,
+    "name": "string",
+    "shortName": "string",
+    "code": "string",
+    "logoUrl": "string",
+    "country": "string",
+    "founded": null,
+    "isNational": false,
+    "venue": null,
+    "players": []
+  },
+  "awayTeam": {
+    "id": "string",
+    "source": "user-generated",
+    "sourceId": null,
+    "name": "string",
+    "shortName": "string",
+    "code": "string",
+    "logoUrl": "string",
+    "country": "string",
+    "founded": null,
+    "isNational": false,
+    "venue": null,
+    "players": []
+  },
+  "competition": {
+    "id": "string",
+    "source": "user-generated",
+    "sourceId": null,
+    "name": "string",
+    "shortName": "string",
+    "type": "string",
+    "country": "string",
+    "logoUrl": "string",
+    "tier": 0
+  },
+  "season": null,
+  "stage": null,
+  "round": null,
+  "scores": {
+    "home": 0,
+    "away": 0,
+    "homePeriod1": 0,
+    "awayPeriod1": 0,
+    "homePeriod2": 0,
+    "awayPeriod2": 0,
+    "homeExtraTime": 0,
+    "awayExtraTime": 0,
+    "homePenalties": 0,
+    "awayPenalties": 0,
+    "winner": null
+  },
+  "venue": {
+    "id": null,
+    "sourceId": null,
+    "name": "string",
+    "city": "string",
+    "country": "string",
+    "capacity": 0,
+    "surface": "string",
+    "coordinates": {
+      "lat": 0,
+      "lng": 0
     }
-  }
+  },
+  "referee": null,
+  "assistantReferees": [],
+  "fourthOfficial": null,
+  "attendance": 0,
+  "weather": {
+    "temperature": 0,
+    "humidity": 0,
+    "windSpeed": 0,
+    "description": "string"
+  },
+  "featuredPlayers": [],
+  "isFeatured": false,
+  "isPrivate": false,
+  "likes": 0,
+  "followers": 0,
+  "sportmonksData": {
+    "raw": null,
+    "lastChanged": null,
+    "hasLineup": false,
+    "hasEvents": false,
+    "hasStats": false,
+    "live": false
+  },
+  "userGeneratedData": {
+    "notes": [],
+    "reviews": [],
+    "invites": [],
+    "tacticalPlan": null,
+    "eventDetails": {},
+    "scheduleDetails": null,
+    "settings": {}
+  },
+  "liveLog": {
+    "events": [],
+    "stats": {},
+    "isActive": false
+  },
+  "tags": [],
+  "popularity": "number",
+  "version": 1
 }`}
                     />
                 </AccordionContent>
