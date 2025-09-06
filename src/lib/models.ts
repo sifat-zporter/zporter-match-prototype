@@ -19,6 +19,14 @@ export type LocationDto = {
   };
 };
 
+export type TeamDto = {
+  id: string;
+  name: string;
+  logoUrl: string;
+  country: string;
+  type: string;
+};
+
 // --- API DTOs for Match Creation & Updates ---
 
 /**

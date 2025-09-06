@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
-import { Calendar as CalendarIcon, Clock, Search, MapPin, Loader2, Camera, Video, Link as LinkIcon, Info } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, Search, MapPin, Loader2, Camera, Video, Link as LinkIcon, Info, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -36,12 +36,28 @@ import { Textarea } from "./ui/textarea";
 import { Switch } from "./ui/switch";
 import { Separator } from "./ui/separator";
 import { apiClient } from "@/lib/api-client";
-import type { CreateMatchDto, MatchCategory, MatchContest, MatchFormat, MatchEntity } from "@/lib/models";
+import type { CreateMatchDto, MatchCategory, MatchContest, MatchFormat, MatchEntity, TeamDto } from "@/lib/models";
 import { useToast } from "@/hooks/use-toast";
 import type { Match } from "@/lib/data";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
 import { ApiDocumentationViewer } from "./api-documentation-viewer";
+import { Command, CommandInput, CommandList, CommandEmpty, CommandItem } from "@/components/ui/command";
+
+// Debounce hook
+function useDebounce(value: string, delay: number) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+  return debouncedValue;
+}
+
 
 const createMatchSchema = z.object({
   categoryId: z.string().min(1, "Category is required."),
@@ -53,11 +69,8 @@ const createMatchSchema = z.object({
   matchPeriod: z.coerce.number().int().positive().default(2),
   matchTime: z.coerce.number().int().positive().default(45),
   matchPause: z.coerce.number().int().positive().default(15),
-  // Placeholder IDs - in a real app, these would come from team selection UI
-  homeTeamId: z.string().default("team-alpha-placeholder"), 
-  awayTeamId: z.string().default("team-beta-placeholder"),
-  yourTeamName: z.string().min(1, "Your team name is required"),
-  opponentTeamName: z.string().min(1, "Opponent team name is required"),
+  homeTeamId: z.string().min(1, "Your team is required."),
+  awayTeamId: z.string().min(1, "Opponent team is required."),
   matchHeadLine: z.string().optional(),
   description: z.string().optional(),
   gatheringDate: z.date(),
@@ -84,6 +97,19 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
   const [contests, setContests] = useState<MatchContest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // State for team search
+  const [homeSearchQuery, setHomeSearchQuery] = useState("");
+  const [awaySearchQuery, setAwaySearchQuery] = useState("");
+  const [homeSearchResults, setHomeSearchResults] = useState<TeamDto[]>([]);
+  const [awaySearchResults, setAwaySearchResults] = useState<TeamDto[]>([]);
+  const [isHomeSearching, setIsHomeSearching] = useState(false);
+  const [isAwaySearching, setIsAwaySearching] = useState(false);
+  const [selectedHomeTeam, setSelectedHomeTeam] = useState<TeamDto | null>(null);
+  const [selectedAwayTeam, setSelectedAwayTeam] = useState<TeamDto | null>(null);
+
+  const debouncedHomeSearch = useDebounce(homeSearchQuery, 300);
+  const debouncedAwaySearch = useDebounce(awaySearchQuery, 300);
+
   useEffect(() => {
     async function fetchDropdownData() {
       try {
@@ -108,6 +134,34 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
     }
     fetchDropdownData();
   }, [toast]);
+
+  const searchTeams = useCallback(async (query: string, setSearchResults: React.Dispatch<React.SetStateAction<TeamDto[]>>, setIsLoading: React.Dispatch<React.SetStateAction<boolean>>) => {
+    if (query.length < 2) {
+      setSearchResults([]);
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const results = await apiClient<TeamDto[]>(`/teams/search?name=${query}`);
+      setSearchResults(results);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Team Search Failed",
+        description: "Could not fetch teams. Please try again.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [toast]);
+
+  useEffect(() => {
+    searchTeams(debouncedHomeSearch, setHomeSearchResults, setIsHomeSearching);
+  }, [debouncedHomeSearch, searchTeams]);
+
+  useEffect(() => {
+    searchTeams(debouncedAwaySearch, setAwaySearchResults, setIsAwaySearching);
+  }, [debouncedAwaySearch, searchTeams]);
   
   const form = useForm<z.infer<typeof createMatchSchema>>({
     resolver: zodResolver(createMatchSchema),
@@ -118,8 +172,6 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
       matchPeriod: 2,
       matchTime: 45,
       matchPause: 15,
-      yourTeamName: "Maj FC - Boys U15",
-      opponentTeamName: "FC Barcelona U15",
       matchHeadLine: "Match Zporter Cup 2023",
       description: 'Match against FC Barcelona U15 starts at 16.00.',
       gatheringDate: new Date(),
@@ -135,6 +187,20 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
       isPrivate: false,
     },
   });
+  
+  const handleSelectHomeTeam = (team: TeamDto) => {
+    setSelectedHomeTeam(team);
+    form.setValue("homeTeamId", team.id);
+    setHomeSearchQuery("");
+    setHomeSearchResults([]);
+  };
+  
+  const handleSelectAwayTeam = (team: TeamDto) => {
+    setSelectedAwayTeam(team);
+    form.setValue("awayTeamId", team.id);
+    setAwaySearchQuery("");
+    setAwaySearchResults([]);
+  };
 
   async function onSubmit(values: z.infer<typeof createMatchSchema>) {
     try {
@@ -150,7 +216,7 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
         matchPause: values.matchPause,
         homeTeamId: values.homeTeamId,
         awayTeamId: values.awayTeamId,
-        matchHeadLine: values.matchHeadLine || `${values.yourTeamName} vs ${values.opponentTeamName}`,
+        matchHeadLine: values.matchHeadLine || `${selectedHomeTeam?.name} vs ${selectedAwayTeam?.name}`,
         matchLocation: values.matchLocation,
         matchArena: values.matchArena,
         matchIsAllDay: values.matchIsAllDay,
@@ -354,28 +420,100 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
                 />
             </div>
 
+            {/* Your Team Search */}
             <FormField
                 control={form.control}
-                name="yourTeamName"
-                render={({ field }) => (
+                name="homeTeamId"
+                render={() => (
                 <FormItem>
                     <FormLabel>Your Team</FormLabel>
-                    <FormControl><Input {...field} /></FormControl>
+                    {selectedHomeTeam ? (
+                        <div className="flex items-center justify-between p-2 border rounded-md">
+                            <span>{selectedHomeTeam.name}</span>
+                            <Button variant="ghost" size="icon" onClick={() => {
+                                setSelectedHomeTeam(null);
+                                form.setValue("homeTeamId", "");
+                            }}><X className="w-4 h-4" /></Button>
+                        </div>
+                    ) : (
+                        <Popover open={homeSearchQuery.length > 0} onOpenChange={() => setHomeSearchQuery("")}>
+                            <PopoverTrigger asChild>
+                                <FormControl>
+                                    <Input
+                                        icon={Search}
+                                        placeholder="Search your team..."
+                                        value={homeSearchQuery}
+                                        onChange={(e) => setHomeSearchQuery(e.target.value)}
+                                    />
+                                </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                                <Command>
+                                    <CommandList>
+                                        {isHomeSearching && <div className="p-2 text-sm text-center">Searching...</div>}
+                                        <CommandEmpty>No team found.</CommandEmpty>
+                                        {homeSearchResults.map(team => (
+                                            <CommandItem key={team.id} onSelect={() => handleSelectHomeTeam(team)}>
+                                                {team.name}
+                                            </CommandItem>
+                                        ))}
+                                    </CommandList>
+                                </Command>
+                            </PopoverContent>
+                        </Popover>
+                    )}
+                    <FormMessage />
                 </FormItem>
                 )}
             />
+            
+            {/* Opponent Team Search */}
             <FormField
                 control={form.control}
-                name="opponentTeamName"
-                render={({ field }) => (
+                name="awayTeamId"
+                render={() => (
                 <FormItem>
                     <FormLabel>Opponent</FormLabel>
-                    <FormControl>
-                    <Input icon={Search} placeholder="Search" {...field} />
-                    </FormControl>
+                     {selectedAwayTeam ? (
+                        <div className="flex items-center justify-between p-2 border rounded-md">
+                            <span>{selectedAwayTeam.name}</span>
+                            <Button variant="ghost" size="icon" onClick={() => {
+                                setSelectedAwayTeam(null);
+                                form.setValue("awayTeamId", "");
+                            }}><X className="w-4 h-4" /></Button>
+                        </div>
+                    ) : (
+                        <Popover open={awaySearchQuery.length > 0} onOpenChange={() => setAwaySearchQuery("")}>
+                            <PopoverTrigger asChild>
+                                <FormControl>
+                                    <Input
+                                        icon={Search}
+                                        placeholder="Search opponent team..."
+                                        value={awaySearchQuery}
+                                        onChange={(e) => setAwaySearchQuery(e.target.value)}
+                                    />
+                                </FormControl>
+                            </PopoverTrigger>
+                             <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                                <Command>
+                                    <CommandList>
+                                        {isAwaySearching && <div className="p-2 text-sm text-center">Searching...</div>}
+                                        <CommandEmpty>No team found.</CommandEmpty>
+                                        {awaySearchResults.map(team => (
+                                            <CommandItem key={team.id} onSelect={() => handleSelectAwayTeam(team)}>
+                                                {team.name}
+                                            </CommandItem>
+                                        ))}
+                                    </CommandList>
+                                </Command>
+                            </PopoverContent>
+                        </Popover>
+                    )}
+                    <FormMessage />
                 </FormItem>
                 )}
             />
+
             <FormField
                 control={form.control}
                 name="matchHeadLine"
@@ -601,6 +739,22 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
                     </div>
                 </AccordionTrigger>
                 <AccordionContent className="space-y-4 pt-4">
+                     <ApiDocumentationViewer
+                        title="Search Teams by Name"
+                        description="Called when the user types in the 'Your Team' or 'Opponent' fields to provide a list of selectable teams."
+                        endpoint="/teams/search?name={query}"
+                        method="GET"
+                        notes="This dynamic search populates the team selection dropdowns."
+                        response={`[
+  {
+    "id": "string",
+    "name": "string",
+    "logoUrl": "string",
+    "country": "string",
+    "type": "string"
+  }
+]`}
+                    />
                     <ApiDocumentationViewer
                         title="Fetch Match Categories"
                         description="Called on component mount to populate the 'Category' dropdown."
