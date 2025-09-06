@@ -1,3 +1,4 @@
+
 // src/components/invite-players.tsx
 "use client";
 
@@ -71,7 +72,7 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
     const fetchInvitedUsers = useCallback(async () => {
         if (!matchId) return;
         try {
-            const invites = await apiClient<Invite[]>(`/invites/match/${matchId}`);
+            const invites = await apiClient<Invite[]>(`/api/invites/match/${matchId}`);
             setInvitedUsers(invites);
         } catch (error) {
             toast({ variant: "destructive", title: "Error", description: "Could not fetch existing invites." });
@@ -83,7 +84,7 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
         setIsLoading(true);
         setSearchResults([]);
         try {
-            let url = `/matches/${matchId}/invites/search-users?`;
+            let url = `/api/matches/${matchId}/invites/search-users?`;
             const params = new URLSearchParams();
 
             if (query) {
@@ -172,7 +173,7 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
                     inviteeId: userId,
                     type: type as any,
                 };
-                return apiClient('/invites', { method: 'POST', body: payload });
+                return apiClient('/api/invites', { method: 'POST', body: payload });
             });
             await Promise.all(invitePromises);
             toast({ title: "Invites Sent!", description: `Successfully invited ${newlySelectedIds.size} new person(s).` });
@@ -291,7 +292,7 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
                         <ApiDocumentationViewer
                             title="Search Users to Invite"
                             description="A single endpoint to find users, either by team ID or by name."
-                            endpoint="/matches/:matchId/invites/search-users"
+                            endpoint="/api/matches/:matchId/invites/search-users"
                             method="GET"
                             notes="Use ?teamId={id}&role=PLAYER to get team members, or ?name={query} to search for referees/hosts."
                             response={`[
@@ -307,7 +308,7 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
                         <ApiDocumentationViewer
                             title="Send an Invitation"
                             description="Called when the 'Save' button is clicked for each newly selected user."
-                            endpoint="/invites"
+                            endpoint="/api/invites"
                             method="POST"
                             requestPayload={`{
   "matchId": "your-match-id",
@@ -325,7 +326,7 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
                          <ApiDocumentationViewer
                             title="List Match Invitations"
                             description="Called when the tab loads to show who has already been invited."
-                            endpoint="/invites/match/:matchId"
+                            endpoint="/api/invites/match/:matchId"
                             method="GET"
                             response={`[
   {
