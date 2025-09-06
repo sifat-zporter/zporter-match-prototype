@@ -59,6 +59,8 @@ export async function apiClient<T>(path: string, options: ApiClientOptions = {})
     defaultHeaders['Authorization'] = `Bearer ${token}`;
     defaultHeaders['roleid'] = userId;
   }
+  
+  const fullUrl = `${API_BASE_URL}${path}`;
 
   const config: RequestInit = {
     method,
@@ -72,8 +74,6 @@ export async function apiClient<T>(path: string, options: ApiClientOptions = {})
     config.body = JSON.stringify(body);
   }
   
-  const fullUrl = `${API_BASE_URL}${path}`;
-
   // Log the outgoing request
   console.log(`[API REQUEST - ${method} ${fullUrl}]:`, {
     headers: config.headers,
