@@ -436,7 +436,7 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
                             }}><X className="w-4 h-4" /></Button>
                         </div>
                     ) : (
-                        <Popover open={homeSearchQuery.length > 0} onOpenChange={() => setHomeSearchQuery("")}>
+                        <Popover open={homeSearchQuery.length > 0}>
                             <PopoverTrigger asChild>
                                 <FormControl>
                                     <Input
@@ -483,7 +483,7 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
                             }}><X className="w-4 h-4" /></Button>
                         </div>
                     ) : (
-                        <Popover open={awaySearchQuery.length > 0} onOpenChange={() => setAwaySearchQuery("")}>
+                        <Popover open={awaySearchQuery.length > 0}>
                             <PopoverTrigger asChild>
                                 <FormControl>
                                     <Input
