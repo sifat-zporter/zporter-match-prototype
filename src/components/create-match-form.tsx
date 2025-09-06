@@ -66,8 +66,8 @@ const createMatchSchema = z.object({
   matchDate: z.date(),
   startTime: z.string().default("16:00"),
   location: z.string().default("Sollentunavallen"),
-  category: z.enum(["Friendly", "Cup", "League", "Other"]),
-  format: z.enum(["11v11", "9v9", "8v8", "7v7", "5v5", "3v3", "2v2", "1v1", "Futsal", "Futnet", "Panna", "Teqball", "Other"]),
+  category: z.string().min(1, "Category is required."),
+  format: z.string().min(1, "Format is required."),
   contestId: z.string().optional(),
   numberOfPeriods: z.coerce.number().int().positive().default(2),
   periodTime: z.coerce.number().int().positive().default(45),
@@ -266,16 +266,6 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
     return <div className="flex items-center justify-center h-64"><Loader2 className="w-8 h-8 animate-spin text-muted-foreground" /></div>;
   }
 
-  const getCategoryName = (value: string): "Friendly" | "Cup" | "League" | "Other" => {
-    const found = categories.find(c => c.id === value);
-    return found?.name as "Friendly" | "Cup" | "League" | "Other" || "Other";
-  }
-  const getFormatName = (value: string): "11v11" | "9v9" | "8v8" | "7v7" | "5v5" | "3v3" | "2v2" | "1v1" | "Futsal" | "Futnet" | "Panna" | "Teqball" | "Other" => {
-    const found = formats.find(f => f.id === value);
-    return found?.name as "11v11" | "9v9" | "8v8" | "7v7" | "5v5" | "3v3" | "2v2" | "1v1" | "Futsal" | "Futnet" | "Panna" | "Teqball" | "Other" || "Other";
-  }
-
-
   return (
     <div className="space-y-6">
         <Form {...form}>
@@ -287,14 +277,14 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
                 render={({ field }) => (
                     <FormItem>
                     <FormLabel>Category</FormLabel>
-                    <Select onValueChange={(value) => field.onChange(getCategoryName(value))} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                         <SelectTrigger>
                             <SelectValue placeholder="Select a category..." />
                         </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                        {categories.map(cat => <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>)}
+                        {categories.map(cat => <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>)}
                         </SelectContent>
                     </Select>
                     <FormMessage />
@@ -307,14 +297,14 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
                 render={({ field }) => (
                     <FormItem>
                     <FormLabel>Format</FormLabel>
-                    <Select onValueChange={(value) => field.onChange(getFormatName(value))} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                         <SelectTrigger>
                             <SelectValue placeholder="Select a format..." />
                         </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                            {formats.map(f => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}
+                            {formats.map(f => <SelectItem key={f.id} value={f.name}>{f.name}</SelectItem>)}
                         </SelectContent>
                     </Select>
                     <FormMessage />
