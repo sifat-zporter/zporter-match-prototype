@@ -1,3 +1,4 @@
+
 /**
  * @fileoverview Centralized API client for the Zporter application.
  * This module provides a single, configured instance of a fetch-based client
@@ -70,15 +71,17 @@ export async function apiClient<T>(path: string, options: ApiClientOptions = {})
   if (body) {
     config.body = JSON.stringify(body);
   }
+  
+  const fullUrl = `${API_BASE_URL}${path}`;
 
   // Log the outgoing request
-  console.log(`[API REQUEST - ${method} ${path}]:`, {
+  console.log(`[API REQUEST - ${method} ${fullUrl}]:`, {
     headers: config.headers,
     body: body ? JSON.stringify(body, null, 2) : 'No body',
   });
 
 
-  const response = await fetch(`${API_BASE_URL}${path}`, config);
+  const response = await fetch(fullUrl, config);
 
   if (!response.ok) {
     let errorData;
