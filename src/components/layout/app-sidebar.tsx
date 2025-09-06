@@ -113,9 +113,11 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton>
-              <UserCircle />
-              Profile
+            <SidebarMenuButton asChild isActive={pathname === '/login'}>
+              <Link href="/login">
+                <KeyRound />
+                Login
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
