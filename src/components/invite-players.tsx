@@ -84,7 +84,7 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
         if (!matchId) return;
         setIsLoading(true);
         setSearchResults([]);
-        setSelectedUserIds(new Set()); // Clear selections on new search
+        setSelectedUserIds(new Set());
         try {
             const params = new URLSearchParams();
 
@@ -110,7 +110,13 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
             }
            
             const data = await apiClient<InviteUserSearchResult[]>(`/matches/${matchId}/invites/search-users?${params.toString()}`);
-            setSearchResults(data);
+            
+            // Filter for unique users to prevent React key errors
+            const uniqueUsers = data.filter((user, index, self) =>
+                index === self.findIndex((u) => u.userId === user.userId)
+            );
+            
+            setSearchResults(uniqueUsers);
         } catch (error) {
             toast({ variant: "destructive", title: "Error", description: "Failed to search for users." });
         } finally {
@@ -186,7 +192,7 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
                 const user = searchResults.find(u => u.userId === userId);
                 const payload: CreateInviteDto = {
                     inviteeId: userId,
-                    type: user?.type.toLowerCase() as any || 'player', // 'player', 'referee', 'host'
+                    type: user?.type.toLowerCase() as any || 'player',
                     role: role,
                     inviteDaysBefore: isSchedulingEnabled ? inviteDays : 0,
                     reminderDaysBefore: isSchedulingEnabled ? reminderDays : 0,
@@ -308,11 +314,11 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
                     </AccordionTrigger>
                     <AccordionContent className="space-y-4 pt-4">
                         <ApiDocumentationViewer
-                            title="Search Users to Invite"
-                            description="A single endpoint to find users, either by team ID or by name."
+                            title="Search for Users to Invite"
+                            description="Use this single, powerful endpoint to find any user (player, referee, or host) to invite to the match."
                             endpoint="/matches/:matchId/invites/search-users"
                             method="GET"
-                            notes="Use ?teamId={id}&role=PLAYER to get team members, or ?name={query} to search for referees/hosts."
+                            notes="Provide a team's ID to get all players on that team, or provide a name to search for specific users like referees."
                             response={`[
     {
         "userId": "user-id-abc",
@@ -330,8 +336,8 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
                             method="POST"
                             requestPayload={`{
   "inviteeId": "user-id-to-invite",
-  "type": "player | referee | host",
-  "role": "PLAYER_HOME | COACH_AWAY | REFEREE | HOST | ADMIN",
+  "type": "player",
+  "role": "PLAYER_HOME | COACH_AWAY | ...",
   "inviteDaysBefore": 14,
   "reminderDaysBefore": 12
 }`}
@@ -344,7 +350,7 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
 }`}
                         />
                          <ApiDocumentationViewer
-                            title="List Match Invitations"
+                            title="List All Invitations for a Match"
                             description="Called when the tab loads to show who has already been invited."
                             endpoint="/matches/:matchId/invites"
                             method="GET"
@@ -357,6 +363,22 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
     "status": "accepted"
   }
 ]`}
+                        />
+                         <ApiDocumentationViewer
+                            title="Respond to an Invitation"
+                            description="This endpoint is for the invited user to accept or decline an invitation."
+                            endpoint="/matches/:matchId/invites/:inviteId/status"
+                            method="PATCH"
+                             requestPayload={`{
+  "status": "accepted"
+}`}
+                            response={`{
+  "id": "invite-id-2",
+  "matchId": "your-match-id",
+  "inviteeId": "user-id-2",
+  "type": "referee",
+  "status": "accepted"
+}`}
                         />
                     </AccordionContent>
                 </AccordionItem>
