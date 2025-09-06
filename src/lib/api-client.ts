@@ -88,10 +88,10 @@ export async function apiClient<T>(path: string, options: ApiClientOptions = {})
       errorData = { message: 'An unknown error occurred.' };
     }
 
-    console.error(`[API ERROR - ${method} ${path}]:`, {
+    console.error(`[API ERROR - ${method} ${path}]:`, JSON.stringify({
       status: response.status,
       data: errorData,
-    });
+    }, null, 2));
     
     throw new ApiError(
       errorData.message || `Request failed with status ${response.status}`,
