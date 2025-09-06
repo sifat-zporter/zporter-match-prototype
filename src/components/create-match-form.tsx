@@ -421,98 +421,82 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
             </div>
 
             {/* Your Team Search */}
-            <FormField
-                control={form.control}
-                name="homeTeamId"
-                render={() => (
-                <FormItem>
-                    <FormLabel>Your Team</FormLabel>
-                    {selectedHomeTeam ? (
-                        <div className="flex items-center justify-between p-2 border rounded-md">
-                            <span>{selectedHomeTeam.name}</span>
-                            <Button variant="ghost" size="icon" onClick={() => {
-                                setSelectedHomeTeam(null);
-                                form.setValue("homeTeamId", "");
-                            }}><X className="w-4 h-4" /></Button>
-                        </div>
-                    ) : (
-                        <Popover open={homeSearchQuery.length > 0}>
-                            <PopoverTrigger asChild>
-                                <FormControl>
-                                    <Input
-                                        icon={Search}
-                                        placeholder="Search your team..."
-                                        value={homeSearchQuery}
-                                        onChange={(e) => setHomeSearchQuery(e.target.value)}
-                                    />
-                                </FormControl>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                                <Command>
-                                    <CommandList>
-                                        {isHomeSearching && <div className="p-2 text-sm text-center">Searching...</div>}
-                                        <CommandEmpty>No team found.</CommandEmpty>
-                                        {homeSearchResults.map(team => (
-                                            <CommandItem key={team.id} onSelect={() => handleSelectHomeTeam(team)}>
-                                                {team.name}
-                                            </CommandItem>
-                                        ))}
-                                    </CommandList>
-                                </Command>
-                            </PopoverContent>
-                        </Popover>
-                    )}
-                    <FormMessage />
-                </FormItem>
+            <div className="space-y-2">
+                <Label>Your Team</Label>
+                {selectedHomeTeam ? (
+                    <div className="flex items-center justify-between p-2 border rounded-md">
+                        <span>{selectedHomeTeam.name}</span>
+                        <Button variant="ghost" size="icon" onClick={() => {
+                            setSelectedHomeTeam(null);
+                            form.setValue("homeTeamId", "");
+                        }}><X className="w-4 h-4" /></Button>
+                    </div>
+                ) : (
+                    <Popover open={homeSearchQuery.length > 0}>
+                        <PopoverTrigger asChild>
+                            <Input
+                                icon={Search}
+                                placeholder="Search your team..."
+                                value={homeSearchQuery}
+                                onChange={(e) => setHomeSearchQuery(e.target.value)}
+                            />
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                            <Command>
+                                <CommandList>
+                                    {isHomeSearching && <div className="p-2 text-sm text-center">Searching...</div>}
+                                    <CommandEmpty>No team found.</CommandEmpty>
+                                    {homeSearchResults.map(team => (
+                                        <CommandItem key={team.id} onSelect={() => handleSelectHomeTeam(team)}>
+                                            {team.name}
+                                        </CommandItem>
+                                    ))}
+                                </CommandList>
+                            </Command>
+                        </PopoverContent>
+                    </Popover>
                 )}
-            />
+                <p className="text-sm font-medium text-destructive">{form.formState.errors.homeTeamId?.message}</p>
+            </div>
             
             {/* Opponent Team Search */}
-            <FormField
-                control={form.control}
-                name="awayTeamId"
-                render={() => (
-                <FormItem>
-                    <FormLabel>Opponent</FormLabel>
-                     {selectedAwayTeam ? (
-                        <div className="flex items-center justify-between p-2 border rounded-md">
-                            <span>{selectedAwayTeam.name}</span>
-                            <Button variant="ghost" size="icon" onClick={() => {
-                                setSelectedAwayTeam(null);
-                                form.setValue("awayTeamId", "");
-                            }}><X className="w-4 h-4" /></Button>
-                        </div>
-                    ) : (
-                        <Popover open={awaySearchQuery.length > 0}>
-                            <PopoverTrigger asChild>
-                                <FormControl>
-                                    <Input
-                                        icon={Search}
-                                        placeholder="Search opponent team..."
-                                        value={awaySearchQuery}
-                                        onChange={(e) => setAwaySearchQuery(e.target.value)}
-                                    />
-                                </FormControl>
-                            </PopoverTrigger>
-                             <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                                <Command>
-                                    <CommandList>
-                                        {isAwaySearching && <div className="p-2 text-sm text-center">Searching...</div>}
-                                        <CommandEmpty>No team found.</CommandEmpty>
-                                        {awaySearchResults.map(team => (
-                                            <CommandItem key={team.id} onSelect={() => handleSelectAwayTeam(team)}>
-                                                {team.name}
-                                            </CommandItem>
-                                        ))}
-                                    </CommandList>
-                                </Command>
-                            </PopoverContent>
-                        </Popover>
-                    )}
-                    <FormMessage />
-                </FormItem>
+            <div className="space-y-2">
+                <Label>Opponent</Label>
+                    {selectedAwayTeam ? (
+                    <div className="flex items-center justify-between p-2 border rounded-md">
+                        <span>{selectedAwayTeam.name}</span>
+                        <Button variant="ghost" size="icon" onClick={() => {
+                            setSelectedAwayTeam(null);
+                            form.setValue("awayTeamId", "");
+                        }}><X className="w-4 h-4" /></Button>
+                    </div>
+                ) : (
+                    <Popover open={awaySearchQuery.length > 0}>
+                        <PopoverTrigger asChild>
+                            <Input
+                                icon={Search}
+                                placeholder="Search opponent team..."
+                                value={awaySearchQuery}
+                                onChange={(e) => setAwaySearchQuery(e.target.value)}
+                            />
+                        </PopoverTrigger>
+                            <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                            <Command>
+                                <CommandList>
+                                    {isAwaySearching && <div className="p-2 text-sm text-center">Searching...</div>}
+                                    <CommandEmpty>No team found.</CommandEmpty>
+                                    {awaySearchResults.map(team => (
+                                        <CommandItem key={team.id} onSelect={() => handleSelectAwayTeam(team)}>
+                                            {team.name}
+                                        </CommandItem>
+                                    ))}
+                                </CommandList>
+                            </Command>
+                        </PopoverContent>
+                    </Popover>
                 )}
-            />
+                <p className="text-sm font-medium text-destructive">{form.formState.errors.awayTeamId?.message}</p>
+            </div>
 
             <FormField
                 control={form.control}
