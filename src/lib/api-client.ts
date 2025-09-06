@@ -5,13 +5,16 @@
  * authentication headers, and consistent error handling.
  */
 
-// Retrieves the auth token from localStorage.
-const getAuthToken = (): string | null => {
+// Retrieves the auth token and user ID from localStorage.
+const getAuthCredentials = (): { token: string | null; userId: string | null } => {
   // Ensure this code runs only on the client-side
   if (typeof window !== 'undefined') {
-    return localStorage.getItem("zporter-api-token") || null;
+    return {
+        token: localStorage.getItem("zporter-id-token"),
+        userId: localStorage.getItem("zporter-local-id"),
+    };
   }
-  return null;
+  return { token: null, userId: null };
 };
 
 // The base URL for the API, configured via environment variables.
@@ -44,14 +47,16 @@ class ApiError extends Error {
  */
 export async function apiClient<T>(path: string, options: ApiClientOptions = {}): Promise<T> {
   const { method = 'GET', body, headers = {} } = options;
-  const token = getAuthToken();
+  const { token, userId } = getAuthCredentials();
 
   const defaultHeaders: Record<string, string> = {
     'Content-Type': 'application/json',
   };
 
-  if (token) {
+  // If a token exists, add the Authorization and roleid headers.
+  if (token && userId) {
     defaultHeaders['Authorization'] = `Bearer ${token}`;
+    defaultHeaders['roleid'] = userId;
   }
 
   const config: RequestInit = {

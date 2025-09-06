@@ -27,6 +27,24 @@ export type TeamDto = {
   type: string;
 };
 
+// --- Authentication Models ---
+
+/**
+ * @model LoginResponse
+ * @description The response DTO from the POST /log-in endpoint.
+ */
+export type LoginResponse = {
+  kind: string;
+  localId: string;
+  email: string;
+  displayName: string;
+  idToken: string;
+  registered: boolean;
+  refreshToken: string;
+  expiresIn: string;
+};
+
+
 // --- API DTOs for Match Creation & Updates ---
 
 /**
