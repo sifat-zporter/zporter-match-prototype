@@ -1,12 +1,10 @@
-
 // src/components/invite-players.tsx
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import Image from "next/image";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Info, Loader2, Plus, ArrowUpDown, ListFilter, ChevronUp, ChevronDown, Check } from "lucide-react";
+import { Search, Info, Loader2, Plus, ArrowUpDown, ListFilter, ChevronUp, ChevronDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiClient } from "@/lib/api-client";
 import type { Invite, CreateInviteDto, TeamRef, InviteUserSearchResult } from "@/lib/models";
@@ -41,15 +39,13 @@ interface InvitePlayersProps {
     awayTeam: TeamRef;
 }
 
-const NumberInput = ({ initialValue = 0 }: { initialValue?: number }) => {
-  const [value, setValue] = useState(initialValue);
-
+const NumberInput = ({ value, setValue }: { value: number, setValue: (value: number) => void }) => {
   return (
     <div className="relative bg-card border border-input rounded-md w-24 h-12 flex items-center justify-center">
       <span className="text-xl font-semibold">- {value}d</span>
       <div className="absolute right-2 flex flex-col items-center">
-        <button onClick={() => setValue(v => v + 1)} className="h-5 w-5"><ChevronUp className="w-4 h-4 text-muted-foreground" /></button>
-        <button onClick={() => setValue(v => Math.max(0, v - 1))} className="h-5 w-5"><ChevronDown className="w-4 h-4 text-muted-foreground" /></button>
+        <button onClick={() => setValue(value + 1)} className="h-5 w-5"><ChevronUp className="w-4 h-4 text-muted-foreground" /></button>
+        <button onClick={() => setValue(Math.max(0, value - 1))} className="h-5 w-5"><ChevronDown className="w-4 h-4 text-muted-foreground" /></button>
       </div>
     </div>
   );
@@ -66,6 +62,11 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
     
     const [invitedUsers, setInvitedUsers] = useState<Invite[]>([]);
     const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
+    
+    // State for scheduling
+    const [isSchedulingEnabled, setIsSchedulingEnabled] = useState(false);
+    const [inviteDays, setInviteDays] = useState(14);
+    const [reminderDays, setReminderDays] = useState(12);
 
     const debouncedSearch = useDebounce(searchQuery, 300);
 
@@ -137,8 +138,8 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
         });
     };
     
-    const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.checked) {
+    const handleSelectAll = (checked: boolean | string) => {
+        if (checked) {
             const allIds = new Set(searchResults.map(u => u.userId));
             setSelectedUserIds(allIds);
         } else {
@@ -156,6 +157,20 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
         return new Set([...selectedUserIds].filter(id => !invitedUserIds.has(id)))
     }, [selectedUserIds, invitedUserIds]);
 
+    const getRoleForTab = (tab: string): string => {
+        switch (tab) {
+            case 'home':
+            case 'away':
+                return 'PLAYER';
+            case 'referees':
+                return 'REFEREE';
+            case 'hosts':
+                return 'HOST';
+            default:
+                return 'PLAYER';
+        }
+    };
+
     const handleSave = async () => {
         if (newlySelectedIds.size === 0) {
             toast({ title: "No new users selected to invite." });
@@ -163,13 +178,17 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
         }
         setIsSubmitting(true);
         
-        const type = activeTab === 'home' || activeTab === 'away' ? 'player' : activeTab.slice(0, -1);
+        const role = getRoleForTab(activeTab);
 
         try {
             const invitePromises = Array.from(newlySelectedIds).map(userId => {
+                const user = searchResults.find(u => u.userId === userId);
                 const payload: CreateInviteDto = {
                     inviteeId: userId,
-                    type: type as any,
+                    type: user?.type.toLowerCase() as any || 'player', // 'player', 'referee', 'host'
+                    role: user?.type || 'PLAYER', // e.g. PLAYER, COACH
+                    inviteDaysBefore: isSchedulingEnabled ? inviteDays : 0,
+                    reminderDaysBefore: isSchedulingEnabled ? reminderDays : 0,
                 };
                 return apiClient(`/matches/${matchId}/invites`, { method: 'POST', body: payload });
             });
@@ -215,7 +234,7 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
                     
                     <div className="flex justify-end items-center gap-2">
                         <Label htmlFor="select-all" className="text-sm">All</Label>
-                        <Checkbox id="select-all" onChange={(e: any) => handleSelectAll(e)} />
+                        <Checkbox id="select-all" onCheckedChange={handleSelectAll} />
                     </div>
 
                     <ScrollArea className="h-72">
@@ -258,16 +277,16 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
                             <Label>Invite scheduling, before match start</Label>
-                            <Switch />
+                            <Switch checked={isSchedulingEnabled} onCheckedChange={setIsSchedulingEnabled} />
                         </div>
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-xs text-muted-foreground">Invites</p>
-                                <NumberInput initialValue={14} />
+                                <NumberInput value={inviteDays} setValue={setInviteDays} />
                             </div>
                             <div>
                                 <p className="text-xs text-muted-foreground">Reminder</p>
-                                <NumberInput initialValue={12} />
+                                <NumberInput value={reminderDays} setValue={setReminderDays} />
                             </div>
                         </div>
                     </div>
@@ -310,7 +329,10 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
                             method="POST"
                             requestPayload={`{
   "inviteeId": "user-id-to-invite",
-  "type": "player | referee | host"
+  "type": "player | referee | host",
+  "role": "PLAYER | COACH | REFEREE",
+  "inviteDaysBefore": 14,
+  "reminderDaysBefore": 12
 }`}
                             response={`{
   "id": "new-invite-id",

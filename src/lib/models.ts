@@ -1,4 +1,3 @@
-
 /**
  * @fileoverview This file contains the TypeScript type definitions for the API request
  * and response models used throughout the Zporter application, based on the new API documentation.
@@ -52,7 +51,7 @@ export type LoginResponse = {
 
 /**
  * @model CreateMatchDto
- * @description The main DTO for creating a match draft (POST /api/matches).
+ * @description The main DTO for creating a match draft (POST /matches).
  */
 export type CreateMatchDto = {
   yourTeamName: string;
@@ -84,7 +83,7 @@ export type CreateMatchDto = {
 
 /**
  * @model CreateMatchLogDto
- * @description The DTO for creating a match specifically for logging (POST /api/matches/match-logs)
+ * @description The DTO for creating a match specifically for logging (POST /matches/match-logs)
  */
 export type CreateMatchLogDto = {
   contestName: string;
@@ -104,7 +103,7 @@ export type CreateMatchLogDto = {
 
 /**
  * @model GetMatchesResponse
- * @description The response DTO from the GET /api/matches endpoint.
+ * @description The response DTO from the GET /matches endpoint.
  */
 export type GetMatchesResponse = {
   data: Array<{
@@ -126,7 +125,7 @@ export type GetMatchesResponse = {
 
 /**
  * @model CreateMatchNoteDto
- * @description Corresponds to the body of POST /api/matches/{id}/notes.
+ * @description Corresponds to the body of POST /matches/{id}/notes.
  */
 export type CreateMatchNoteDto = {
   content: string;
@@ -134,7 +133,7 @@ export type CreateMatchNoteDto = {
 
 /**
  * @model MatchNoteResponse
- * @description The response DTO from POST /api/matches/{id}/notes.
+ * @description The response DTO from POST /matches/{id}/notes.
  */
 export type MatchNoteResponse = {
     id: string;
@@ -156,7 +155,7 @@ export type PlayerReviewDto = {
 
 /**
  * @model CreateMatchReviewDto
- * @description Corresponds to the body of POST /api/matches/{id}/reviews.
+ * @description Corresponds to the body of POST /matches/{id}/reviews.
  */
 export type CreateMatchReviewDto = {
   authorId: string;
@@ -169,7 +168,7 @@ export type CreateMatchReviewDto = {
 
 /**
  * @model MatchPlanDto
- * @description Corresponds to the `tacticsNotes` object within PATCH /api/matches/{id}
+ * @description Corresponds to the `tacticsNotes` object within PATCH /matches/{id}
  */
 export type MatchPlanDto = {
   offense?: {
@@ -208,7 +207,7 @@ export type MatchPlanDto = {
 
 /**
  * @model LogMatchEventDto
- * @description Corresponds to the body of POST /api/matches/{id}/log-event
+ * @description Corresponds to the body of POST /matches/{id}/log-event
  */
 export type LogMatchEventDto = {
   eventType: 'SHOT' | 'GOAL' | 'YELLOW_CARD' | 'RED_CARD' | 'SUBSTITUTION';
@@ -217,7 +216,7 @@ export type LogMatchEventDto = {
 
 /**
  * @model LogMatchEventResponse
- * @description The response from POST /api/matches/{id}/log-event
+ * @description The response from POST /matches/{id}/log-event
  */
 export type LogMatchEventResponse = {
   newEvent: {
@@ -235,7 +234,7 @@ export type LogMatchEventResponse = {
 
 /**
  * @model MatchEntity
- * @description The response DTO from POST /api/matches
+ * @description The response DTO from POST /matches
  */
 export type MatchEntity = {
     id: string;
@@ -386,6 +385,9 @@ export type InviteUserSearchResult = {
 export type CreateInviteDto = {
   inviteeId: string;
   type: 'player' | 'referee' | 'host' | 'team';
+  role: string;
+  inviteDaysBefore: number;
+  reminderDaysBefore: number;
 };
 
 /**
