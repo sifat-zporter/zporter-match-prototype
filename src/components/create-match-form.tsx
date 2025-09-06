@@ -12,7 +12,6 @@ import { Calendar } from "@/components/ui/calendar";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -143,7 +142,7 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
     setIsLoading(true);
     try {
       const clubId = "phL7vvhFwA3K3jrmN3ha"; // As specified in the instructions
-      const response = await apiClient<{ data: TeamDto[] }>(`/clubs/teams?clubId=${clubId}&searchQuery=${query}`);
+      const response = await apiClient<{ data: TeamDto[] }>(`/clubs/teams?limit=10&sorted=asc&clubId=${clubId}&searchQuery=${query}&gender=MALE&userType=PLAYER`);
       
       // Adapt to the new response structure
       const resultsWithLogoUrl = response.data.map(team => ({
@@ -739,8 +738,8 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
                 <AccordionContent className="space-y-4 pt-4">
                      <ApiDocumentationViewer
                         title="Search Teams by Name"
-                        description="Called when the user types in the 'Your Team' or 'Opponent' fields. Requires clubId and the search query."
-                        endpoint="/clubs/teams?clubId={clubId}&searchQuery={query}"
+                        description="Called when the user types in the 'Your Team' or 'Opponent' fields. Requires clubId and other parameters."
+                        endpoint="/clubs/teams?limit=10&sorted=asc&clubId={clubId}&searchQuery={query}&gender=MALE&userType=PLAYER"
                         method="GET"
                         notes="This dynamic search populates the team selection dropdowns. The clubId is currently hardcoded to 'phL7vvhFwA3K3jrmN3ha'."
                         response={`{
