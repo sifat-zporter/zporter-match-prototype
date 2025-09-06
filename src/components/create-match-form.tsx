@@ -1,5 +1,4 @@
 
-
 "use client"
 
 import { useForm } from "react-hook-form";
@@ -43,6 +42,7 @@ import { useEffect, useState, useCallback } from "react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
 import { ApiDocumentationViewer } from "./api-documentation-viewer";
 import { Command, CommandInput, CommandList, CommandEmpty, CommandItem } from "@/components/ui/command";
+import { Label } from "./ui/label";
 
 // Debounce hook
 function useDebounce(value: string, delay: number) {
@@ -887,8 +887,7 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
     "homePeriod1": 0,
     "awayPeriod1": 0,
     "homePeriod2": 0,
-    "awayPeriod2": 0,
-    "homeExtraTime": 0,
+    "awayExtraTime": 0,
     "awayExtraTime": 0,
     "homePenalties": 0,
     "awayPenalties": 0,
@@ -955,3 +954,5 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
     </div>
   )
 }
+
+    
