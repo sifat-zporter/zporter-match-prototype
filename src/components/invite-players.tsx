@@ -1,19 +1,24 @@
+// src/components/invite-players.tsx
+"use client";
 
-"use client"
-
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import Image from "next/image";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Info, Loader2, X, PlusCircle } from "lucide-react";
+import { Search, Info, Loader2, Plus, ArrowUpDown, ListFilter, ChevronUp, ChevronDown, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiClient } from "@/lib/api-client";
-import type { UserSearchResult, Invite, CreateInviteDto, TeamRef } from "@/lib/models";
+import type { UserSearchResult, Invite, CreateInviteDto, TeamRef, InviteUserSearchResult } from "@/lib/models";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
 import { ApiDocumentationViewer } from "./api-documentation-viewer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
-import { Card, CardContent } from "./ui/card";
 import { ScrollArea } from "./ui/scroll-area";
+import { Checkbox } from "./ui/checkbox";
+import { Label } from "./ui/label";
+import { Switch } from "./ui/switch";
+import { Separator } from "./ui/separator";
+import { InviteUserListItem } from "./invite-user-list-item";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 
 // Debounce hook
 function useDebounce(value: string, delay: number) {
@@ -35,207 +40,246 @@ interface InvitePlayersProps {
     awayTeam: TeamRef;
 }
 
-const UserCard = ({ user, onSelect, isSelected, isInvited }: { user: UserSearchResult, onSelect: (user: UserSearchResult) => void, isSelected: boolean, isInvited: boolean }) => (
-    <Card className={`p-2 ${isSelected ? 'ring-2 ring-primary' : ''} ${isInvited ? 'opacity-50' : ''}`}>
-        <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-                <Image src={user.avatar || 'https://placehold.co/40x40.png'} alt={user.name} width={32} height={32} className="rounded-full" />
-                <span className="text-sm font-medium">{user.name}</span>
-            </div>
-            <Button
-                size="icon"
-                variant="ghost"
-                onClick={() => onSelect(user)}
-                disabled={isInvited}
-            >
-                {isInvited ? <span className="text-xs">Invited</span> : <PlusCircle className={`w-5 h-5 ${isSelected ? 'text-destructive' : 'text-primary'}`} />}
-            </Button>
-        </div>
-    </Card>
-);
+const NumberInput = ({ initialValue = 0 }: { initialValue?: number }) => {
+  const [value, setValue] = useState(initialValue);
+
+  return (
+    <div className="relative bg-card border border-input rounded-md w-24 h-12 flex items-center justify-center">
+      <span className="text-xl font-semibold">- {value}d</span>
+      <div className="absolute right-2 flex flex-col items-center">
+        <button onClick={() => setValue(v => v + 1)} className="h-5 w-5"><ChevronUp className="w-4 h-4 text-muted-foreground" /></button>
+        <button onClick={() => setValue(v => Math.max(0, v - 1))} className="h-5 w-5"><ChevronDown className="w-4 h-4 text-muted-foreground" /></button>
+      </div>
+    </div>
+  );
+};
+
 
 export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProps) {
     const { toast } = useToast();
-    const [selectedUsers, setSelectedUsers] = useState<UserSearchResult[]>([]);
-    const [invites, setInvites] = useState<Invite[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState('home');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [searchResults, setSearchResults] = useState<InviteUserSearchResult[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    
+    const [invitedUsers, setInvitedUsers] = useState<Invite[]>([]);
+    const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
 
-    // States for different user types
-    const [homePlayers, setHomePlayers] = useState<UserSearchResult[]>([]);
-    const [awayPlayers, setAwayPlayers] = useState<UserSearchResult[]>([]);
-    const [refereeSearch, setRefereeSearch] = useState("");
-    const [refereeResults, setRefereeResults] = useState<UserSearchResult[]>([]);
-    const [isSearchingReferees, setIsSearchingReferees] = useState(false);
+    const debouncedSearch = useDebounce(searchQuery, 300);
 
-    const debouncedRefereeSearch = useDebounce(refereeSearch, 300);
-
-    const fetchInvites = useCallback(async () => {
+    const fetchInvitedUsers = useCallback(async () => {
         if (!matchId) return;
         try {
-            setIsLoading(true);
-            const [fetchedInvites, fetchedHomePlayers, fetchedAwayPlayers] = await Promise.all([
-                apiClient<Invite[]>(`/invites/match/${matchId}`),
-                apiClient<UserSearchResult[]>(`/users?teamId=${homeTeam.id}`),
-                apiClient<UserSearchResult[]>(`/users?teamId=${awayTeam.id}`)
-            ]);
-            setInvites(fetchedInvites);
-            setHomePlayers(fetchedHomePlayers);
-            setAwayPlayers(fetchedAwayPlayers);
+            const invites = await apiClient<Invite[]>(`/invites/match/${matchId}`);
+            setInvitedUsers(invites);
         } catch (error) {
-            toast({
-                variant: "destructive",
-                title: "Error fetching data",
-                description: "Could not load existing invites or player lists.",
-            });
+            toast({ variant: "destructive", title: "Error", description: "Could not fetch existing invites." });
+        }
+    }, [matchId, toast]);
+
+    const fetchUsers = useCallback(async (tab: string, query: string) => {
+        if (!matchId) return;
+        setIsLoading(true);
+        setSearchResults([]);
+        try {
+            let url = `/matches/${matchId}/invites/search-users?`;
+            const params = new URLSearchParams();
+
+            if (query) {
+                params.append('name', query);
+            } else {
+                 switch (tab) {
+                    case 'home':
+                        params.append('teamId', homeTeam.id);
+                        params.append('role', 'PLAYER');
+                        break;
+                    case 'away':
+                        params.append('teamId', awayTeam.id);
+                        params.append('role', 'PLAYER');
+                        break;
+                    case 'referees':
+                        params.append('role', 'REFEREE'); // Assuming this role exists
+                        break;
+                    case 'hosts':
+                        params.append('role', 'HOST'); // Assuming this role exists
+                        break;
+                }
+            }
+           
+            const data = await apiClient<InviteUserSearchResult[]>(url + params.toString());
+            setSearchResults(data);
+        } catch (error) {
+            toast({ variant: "destructive", title: "Error", description: "Failed to search for users." });
         } finally {
             setIsLoading(false);
         }
     }, [matchId, homeTeam.id, awayTeam.id, toast]);
 
     useEffect(() => {
-        fetchInvites();
-    }, [fetchInvites]);
+        fetchInvitedUsers();
+    }, [fetchInvitedUsers]);
 
-    const handleSearchReferees = useCallback(async (query: string) => {
-        if (query.length < 2) {
-            setRefereeResults([]);
-            return;
-        }
-        setIsSearchingReferees(true);
-        try {
-            const results = await apiClient<UserSearchResult[]>(`/users?name=${query}`);
-            setRefereeResults(results);
-        } catch (error) {
-             toast({
-                variant: "destructive",
-                title: "Search Failed",
-                description: "Could not fetch users.",
-            });
-        } finally {
-            setIsSearchingReferees(false);
-        }
-    }, [toast]);
-    
     useEffect(() => {
-        handleSearchReferees(debouncedRefereeSearch);
-    }, [debouncedRefereeSearch, handleSearchReferees]);
+        fetchUsers(activeTab, debouncedSearch);
+    }, [activeTab, debouncedSearch, fetchUsers]);
 
-    const handleToggleUserSelection = (user: UserSearchResult) => {
-        setSelectedUsers(prev => {
-            if (prev.find(u => u.id === user.id)) {
-                return prev.filter(u => u.id !== user.id);
+    const handleSelectUser = (userId: string) => {
+        setSelectedUserIds(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(userId)) {
+                newSet.delete(userId);
             } else {
-                return [...prev, user];
+                newSet.add(userId);
             }
+            return newSet;
         });
     };
+    
+    const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.checked) {
+            const allIds = new Set(searchResults.map(u => u.userId));
+            setSelectedUserIds(allIds);
+        } else {
+            setSelectedUserIds(new Set());
+        }
+    };
+    
+    const usersToDisplay = useMemo(() => {
+        // This could be enhanced to merge search results with team lists etc.
+        return searchResults;
+    }, [searchResults]);
 
-    const handleSendInvites = async () => {
-        if (selectedUsers.length === 0) {
-            toast({ title: "No new players selected to invite." });
+    const invitedUserIds = useMemo(() => new Set(invitedUsers.map(u => u.inviteeId)), [invitedUsers]);
+    const newlySelectedIds = useMemo(() => {
+        return new Set([...selectedUserIds].filter(id => !invitedUserIds.has(id)))
+    }, [selectedUserIds, invitedUserIds]);
+
+    const handleSave = async () => {
+        if (newlySelectedIds.size === 0) {
+            toast({ title: "No new users selected to invite." });
             return;
         }
         setIsSubmitting(true);
+        
+        // This assumes the role maps directly from the active tab
+        const type = activeTab === 'home' || activeTab === 'away' ? 'player' : activeTab.slice(0, -1);
+
         try {
-            const invitePromises = selectedUsers.map(user => {
+            const invitePromises = Array.from(newlySelectedIds).map(userId => {
                 const payload: CreateInviteDto = {
-                    matchId: matchId,
-                    inviteeId: user.id,
-                    type: "player", // This should be dynamic based on tab
+                    matchId,
+                    inviteeId: userId,
+                    type: type as any,
                 };
                 return apiClient('/invites', { method: 'POST', body: payload });
             });
             await Promise.all(invitePromises);
-            toast({
-                title: "Invites Sent!",
-                description: `Successfully invited ${selectedUsers.length} new person(s).`,
-            });
-            setSelectedUsers([]);
-            fetchInvites();
+            toast({ title: "Invites Sent!", description: `Successfully invited ${newlySelectedIds.size} new person(s).` });
+            setSelectedUserIds(new Set());
+            fetchInvitedUsers(); // Refresh invited list
         } catch (error) {
-             toast({
-                variant: "destructive",
-                title: "Error Sending Invites",
-                description: "One or more invitations could not be sent.",
-            });
+            toast({ variant: "destructive", title: "Error", description: "One or more invitations failed." });
         } finally {
             setIsSubmitting(false);
         }
     };
-    
-    const invitedUserIds = new Set(invites.map(i => i.inviteeId));
-    const selectedUserIds = new Set(selectedUsers.map(u => u.id));
-
-    if (isLoading) {
-        return <div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-muted-foreground" /></div>
-    }
 
     return (
         <div className="space-y-4">
-            <Tabs defaultValue="players" className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="players">Players</TabsTrigger>
-                    <TabsTrigger value="referees">Referees</TabsTrigger>
-                    <TabsTrigger value="hosts">Hosts</TabsTrigger>
+             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <TabsList className="grid w-full grid-cols-4 bg-transparent p-0">
+                    <TabsTrigger value="home" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Home</TabsTrigger>
+                    <TabsTrigger value="referees" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Referees</TabsTrigger>
+                    <TabsTrigger value="away" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Away</TabsTrigger>
+                    <TabsTrigger value="hosts" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Hosts</TabsTrigger>
                 </TabsList>
-                <TabsContent value="players" className="pt-4 space-y-4">
-                    <h3 className="font-semibold">{homeTeam.name}</h3>
-                    <ScrollArea className="h-48">
-                        <div className="space-y-2 pr-4">
-                           {homePlayers.map(p => <UserCard key={p.id} user={p} onSelect={handleToggleUserSelection} isSelected={selectedUserIds.has(p.id)} isInvited={invitedUserIds.has(p.id)} />)}
+                <div className="p-4 space-y-4">
+                    <div className="flex justify-between items-center text-sm">
+                        <p><span className="text-primary font-semibold">{invitedUsers.length}</span> of {searchResults.length} Invited</p>
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                            <Search className="w-4 h-4" />
+                            <ArrowUpDown className="w-4 h-4" />
+                            <ListFilter className="w-4 h-4" />
                         </div>
-                    </ScrollArea>
-                    <h3 className="font-semibold">{awayTeam.name}</h3>
-                     <ScrollArea className="h-48">
-                        <div className="space-y-2 pr-4">
-                           {awayPlayers.map(p => <UserCard key={p.id} user={p} onSelect={handleToggleUserSelection} isSelected={selectedUserIds.has(p.id)} isInvited={invitedUserIds.has(p.id)} />)}
-                        </div>
-                    </ScrollArea>
-                </TabsContent>
-                <TabsContent value="referees" className="pt-4 space-y-4">
+                    </div>
+
                     <div className="relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <Input
-                            placeholder="Search for referees to invite..."
+                        <Input 
+                            placeholder="Search..." 
                             className="pl-9"
-                            value={refereeSearch}
-                            onChange={(e) => setRefereeSearch(e.target.value)}
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
                         />
                     </div>
-                     <ScrollArea className="h-64">
-                        <div className="space-y-2 pr-4">
-                            {isSearchingReferees ? <Loader2 className="animate-spin mx-auto" /> :
-                             refereeResults.map(p => <UserCard key={p.id} user={p} onSelect={handleToggleUserSelection} isSelected={selectedUserIds.has(p.id)} isInvited={invitedUserIds.has(p.id)} />)
-                            }
+                    
+                    <div className="flex justify-end items-center gap-2">
+                        <Label htmlFor="select-all" className="text-sm">All</Label>
+                        <Checkbox id="select-all" onChange={(e: any) => handleSelectAll(e)} />
+                    </div>
+
+                    <ScrollArea className="h-72">
+                        <div className="space-y-1 pr-2">
+                            {isLoading ? (
+                                <div className="flex justify-center p-8"><Loader2 className="w-8 h-8 animate-spin" /></div>
+                            ) : usersToDisplay.length > 0 ? (
+                                usersToDisplay.map(user => (
+                                    <InviteUserListItem 
+                                        key={user.userId} 
+                                        user={user} 
+                                        isChecked={selectedUserIds.has(user.userId)}
+                                        onCheckedChange={() => handleSelectUser(user.userId)}
+                                        isInvited={invitedUserIds.has(user.userId)}
+                                    />
+                                ))
+                            ) : (
+                                <p className="text-center text-muted-foreground p-8">No users found.</p>
+                            )}
                         </div>
                     </ScrollArea>
-                </TabsContent>
-                 <TabsContent value="hosts" className="pt-4">
-                    <p className="text-center text-muted-foreground p-8">Host search will be implemented here.</p>
-                 </TabsContent>
-            </Tabs>
-
-            {selectedUsers.length > 0 && (
-                <div className="space-y-2">
-                    <h3 className="text-sm font-medium">To Be Invited ({selectedUsers.length})</h3>
-                    <div className="flex flex-wrap gap-2">
-                        {selectedUsers.map(user => (
-                             <div key={user.id} className="flex items-center gap-2 p-1 pr-2 rounded-full bg-accent">
-                                 <Image src={user.avatar || 'https://placehold.co/40x40.png'} alt={user.name} width={24} height={24} className="rounded-full" />
-                                 <span className="text-sm">{user.name}</span>
-                                <Button variant="ghost" size="icon" className="h-5 w-5 rounded-full" onClick={() => handleToggleUserSelection(user)}><X className="w-3 h-3"/></Button>
-                            </div>
-                        ))}
+                    
+                    <div className="space-y-2">
+                        <Label>Add</Label>
+                        <div className="flex items-center gap-2">
+                            <Select>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Search...." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {/* Content for searching users to add */}
+                                </SelectContent>
+                            </Select>
+                            <Button size="icon" variant="outline"><Plus className="w-5 h-5"/></Button>
+                        </div>
                     </div>
+                    
+                    <Separator />
+
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <Label>Invite scheduling, before match start</Label>
+                            <Switch />
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-xs text-muted-foreground">Invites</p>
+                                <NumberInput initialValue={14} />
+                            </div>
+                            <div>
+                                <p className="text-xs text-muted-foreground">Reminder</p>
+                                <NumberInput initialValue={12} />
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <Button className="w-full bg-blue-600 hover:bg-blue-700" onClick={handleSave} disabled={isSubmitting || newlySelectedIds.size === 0}>
+                        {isSubmitting ? <Loader2 className="animate-spin" /> : "Save"}
+                    </Button>
                 </div>
-            )}
+            </Tabs>
             
-            <Button className="w-full" onClick={handleSendInvites} disabled={isSubmitting || selectedUsers.length === 0}>
-                {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin"/> Sending...</> : 'Send Invites'}
-            </Button>
-            
-            <Accordion type="single" collapsible className="w-full pt-4">
+             <Accordion type="single" collapsible className="w-full pt-4">
                 <AccordionItem value="api-docs">
                     <AccordionTrigger>
                         <div className="flex items-center gap-2">
@@ -245,34 +289,24 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
                     </AccordionTrigger>
                     <AccordionContent className="space-y-4 pt-4">
                         <ApiDocumentationViewer
-                            title="Get Team Players"
-                            description="Called on tab load to get players for the home and away teams."
-                            endpoint="/users?teamId={teamId}"
+                            title="Search Users to Invite"
+                            description="A single endpoint to find users, either by team ID or by name."
+                            endpoint="/matches/:matchId/invites/search-users"
                             method="GET"
+                            notes="Use ?teamId={id}&role=PLAYER to get team members, or ?name={query} to search for referees/hosts."
                             response={`[
-  {
-    "id": "player-user-id-1",
-    "name": "Player One",
-    "avatar": "url-to-avatar"
-  }
-]`}
-                        />
-                        <ApiDocumentationViewer
-                            title="Search for Referees/Hosts"
-                            description="Called when typing in the search bar to find users by name."
-                            endpoint="/users?name={name}"
-                            method="GET"
-                            response={`[
-  {
-    "id": "some-user-id",
-    "name": "John Doe",
-    "avatar": "url-to-avatar"
-  }
+    {
+        "userId": "user-id-abc",
+        "name": "John Player",
+        "username": "johnplayer",
+        "faceImage": "https://example.com/avatar.jpg",
+        "type": "PLAYER"
+    }
 ]`}
                         />
                         <ApiDocumentationViewer
                             title="Send an Invitation"
-                            description="Called when the 'Send Invites' button is clicked for each newly selected user."
+                            description="Called when the 'Save' button is clicked for each newly selected user."
                             endpoint="/invites"
                             method="POST"
                             requestPayload={`{

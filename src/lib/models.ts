@@ -58,15 +58,15 @@ export type CreateMatchDto = {
   homeTeamId: string;
   awayTeamId: string;
   matchDate: string; // "YYYY-MM-DD"
-  startTime: string; // "HH:MM"
-  location: string;
+  matchStartTime: string; // "HH:MM"
+  matchLocation: string;
   categoryId: string;
   formatId: string;
   contestId?: string;
-  numberOfPeriods: number;
-  periodTime: number;
-  pauseTime: number;
-  headline?: string;
+  matchPeriod: number;
+  matchTime: number;
+  matchPause: number;
+  matchHeadLine?: string;
   description?: string;
   gatheringTime: string; // ISO 8601
   fullDayScheduling: boolean;
@@ -353,13 +353,26 @@ export type UpdateMatchContestDto = Partial<CreateMatchContestDto>;
 
 /**
  * @model UserSearchResult
- * @description Represents a user object from the search results.
+ * @description Represents a user object from the old search results.
+ * @deprecated Use InviteUserSearchResult instead.
  */
 export type UserSearchResult = {
   id: string;
   name: string;
   avatar: string;
 };
+
+/**
+ * @model InviteUserSearchResult
+ * @description Represents a user from the new invite search endpoint.
+ */
+export type InviteUserSearchResult = {
+    userId: string;
+    name: string;
+    username: string;
+    faceImage: string;
+    type: string; // e.g., PLAYER, COACH
+}
 
 
 // --- Invite Models ---
@@ -393,5 +406,3 @@ export type Invite = {
   type: string;
   status: 'pending' | 'accepted' | 'declined';
 };
-
-    
