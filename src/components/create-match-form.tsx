@@ -1,5 +1,4 @@
 
-
 "use client"
 
 import { useForm } from "react-hook-form";
@@ -58,21 +57,22 @@ function useDebounce(value: string, delay: number) {
   return debouncedValue;
 }
 
-
+// Updated schema to match backend expectations
 const createMatchSchema = z.object({
-  yourTeamName: z.string().min(1, "Your team name is required."),
-  opponentTeamName: z.string().min(1, "Opponent team name is required."),
   homeTeamId: z.string().min(1, "Your team is required."),
+  awayTeamId: z.string().min(1, "Opponent team is required."),
+  categoryId: z.string().min(1, "Category is required."),
+  formatId: z.string().min(1, "Format is required."),
   matchDate: z.date(),
-  startTime: z.string().default("16:00"),
-  location: z.string().default("Sollentunavallen"),
-  category: z.string().min(1, "Category is required."),
-  format: z.string().min(1, "Format is required."),
+  matchStartTime: z.string().default("16:00"),
+  matchType: z.enum(["Friendly", "Cup", "League", "Other"]), // Assuming this is an enum
+  matchPeriod: z.coerce.number().int().positive().default(2),
+  matchTime: z.coerce.number().int().positive().default(45),
+  matchPause: z.coerce.number().int().positive().default(15),
+  matchHeadLine: z.string().min(1, "Headline is required."),
+  matchLocation: z.string().min(1, "Location is required"),
+  matchArena: z.string().min(1, "Arena is required."),
   contestId: z.string().optional(),
-  numberOfPeriods: z.coerce.number().int().positive().default(2),
-  periodTime: z.coerce.number().int().positive().default(45),
-  pauseTime: z.coerce.number().int().positive().default(15),
-  headline: z.string().optional(),
   description: z.string().optional(),
   gatheringTime: z.date(),
   fullDayScheduling: z.boolean().default(false),
@@ -173,18 +173,19 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
   const form = useForm<z.infer<typeof createMatchSchema>>({
     resolver: zodResolver(createMatchSchema),
     defaultValues: {
-      yourTeamName: "Maj FC",
-      opponentTeamName: "FC Barcelona",
-      homeTeamId: "placeholder-home-id",
+      homeTeamId: "",
+      awayTeamId: "",
       matchDate: new Date(),
-      startTime: "16:00",
-      location: "Sollentunavallen",
-      category: "Friendly",
-      format: "11v11",
-      numberOfPeriods: 2,
-      periodTime: 45,
-      pauseTime: 15,
-      headline: "Match Zporter Cup 2023",
+      matchStartTime: "16:00",
+      matchLocation: "Sollentunavallen",
+      matchArena: "Main Pitch",
+      categoryId: "",
+      formatId: "",
+      matchType: "Friendly",
+      matchPeriod: 2,
+      matchTime: 45,
+      matchPause: 15,
+      matchHeadLine: "Match Zporter Cup 2023",
       description: 'Match against FC Barcelona U15 starts at 16.00.',
       gatheringTime: new Date(),
       fullDayScheduling: false,
@@ -199,14 +200,13 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
   const handleSelectHomeTeam = (team: TeamDto) => {
     setSelectedHomeTeam(team);
     form.setValue("homeTeamId", team.id);
-    form.setValue("yourTeamName", team.name);
     setHomeSearchQuery("");
     setHomeSearchResults([]);
   };
   
   const handleSelectAwayTeam = (team: TeamDto) => {
     setSelectedAwayTeam(team);
-    form.setValue("opponentTeamName", team.name);
+    form.setValue("awayTeamId", team.id);
     setAwaySearchQuery("");
     setAwaySearchResults([]);
   };
@@ -222,12 +222,11 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
         return;
       }
 
-      const payload: CreateMatchDto = {
+      // Construct the payload with the correct field names for the backend
+      const payload = {
         ...values,
-        homeTeamId: selectedHomeTeam.id,
-        // The API doc uses `opponentTeamName` but let's assume we need an ID for it too
-        // if not, the backend might just use the name. For now, we only have the name for opponent.
-        opponentTeamName: selectedAwayTeam.name,
+        homeTeamName: selectedHomeTeam.name,
+        awayTeamName: selectedAwayTeam.name,
         matchDate: format(values.matchDate, 'yyyy-MM-dd'),
         gatheringTime: values.gatheringTime.toISOString(),
         endTime: values.endTime.toISOString(),
@@ -273,7 +272,7 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <FormField
                 control={form.control}
-                name="category"
+                name="categoryId"
                 render={({ field }) => (
                     <FormItem>
                     <FormLabel>Category</FormLabel>
@@ -284,7 +283,7 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
                         </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                        {categories.map(cat => <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>)}
+                        {categories.map(cat => <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>)}
                         </SelectContent>
                     </Select>
                     <FormMessage />
@@ -293,7 +292,7 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
                 />
                 <FormField
                 control={form.control}
-                name="format"
+                name="formatId"
                 render={({ field }) => (
                     <FormItem>
                     <FormLabel>Format</FormLabel>
@@ -304,7 +303,7 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
                         </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                            {formats.map(f => <SelectItem key={f.id} value={f.name}>{f.name}</SelectItem>)}
+                            {formats.map(f => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}
                         </SelectContent>
                     </Select>
                     <FormMessage />
@@ -362,7 +361,7 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
                 />
                 <FormField
                 control={form.control}
-                name="startTime"
+                name="matchStartTime"
                 render={({ field }) => (
                     <FormItem>
                     <FormLabel>Start</FormLabel>
@@ -378,7 +377,7 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
             <div className="grid grid-cols-3 gap-4">
                 <FormField
                 control={form.control}
-                name="numberOfPeriods"
+                name="matchPeriod"
                 render={({ field }) => (
                     <FormItem>
                     <FormLabel>Periods</FormLabel>
@@ -395,7 +394,7 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
                 />
                 <FormField
                 control={form.control}
-                name="periodTime"
+                name="matchTime"
                 render={({ field }) => (
                     <FormItem>
                     <FormLabel>Time</FormLabel>
@@ -410,7 +409,7 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
                 />
                 <FormField
                 control={form.control}
-                name="pauseTime"
+                name="matchPause"
                 render={({ field }) => (
                     <FormItem>
                     <FormLabel>Pause</FormLabel>
@@ -434,13 +433,12 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
                         <Button variant="ghost" size="icon" onClick={() => {
                             setSelectedHomeTeam(null);
                             form.setValue("homeTeamId", "");
-                            form.setValue("yourTeamName", "");
                         }}><X className="w-4 h-4" /></Button>
                     </div>
                 ) : (
                     <Popover open={homeSearchQuery.length > 1 && homeSearchResults.length > 0}>
                         <PopoverTrigger asChild>
-                            <div className="relative">
+                             <div className="relative">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                                 <Input
                                     placeholder="Search your team..."
@@ -476,7 +474,7 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
                         <span>{selectedAwayTeam.name}</span>
                         <Button variant="ghost" size="icon" onClick={() => {
                             setSelectedAwayTeam(null);
-                            form.setValue("opponentTeamName", "");
+                            form.setValue("awayTeamId", "");
                         }}><X className="w-4 h-4" /></Button>
                     </div>
                 ) : (
@@ -507,16 +505,17 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
                         </PopoverContent>
                     </Popover>
                 )}
-                <p className="text-sm font-medium text-destructive">{form.formState.errors.opponentTeamName?.message}</p>
+                <p className="text-sm font-medium text-destructive">{form.formState.errors.awayTeamId?.message}</p>
             </div>
 
             <FormField
                 control={form.control}
-                name="headline"
+                name="matchHeadLine"
                 render={({ field }) => (
                 <FormItem>
                     <FormLabel>Headline</FormLabel>
                     <FormControl><Input {...field} /></FormControl>
+                    <FormMessage />
                 </FormItem>
                 )}
             />
@@ -624,13 +623,27 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
             
             <FormField
                 control={form.control}
-                name="location"
+                name="matchLocation"
                 render={({ field }) => (
                 <FormItem>
                     <FormLabel>Location</FormLabel>
                     <FormControl>
                     <Input icon={MapPin} {...field} />
                     </FormControl>
+                     <FormMessage />
+                </FormItem>
+                )}
+            />
+             <FormField
+                control={form.control}
+                name="matchArena"
+                render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Arena</FormLabel>
+                    <FormControl>
+                    <Input {...field} />
+                    </FormControl>
+                     <FormMessage />
                 </FormItem>
                 )}
             />
@@ -676,7 +689,7 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
             </div>
 
             <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white" disabled={form.formState.isSubmitting}>
-            {form.formState.isSubmitting ? 'Saving...' : 'Save Draft & Continue'}
+            {form.formState.isSubmitting ? 'Saving...' : 'Save Draft &amp; Continue'}
             </Button>
         </form>
         </Form>
@@ -693,7 +706,7 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
                      <ApiDocumentationViewer
                         title="Search Teams by Name"
                         description="Called when the user types in the 'Your Team' or 'Opponent' fields. Requires clubId and other parameters."
-                        endpoint="/clubs/teams?limit=10&sorted=asc&clubId={clubId}&searchQuery={query}&gender=MALE&userType=PLAYER"
+                        endpoint="/clubs/teams?limit=10&amp;sorted=asc&amp;clubId={clubId}&amp;searchQuery={query}&amp;gender=MALE&amp;userType=PLAYER"
                         method="GET"
                         notes="This dynamic search populates the team selection dropdowns. The clubId is currently hardcoded to 'phL7vvhFwA3K3jrmN3ha'."
                         response={`[
@@ -762,28 +775,29 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
                     />
                      <ApiDocumentationViewer
                         title="Create Match Draft"
-                        description="Called when the 'Save Draft & Continue' button is clicked. It creates the initial match record."
+                        description="Called when the 'Save Draft &amp; Continue' button is clicked. It creates the initial match record."
                         endpoint="/api/matches"
                         method="POST"
                         notes="This is the first and most critical step. The 'id' returned in the response is required to save data in all other tabs (Invites, Plan, Notes, etc.)."
                         requestPayload={`{
-  "yourTeamName": "string",
-  "opponentTeamName": "string",
   "homeTeamId": "string",
+  "awayTeamId": "string",
+  "categoryId": "string",
+  "formatId": "string",
   "matchDate": "string (YYYY-MM-DD)",
-  "startTime": "string (HH:MM)",
-  "location": "string",
-  "category": "Friendly | Cup | League | Other",
-  "format": "11v11 | 9v9 | 8v8 | 7v7 | 5v5 | 3v3 | 2v2 | 1v1 | Futsal | Futnet | Panna | Teqball | Other",
+  "matchStartTime": "string (HH:MM)",
+  "matchType": "Friendly | Cup | League | Other",
+  "matchPeriod": "number",
+  "matchTime": "number",
+  "matchPause": "number",
+  "matchHeadLine": "string",
+  "matchLocation": "string",
+  "matchArena": "string",
   "contestId": "string" (optional),
-  "numberOfPeriods": "number",
-  "periodTime": "number",
-  "pauseTime": "number",
-  "headline": "string" (optional),
   "description": "string" (optional),
-  "gatheringTime": "string (ISO 8601, e.g., YYYY-MM-DDTHH:MM:SSZ)",
+  "gatheringTime": "string (ISO 8601)",
   "fullDayScheduling": "boolean",
-  "endTime": "string (ISO 8601, e.g., YYYY-MM-DDTHH:MM:SSZ)",
+  "endTime": "string (ISO 8601)",
   "isRecurring": "boolean",
   "recurringUntil": "string (YYYY-MM-DD)" (optional),
   "notificationMinutesBefore": "number",
@@ -817,3 +831,5 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
     </div>
   )
 }
+
+    
