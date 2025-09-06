@@ -10,7 +10,7 @@ async function getLoggedEvents(matchId: string): Promise<LoggedEvent[]> {
     // This assumes an endpoint to fetch events for a match.
     // As it's not in the spec, we'll return an empty array for now,
     // but the structure is here for future implementation.
-    // const events = await apiClient<LoggedEvent[]>(`/api/matches/${matchId}/events`);
+    // const events = await apiClient<LoggedEvent[]>(`/matches/${matchId}/events`);
     // return events;
     return []; // Placeholder until the GET events endpoint is specified
   } catch (error) {

@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import { useForm } from "react-hook-form";
@@ -95,7 +96,7 @@ export function CreateMatchLogForm() {
         apiToken: apiToken,
       };
       
-      const newMatchLog = await apiClient<Match>('/api/matches/match-logs', {
+      const newMatchLog = await apiClient<Match>('/matches/match-logs', {
         method: 'POST',
         body: payload,
       });
