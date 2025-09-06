@@ -29,7 +29,6 @@ export type TeamDto = {
   // Raw API fields for mapping
   teamId?: string;
   teamName?: string;
-  logo?: string;
 };
 
 
@@ -61,11 +60,12 @@ export type CreateMatchDto = {
   yourTeamName: string;
   opponentTeamName: string;
   homeTeamId: string;
+  awayTeamId: string; // Added this field
   matchDate: string; // "YYYY-MM-DD"
   startTime: string; // "HH:MM"
   location: string;
-  category: "Friendly" | "Cup" | "League" | "Other";
-  format: "11v11" | "9v9" | "8v8" | "7v7" | "5v5" | "3v3" | "2v2" | "1v1" | "Futsal" | "Futnet" | "Panna" | "Teqball" | "Other";
+  categoryId: string;
+  formatId: string;
   contestId?: string;
   numberOfPeriods: number;
   periodTime: number;
@@ -80,6 +80,7 @@ export type CreateMatchDto = {
   notificationMinutesBefore: number;
   markAsOccupied: boolean;
   isPrivate: boolean;
+  matchType: 'HOME' | 'AWAY';
 };
 
 

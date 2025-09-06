@@ -458,7 +458,7 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
                     </div>
                 ) : (
                     <Popover open={homeSearchQuery.length > 1 && homeSearchResults.length > 0}>
-                        <PopoverTrigger asChild>
+                        <PopoverTrigger>
                              <div className="relative">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                                 <Input
@@ -500,7 +500,7 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
                     </div>
                 ) : (
                     <Popover open={awaySearchQuery.length > 1 && awaySearchResults.length > 0}>
-                        <PopoverTrigger asChild>
+                        <PopoverTrigger>
                             <div className="relative">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                                 <Input
@@ -827,23 +827,27 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
 }`}
                         response={`{
   "id": "string",
+  "status": "draft",
+  "startDate": "string (ISO 8601)",
   "homeTeam": {
     "id": "string",
-    "name": "string"
+    "name": "string",
+    "logoUrl": "string"
   },
   "awayTeam": {
     "id": "string",
+    "name": "string",
+    "logoUrl": "string"
+  },
+  "venue": {
     "name": "string"
   },
-  "matchDate": "string (YYYY-MM-DD)",
-  "startTime": "string (HH:MM)",
-  "location": {
-    "name": "string",
-    "address": "string"
-  },
-  "status": "draft",
-  "createdAt": "string (ISO 8601)",
-  "updatedAt": "string (ISO 8601)"
+  "userGeneratedData": {
+    "eventDetails": {
+      // ... a copy of the request payload
+    }
+  }
+  // ... and many more fields
 }`}
                     />
                 </AccordionContent>
