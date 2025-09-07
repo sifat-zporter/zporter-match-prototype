@@ -1,3 +1,4 @@
+
 // src/components/match-plan.tsx
 "use client";
 
@@ -721,10 +722,10 @@ export function MatchPlan({ matchId }: { matchId: string }) {
                             requestPayload={`{
   "tacticsNotes": {
     "opponentAnalysis": {
-      "general": { "summary": "string", "isLineupVisible": true, "areSetPlaysVisible": false, "lineup": {"formation": "4-3-3", "playerPositions": []} },
-      "offense": { "summary": "string", "isLineupVisible": true, "areSetPlaysVisible": false, "lineup": {"formation": "4-3-3", "playerPositions": []} },
-      "defense": { "summary": "string", "isLineupVisible": true, "areSetPlaysVisible": false, "lineup": {"formation": "4-3-3", "playerPositions": []} },
-      "other": { "summary": "string", "isLineupVisible": true, "areSetPlaysVisible": false, "lineup": {"formation": "4-3-3", "playerPositions": []} }
+      "general": { "summary": "string", "isLineupVisible": true, "areSetPlaysVisible": false, "lineup": {"formation": "4-3-3", "playerPositions": [{ "playerId": "user-id-string-1", "position": "GK" }, { "playerId": "user-id-string-2", "position": "RB" }]} },
+      "offense": { "summary": "string", "isLineupVisible": true, "areSetPlaysVisible": false, "lineup": {"formation": "4-3-3", "playerPositions": [{ "playerId": "user-id-string-1", "position": "ST" }]} },
+      "defense": { "summary": "string", "isLineupVisible": true, "areSetPlaysVisible": false, "lineup": {"formation": "5-4-1", "playerPositions": []} },
+      "other": { "summary": "string", "isLineupVisible": true, "areSetPlaysVisible": false, "lineup": {"formation": "4-4-2", "playerPositions": []} }
     },
     "teamLineup": {
       "planName": "string",
@@ -745,7 +746,7 @@ export function MatchPlan({ matchId }: { matchId: string }) {
     },
     "offenseTactics": {
       "planName": "string",
-      "general": { "summary": "string", "isLineupVisible": true, "areSetPlaysVisible": false, "lineup": {"formation": "4-3-3", "playerPositions": []} },
+      "general": { "summary": "string", "isLineupVisible": true, "areSetPlaysVisible": false, "lineup": {"formation": "4-3-3", "playerPositions": [{ "playerId": "user-id-string-1", "position": "RW" }]} },
       "buildUp": { "summary": "string", "isLineupVisible": true, "areSetPlaysVisible": false, "lineup": {"formation": "4-3-3", "playerPositions": []} },
       "attack": { "summary": "string", "isLineupVisible": true, "areSetPlaysVisible": false, "lineup": {"formation": "4-3-3", "playerPositions": []} },
       "finishing": { "summary": "string", "isLineupVisible": true, "areSetPlaysVisible": false, "lineup": {"formation": "4-3-3", "playerPositions": []} }
@@ -785,3 +786,4 @@ export function MatchPlan({ matchId }: { matchId: string }) {
         </div>
     );
 }
+
