@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -14,7 +15,7 @@ import { FilterSheet } from "@/components/filter-sheet";
 import type { Match, Cup } from "@/lib/data";
 import { apiClient } from "@/lib/api-client";
 import { format, parse } from "date-fns";
-import type { GetMatchesResponse } from "@/lib/models";
+import type { GetMatchesResponse, MatchListItem } from "@/lib/models";
 
 // --- Data Transformation Layer ---
 
@@ -23,7 +24,7 @@ import type { GetMatchesResponse } from "@/lib/models";
  * @param apiMatch - The match object from the backend API.
  * @returns A Match object formatted for the frontend.
  */
-function transformApiMatchToFrontendMatch(apiMatch: GetMatchesResponse['data'][0]): Match {
+function transformApiMatchToFrontendMatch(apiMatch: MatchListItem): Match {
   const matchDate = parse(apiMatch.matchDate, 'yyyy-MM-dd', new Date());
 
   return {
@@ -109,7 +110,7 @@ export default function MatchesHubPage() {
         const response = await apiClient<GetMatchesResponse>('/matches', {
           params: { date: dateString, limit: 50 }
         });
-        const transformedMatches = (response.data || []).map(transformApiMatchToFrontendMatch);
+        const transformedMatches = (response.matches || []).map(transformApiMatchToFrontendMatch);
         setMatches(transformedMatches);
       } catch (error) {
         console.error("Failed to fetch matches:", error);

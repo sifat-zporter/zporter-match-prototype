@@ -1,5 +1,4 @@
 
-
 /**
  * @fileoverview This file contains the TypeScript type definitions for the API request
  * and response models used throughout the Zporter application, based on the new API documentation.
@@ -102,26 +101,34 @@ export type CreateMatchLogDto = {
   apiToken: string;
 };
 
+export type MatchListItem = {
+  id: string;
+  homeTeam: { id: string; name: string; logoUrl?: string };
+  awayTeam: { id: string; name: string; logoUrl?: string };
+  matchDate: string;
+  matchStartTime: string;
+  startTime: string; // Keep for compatibility
+  location: { name: string; address: string };
+  venue?: { name: string };
+  status: string;
+  score?: { home: number; away: number };
+  featuredPlayer?: { id: string; name: string; imageUrl: string };
+};
+
 
 /**
  * @model GetMatchesResponse
  * @description The response DTO from the GET /matches endpoint.
  */
 export type GetMatchesResponse = {
-  data: Array<{
-    id: string;
-    homeTeam: { id: string; name: string; logoUrl: string };
-    awayTeam: { id: string; name: string; logoUrl: string };
-    matchDate: string;
-    startTime: string;
-    location: { name: string; address: string };
-    status: string;
-    score?: { home: number; away: number };
-    featuredPlayer?: { id: string; name: string; imageUrl: string };
-  }>;
-  total: number;
-  limit: number;
-  offset: number;
+  matches: MatchListItem[];
+  pagination: {
+    total: number;
+    limit: number;
+    offset: number;
+    page: number;
+    totalPages: number;
+  };
 };
 
 // --- Match Note Models ---
@@ -212,10 +219,7 @@ export type CreateMatchReviewDto = {
   overallMatchReview: string;
   teamRating: number;
   playerReviews: PlayerReviewDto[];
-  tacticalRatings?: TacticalRatingsDto;
-  mentalRatings?: MentalRatingsDto;
   comment?: string;
-  isShared?: boolean;
 };
 
 
@@ -404,7 +408,7 @@ export type UserDto = {
 
 // --- Invite Models ---
 
-export type InvitationRole = 'PLAYER_HOME' | 'COACH_AWAY' | 'REFEREE' | 'HOST' | 'ADMIN' | 'PLAYER_AWAY';
+export type InvitationRole = 'PLAYER_HOME' | 'COACH_AWAY' | 'REFEREE' | 'HOST' | 'ADMIN' | 'PLAYER_AWAY' | 'COACH_HOME';
 
 /**
  * @model CreateInviteDto

@@ -1,3 +1,4 @@
+
 // src/app/(app)/user-generated-matches/page.tsx
 "use client";
 
@@ -6,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle, Loader2, Pencil, Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiClient } from "@/lib/api-client";
-import type { GetMatchesResponse } from "@/lib/models";
+import type { GetMatchesResponse, MatchListItem } from "@/lib/models";
 import {
   Table,
   TableBody,
@@ -21,8 +22,6 @@ import Link from "next/link";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ApiDocumentationViewer } from "@/components/api-documentation-viewer";
 
-type MatchListItem = GetMatchesResponse['data'][0];
-
 export default function UserGeneratedMatchesPage() {
   const { toast } = useToast();
   const [matches, setMatches] = useState<MatchListItem[]>([]);
@@ -35,7 +34,7 @@ export default function UserGeneratedMatchesPage() {
       const response = await apiClient<GetMatchesResponse>("/matches", {
         params: { limit: 100 }
       });
-      setMatches(response.data || []);
+      setMatches(response.matches || []);
     } catch (error) {
       toast({
         variant: "destructive",
@@ -94,9 +93,9 @@ export default function UserGeneratedMatchesPage() {
                         {match.homeTeam.name} vs {match.awayTeam.name}
                       </TableCell>
                       <TableCell>
-                        {format(new Date(match.matchDate), "PPP")} at {match.startTime}
+                        {format(new Date(match.matchDate), "PPP")} at {match.matchStartTime}
                       </TableCell>
-                      <TableCell>{match.location.name}</TableCell>
+                      <TableCell>{match.venue?.name || 'N/A'}</TableCell>
                       <TableCell>
                         <Badge variant={match.status === 'finished' ? 'secondary' : 'default'}>
                           {match.status}
