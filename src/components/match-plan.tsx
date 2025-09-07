@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Textarea } from "./ui/textarea";
 import { Button } from "./ui/button";
-import { Plus, Camera, Video, Loader2, ListFilter, Mic, ChevronUp, ChevronDown } from "lucide-react";
+import { Plus, Camera, Video, Loader2, ListFilter, Mic, ChevronUp, ChevronDown, X, UserPlus } from "lucide-react";
 import { Switch } from "./ui/switch";
 import { apiClient } from "@/lib/api-client";
 import type { MatchPlanPayload, Invite, UserDto } from "@/lib/models";
@@ -17,47 +17,67 @@ import { Label } from "./ui/label";
 import { ZaiIcon } from "./icons";
 import { cn } from "@/lib/utils";
 import type { Player } from "@/lib/data";
-import { DragDropContext, Droppable, Draggable, type DropResult } from 'react-beautiful-dnd';
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "./ui/command";
 
-const PlayerOnPitch = ({ player, droppableId }: { player: Player, droppableId: string }) => (
-     <Droppable droppableId={droppableId}>
-        {(provided) => (
-            <div ref={provided.innerRef} {...provided.droppableProps}>
-                <Draggable draggableId={player.id} index={0}>
-                    {(provided) => (
-                        <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} className="flex flex-col items-center justify-center gap-1 text-center w-16">
-                            <div className="relative">
-                                <Image src={player.avatarUrl} alt={player.name} width={40} height={40} className="rounded-full" data-ai-hint="player avatar" />
-                                <div className="absolute -top-1 -left-4 text-xs font-semibold text-purple-400">{player.zporterId}</div>
-                                <div className="absolute -top-1 -right-4 text-xs font-semibold">{player.number}</div>
-                            </div>
-                            <p className="text-xs font-semibold truncate w-full">{player.name}</p>
-                        </div>
-                    )}
-                </Draggable>
-                {provided.placeholder}
-            </div>
-        )}
-    </Droppable>
-);
-
-const EmptySlot = ({ droppableId }: { droppableId: string }) => (
-    <Droppable droppableId={droppableId}>
-        {(provided, snapshot) => (
-            <div
-                ref={provided.innerRef}
-                {...provided.droppableProps}
-                className={cn(
-                    "w-16 h-[60px] bg-card/50 border-2 border-dashed border-muted-foreground/50 rounded-md flex items-center justify-center transition-colors",
-                    snapshot.isDraggingOver && "bg-primary/20 border-primary"
-                )}
+const PlayerOnPitch = ({ player, onRemove }: { player: Player, onRemove: () => void }) => (
+    <div className="flex flex-col items-center justify-center gap-1 text-center w-16 relative group/player">
+        <div className="relative">
+            <Image src={player.avatarUrl} alt={player.name} width={40} height={40} className="rounded-full" data-ai-hint="player avatar" />
+            <div className="absolute -top-1 -left-4 text-xs font-semibold text-purple-400">{player.zporterId}</div>
+            <div className="absolute -top-1 -right-4 text-xs font-semibold">{player.number}</div>
+             <Button
+                variant="destructive"
+                size="icon"
+                className="absolute -top-2 -right-2 w-5 h-5 rounded-full opacity-0 group-hover/player:opacity-100 transition-opacity"
+                onClick={onRemove}
             >
-                <Plus className="w-6 h-6 text-muted-foreground" />
-                {provided.placeholder}
-            </div>
-        )}
-    </Droppable>
+                <X className="w-3 h-3" />
+            </Button>
+        </div>
+        <p className="text-xs font-semibold truncate w-full">{player.name}</p>
+    </div>
 );
+
+
+const EmptySlot = ({ onSelectPlayer, availablePlayers }: { onSelectPlayer: (playerId: string) => void, availablePlayers: Player[] }) => {
+    const [open, setOpen] = useState(false);
+
+    return (
+        <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+                <Button
+                    variant="outline"
+                    className="w-16 h-[60px] bg-card/50 border-2 border-dashed border-muted-foreground/50 rounded-md flex items-center justify-center transition-colors hover:bg-primary/20 hover:border-primary"
+                >
+                    <UserPlus className="w-6 h-6 text-muted-foreground" />
+                </Button>
+            </PopoverTrigger>
+            <PopoverContent className="p-0 w-64">
+                <Command>
+                    <CommandInput placeholder="Assign player..." />
+                    <CommandList>
+                        <CommandEmpty>No available players.</CommandEmpty>
+                        <CommandGroup>
+                            {availablePlayers.map((player) => (
+                                <CommandItem
+                                    key={player.id}
+                                    value={player.name}
+                                    onSelect={() => {
+                                        onSelectPlayer(player.id);
+                                        setOpen(false);
+                                    }}
+                                >
+                                    {player.name}
+                                </CommandItem>
+                            ))}
+                        </CommandGroup>
+                    </CommandList>
+                </Command>
+            </PopoverContent>
+        </Popover>
+    );
+};
 
 const NumberInput = ({ value, onValueChange }: { value: number; onValueChange: (newValue: number) => void }) => (
     <div className="relative bg-card border border-input rounded-md w-24 h-12 flex items-center justify-center">
@@ -74,7 +94,6 @@ export function MatchPlan({ matchId }: { matchId: string }) {
     const { toast } = useToast();
     const [isLoading, setIsLoading] = useState(false);
     const [invitedPlayers, setInvitedPlayers] = useState<Player[]>([]);
-    const [draggingPlayerId, setDraggingPlayerId] = useState<string | null>(null);
     
     const [planData, setPlanData] = useState<Partial<MatchPlanPayload>>({
         main: { matchHeadLine: "", isPrivate: false },
@@ -176,62 +195,34 @@ export function MatchPlan({ matchId }: { matchId: string }) {
         }
     };
     
-    const onDragEnd = (result: DropResult) => {
-        setDraggingPlayerId(null);
-        const { source, destination, draggableId } = result;
-        if (!destination) return;
+    const playersOnPitchIds = new Set((planData.teamLineup?.lineup?.playerPositions || []).map(p => p.playerId));
+    const availablePlayers = invitedPlayers.filter(p => !playersOnPitchIds.has(p.id));
 
-        const sourceId = source.droppableId;
-        const destinationId = destination.droppableId;
+    const handleSelectPlayerForPosition = (position: string, playerId: string) => {
         const currentPositions = planData.teamLineup?.lineup?.playerPositions || [];
-
-        // Dragging from the invited players list to a pitch position
-        if (sourceId === 'invited-players' && destinationId.startsWith('pos-')) {
-            const position = destinationId.replace('pos-', '');
-            const player = invitedPlayers.find(p => p.id === draggableId);
-
-            if (!player) return;
-            if (currentPositions.some(p => p.position === position)) return; // Position taken
-
-            const newPositions = [...currentPositions.filter(p => p.playerId !== player.id), { playerId: player.id, position }];
-            handlePlanChange('teamLineup.lineup.playerPositions', newPositions);
-        }
-
-        // Dragging from the pitch back to the invited players list (or off the pitch)
-        if (sourceId.startsWith('pos-')) {
-            const position = sourceId.replace('pos-', '');
-            let newPositions = currentPositions.filter(p => p.position !== position);
-            
-            // If dropping on another position
-            if(destinationId.startsWith('pos-')) {
-                 const destPosition = destinationId.replace('pos-', '');
-                 // if dest position is empty, move player there
-                 if (!newPositions.some(p => p.position === destPosition)) {
-                    newPositions = [...newPositions, { playerId: draggableId, position: destPosition }];
-                 }
-            }
-            
-            handlePlanChange('teamLineup.lineup.playerPositions', newPositions);
-        }
+        const newPositions = [...currentPositions.filter(p => p.playerId !== playerId), { playerId, position }];
+        handlePlanChange('teamLineup.lineup.playerPositions', newPositions);
     };
     
-    const playersOnPitchIds = new Set((planData.teamLineup?.lineup?.playerPositions || []).map(p => p.playerId));
-    const availablePlayers = invitedPlayers.filter(p => !playersOnPitchIds.has(p.id) || p.id === draggingPlayerId);
+    const handleRemovePlayerFromPosition = (position: string) => {
+        const currentPositions = planData.teamLineup?.lineup?.playerPositions || [];
+        const newPositions = currentPositions.filter(p => p.position !== position);
+        handlePlanChange('teamLineup.lineup.playerPositions', newPositions);
+    };
+
 
     const renderPlayerOnPitch = (position: string) => {
         const playerPosition = planData.teamLineup?.lineup?.playerPositions.find(p => p.position === position);
         if (playerPosition) {
             const playerDetails = invitedPlayers.find(p => p.id === playerPosition.playerId);
             if (playerDetails) {
-                return <PlayerOnPitch player={playerDetails} droppableId={`pos-${position}`} />;
+                return <PlayerOnPitch player={playerDetails} onRemove={() => handleRemovePlayerFromPosition(position)} />;
             }
         }
-        return <EmptySlot droppableId={`pos-${position}`} />;
+        return <EmptySlot availablePlayers={availablePlayers} onSelectPlayer={(playerId) => handleSelectPlayerForPosition(position, playerId)} />;
     };
     
-
     return (
-      <DragDropContext onDragEnd={onDragEnd} onDragStart={(start) => setDraggingPlayerId(start.draggableId)}>
         <div className="space-y-4">
             <Tabs defaultValue="line-up" className="w-full">
                 <TabsList className="grid w-full grid-cols-5 bg-transparent p-0">
@@ -270,40 +261,30 @@ export function MatchPlan({ matchId }: { matchId: string }) {
                     </div>
                     
                     <div className="space-y-2">
-                        <div className="flex justify-between items-center">
-                            <Label>Invited - {availablePlayers.length} Players</Label>
+                         <div className="flex justify-between items-center">
+                            <Label>Invited - {invitedPlayers.length} Players</Label>
                             <Button variant="ghost" size="icon"><ListFilter className="w-5 h-5"/></Button>
                         </div>
-                        <Droppable droppableId="invited-players" direction="horizontal">
-                            {(provided) => (
+                        <div
+                            className="flex gap-4 pb-4 overflow-x-auto min-h-[80px] bg-card/50 p-2 rounded-md"
+                        >
+                            {invitedPlayers.map((p) => (
                                 <div
-                                    ref={provided.innerRef}
-                                    {...provided.droppableProps}
-                                    className="flex gap-4 pb-4 overflow-x-auto min-h-[80px] bg-card/50 p-2 rounded-md"
+                                    key={p.id}
+                                    className={cn(
+                                        "flex flex-col items-center justify-center gap-1 text-center w-16 flex-shrink-0 transition-opacity",
+                                        playersOnPitchIds.has(p.id) && "opacity-40"
+                                    )}
                                 >
-                                    {availablePlayers.map((p, index) => (
-                                        <Draggable key={p.id} draggableId={p.id} index={index}>
-                                            {(provided) => (
-                                                <div
-                                                    ref={provided.innerRef}
-                                                    {...provided.draggableProps}
-                                                    {...provided.dragHandleProps}
-                                                    className="flex flex-col items-center justify-center gap-1 text-center w-16 flex-shrink-0"
-                                                >
-                                                    <div className="relative">
-                                                        <Image src={p.avatarUrl} alt={p.name} width={48} height={48} className="rounded-full" data-ai-hint="player avatar" />
-                                                        <div className="absolute -top-1 -left-2 text-xs font-semibold text-purple-400">{p.zporterId}</div>
-                                                        <div className="absolute -top-1 -right-2 text-xs font-semibold">{p.number}</div>
-                                                    </div>
-                                                    <p className="text-xs font-semibold truncate w-full">{p.name}</p>
-                                                </div>
-                                            )}
-                                        </Draggable>
-                                    ))}
-                                    {provided.placeholder}
+                                    <div className="relative">
+                                        <Image src={p.avatarUrl} alt={p.name} width={48} height={48} className="rounded-full" data-ai-hint="player avatar" />
+                                        <div className="absolute -top-1 -left-2 text-xs font-semibold text-purple-400">{p.zporterId}</div>
+                                        <div className="absolute -top-1 -right-2 text-xs font-semibold">{p.number}</div>
+                                    </div>
+                                    <p className="text-xs font-semibold truncate w-full">{p.name}</p>
                                 </div>
-                            )}
-                        </Droppable>
+                            ))}
+                        </div>
                     </div>
                     
                     <div className="space-y-2">
@@ -410,6 +391,5 @@ export function MatchPlan({ matchId }: { matchId: string }) {
                 </Button>
             </div>
         </div>
-      </DragDropContext>
     );
 }
