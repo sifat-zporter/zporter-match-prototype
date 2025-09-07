@@ -46,12 +46,11 @@ const EmptySlot = ({ onSelectPlayer, availablePlayers }: { onSelectPlayer: (play
     return (
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
-                <Button
-                    variant="outline"
+                <button
                     className="w-16 h-[60px] bg-card/50 border-2 border-dashed border-muted-foreground/50 rounded-md flex items-center justify-center transition-colors hover:bg-primary/20 hover:border-primary"
                 >
                     <UserPlus className="w-6 h-6 text-muted-foreground" />
-                </Button>
+                </button>
             </PopoverTrigger>
             <PopoverContent className="p-0 w-64">
                 <Command>
@@ -192,7 +191,7 @@ export function MatchPlan({ matchId }: { matchId: string }) {
                 title: "Plan Saved!",
                 description: "Your match plan has been updated successfully.",
             });
-        } catch (error) => {
+        } catch (error) {
             console.error("Failed to save match plan:", error);
             toast({
                 variant: "destructive",
@@ -373,12 +372,11 @@ export function MatchPlan({ matchId }: { matchId: string }) {
                         <div
                             className="flex gap-4 pb-4 overflow-x-auto min-h-[80px] bg-card/50 p-2 rounded-md"
                         >
-                            {invitedPlayers.map((p) => (
+                            {availablePlayers.map((p) => (
                                 <div
                                     key={p.id}
                                     className={cn(
-                                        "flex flex-col items-center justify-center gap-1 text-center w-16 flex-shrink-0 transition-opacity",
-                                        playersOnPitchIds.has(p.id) && "opacity-40"
+                                        "flex flex-col items-center justify-center gap-1 text-center w-16 flex-shrink-0"
                                     )}
                                 >
                                     <div className="relative">
