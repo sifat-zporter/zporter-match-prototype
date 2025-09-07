@@ -1,3 +1,4 @@
+
 // src/components/match-plan.tsx
 "use client";
 
@@ -176,7 +177,7 @@ export function MatchPlan({ matchId }: { matchId: string }) {
     };
     
     const onDragEnd = (result: DropResult) => {
-        const { source, destination } = result;
+        const { source, destination, draggableId } = result;
         if (!destination) return;
 
         const sourceId = source.droppableId;
@@ -186,7 +187,7 @@ export function MatchPlan({ matchId }: { matchId: string }) {
         // Dragging from the invited players list to a pitch position
         if (sourceId === 'invited-players' && destinationId.startsWith('pos-')) {
             const position = destinationId.replace('pos-', '');
-            const player = invitedPlayers.find(p => p.id === result.draggableId);
+            const player = invitedPlayers.find(p => p.id === draggableId);
 
             if (!player) return;
             if (currentPositions.some(p => p.position === position)) return; // Position taken
@@ -205,7 +206,7 @@ export function MatchPlan({ matchId }: { matchId: string }) {
                  const destPosition = destinationId.replace('pos-', '');
                  // if dest position is empty, move player there
                  if (!newPositions.some(p => p.position === destPosition)) {
-                    newPositions = [...newPositions, { playerId: result.draggableId, position: destPosition }];
+                    newPositions = [...newPositions, { playerId: draggableId, position: destPosition }];
                  }
             }
             
