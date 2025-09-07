@@ -15,7 +15,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { apiClient } from "@/lib/api-client";
 
-// This is now the client-side view component.
+// This is the client-side view component.
 function UpdateMatchView({ matchId }: { matchId: string }) {
     const { toast } = useToast();
     const [match, setMatch] = useState<Match | null>(null);
@@ -115,7 +115,7 @@ function UpdateMatchView({ matchId }: { matchId: string }) {
   );
 }
 
-// This is the new Server Component Page that wraps the client component.
+// This is the Server Component Page that wraps the client component.
 export default function UpdateMatchPage({ params }: { params: { id: string } }) {
   // We can safely access params.id here on the server.
   const matchId = params.id;
