@@ -20,27 +20,30 @@ import type { Player } from "@/lib/data";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "./ui/command";
 
+
 const PlayerOnPitch = ({ player, onRemove, isOpponent = false }: { player: Player, onRemove?: () => void, isOpponent?: boolean }) => (
     <div className="flex flex-col items-center justify-center gap-1 text-center w-16 relative group/player">
         <div className="relative">
             <Image src={player.avatarUrl} alt={player.name} width={40} height={40} className="rounded-full" data-ai-hint="player avatar" />
             {!isOpponent && <div className="absolute -top-1 -left-4 text-xs font-semibold text-purple-400">{player.zporterId}</div>}
             <div className="absolute -top-1 -right-4 text-xs font-semibold">{player.number}</div>
-             {onRemove && <Button
-                variant="destructive"
-                size="icon"
-                className="absolute -top-2 -right-2 w-5 h-5 rounded-full opacity-0 group-hover/player:opacity-100 transition-opacity"
-                onClick={onRemove}
-            >
-                <X className="w-3 h-3" />
-            </Button>}
+            {onRemove && (
+                <Button
+                    variant="destructive"
+                    size="icon"
+                    className="absolute -top-2 -right-2 w-5 h-5 rounded-full opacity-0 group-hover/player:opacity-100 transition-opacity"
+                    onClick={onRemove}
+                >
+                    <X className="w-3 h-3" />
+                </Button>
+            )}
         </div>
         <p className="text-xs font-semibold truncate w-full">{player.name}</p>
     </div>
 );
 
 
-const EmptySlot = ({ onSelectPlayer, availablePlayers }: { onSelectPlayer: (playerId: string) => void, availablePlayers: Player[] }) => {
+const EmptySlot = ({ onSelectPlayer, availablePlayers, position }: { onSelectPlayer: (playerId: string) => void, availablePlayers: Player[], position: string }) => {
     const [open, setOpen] = useState(false);
 
     return (
@@ -48,6 +51,7 @@ const EmptySlot = ({ onSelectPlayer, availablePlayers }: { onSelectPlayer: (play
             <PopoverTrigger asChild>
                 <button
                     className="w-16 h-[60px] bg-card/50 border-2 border-dashed border-muted-foreground/50 rounded-md flex items-center justify-center transition-colors hover:bg-primary/20 hover:border-primary"
+                    aria-label={`Add player to ${position}`}
                 >
                     <UserPlus className="w-6 h-6 text-muted-foreground" />
                 </button>
@@ -118,6 +122,14 @@ export function MatchPlan({ matchId }: { matchId: string }) {
             plannedExchanges: { isEnabled: false, substitutions: [{ playerInId: '', playerOutId: '', minute: 65 }] },
             publishingSettings: { isEnabled: false, publishInternallyMinutesBefore: 240, publishPubliclyMinutesBefore: 60 }
         },
+        offenseTactics: {
+            planId: "",
+            planName: "New Offense Plan",
+            general: { summary: 'Offense tactics from another match.', isLineupVisible: true, areSetPlaysVisible: false, lineup: { formation: "4-3-3", playerPositions: [] } },
+            buildUp: { summary: '', isLineupVisible: true, areSetPlaysVisible: false, lineup: { formation: "4-3-3", playerPositions: [] } },
+            attack: { summary: '', isLineupVisible: true, areSetPlaysVisible: false, lineup: { formation: "4-3-3", playerPositions: [] } },
+            finishing: { summary: '', isLineupVisible: true, areSetPlaysVisible: false, lineup: { formation: "4-3-3", playerPositions: [] } },
+        },
     });
 
     useEffect(() => {
@@ -179,7 +191,6 @@ export function MatchPlan({ matchId }: { matchId: string }) {
         handlePlanChange('teamLineup.plannedExchanges.substitutions', newSubstitutions);
     };
 
-
     const handleSave = async () => {
         setIsLoading(true);
         try {
@@ -226,49 +237,34 @@ export function MatchPlan({ matchId }: { matchId: string }) {
                 return <PlayerOnPitch player={playerDetails} onRemove={() => handleRemovePlayerFromPosition(position)} />;
             }
         }
-        return <EmptySlot availablePlayers={availablePlayers} onSelectPlayer={(playerId) => handleSelectPlayerForPosition(position, playerId)} />;
+        return <EmptySlot availablePlayers={availablePlayers} onSelectPlayer={(playerId) => handleSelectPlayerForPosition(position, playerId)} position={position} />;
     };
 
-    const renderOpponentPitch = (subTab: 'general' | 'offense' | 'defense' | 'other') => {
-        const opponentLineupVisible = planData.opponentAnalysis?.[subTab]?.isLineupVisible;
-
-        if (!opponentLineupVisible) return null;
-        
-        // This is a static representation for now. It could be made dynamic.
-        const opponentFormation = {
-            forwards: [opponentPlayers[0], opponentPlayers[1], opponentPlayers[2]],
-            midfielders: [opponentPlayers[3], opponentPlayers[4]],
-            defenders: [opponentPlayers[5], opponentPlayers[6], opponentPlayers[7], opponentPlayers[8]],
-            goalkeeper: [opponentPlayers[9]],
+    const renderFormationPitch = (players: Player[]) => {
+        if (!players || players.length === 0) return null;
+         const formation = {
+            forwards: players.slice(0, 3),
+            midfielders: players.slice(3, 5),
+            defenders: players.slice(5, 9),
+            goalkeeper: players.slice(9, 10),
         };
-        
         return (
-            <div className="space-y-4">
-                 <Select>
-                    <SelectTrigger>
-                        <SelectValue placeholder="Choose Opponent line up" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="if-bromma">IF Brommapojkarna - IFK Norrköping</SelectItem>
-                    </SelectContent>
-                </Select>
-                <div className="relative h-[450px] bg-center bg-no-repeat bg-contain" style={{backgroundImage: "url('/football-pitch-vertical.svg')"}}>
-                    <div className="absolute top-[8%] left-[50%] -translate-x-1/2 grid grid-cols-3 gap-x-8 gap-y-2">
-                        {opponentFormation.forwards.map(p => <PlayerOnPitch key={p.id} player={p} isOpponent />)}
-                    </div>
-                    <div className="absolute top-[28%] left-[50%] -translate-x-1/2 grid grid-cols-2 gap-x-8 gap-y-4">
-                        {opponentFormation.midfielders.map(p => <PlayerOnPitch key={p.id} player={p} isOpponent />)}
-                    </div>
-                    <div className="absolute top-[55%] left-[50%] -translate-x-1/2 grid grid-cols-4 gap-x-2 gap-y-4">
-                       {opponentFormation.defenders.map(p => <PlayerOnPitch key={p.id} player={p} isOpponent />)}
-                    </div>
-                    <div className="absolute top-[80%] left-[50%] -translate-x-1/2">
-                       {opponentFormation.goalkeeper.map(p => <PlayerOnPitch key={p.id} player={p} isOpponent />)}
-                    </div>
+             <div className="relative h-[450px] bg-center bg-no-repeat bg-contain" style={{backgroundImage: "url('/football-pitch-vertical.svg')"}}>
+                <div className="absolute top-[8%] left-[50%] -translate-x-1/2 grid grid-cols-3 gap-x-8 gap-y-2">
+                    {formation.forwards.map(p => <PlayerOnPitch key={p.id} player={p} isOpponent />)}
+                </div>
+                <div className="absolute top-[28%] left-[50%] -translate-x-1/2 grid grid-cols-2 gap-x-8 gap-y-4">
+                    {formation.midfielders.map(p => <PlayerOnPitch key={p.id} player={p} isOpponent />)}
+                </div>
+                <div className="absolute top-[55%] left-[50%] -translate-x-1/2 grid grid-cols-4 gap-x-2 gap-y-4">
+                    {formation.defenders.map(p => <PlayerOnPitch key={p.id} player={p} isOpponent />)}
+                </div>
+                <div className="absolute top-[80%] left-[50%] -translate-x-1/2">
+                    {formation.goalkeeper.map(p => <PlayerOnPitch key={p.id} player={p} isOpponent />)}
                 </div>
             </div>
         )
-    };
+    }
     
     return (
         <div className="space-y-4">
@@ -328,7 +324,7 @@ export function MatchPlan({ matchId }: { matchId: string }) {
                                      onCheckedChange={(c) => handlePlanChange(`opponentAnalysis.${subTab}.isLineupVisible`, c)}
                                    />
                                </div>
-                               {renderOpponentPitch(subTab)}
+                               {planData.opponentAnalysis?.[subTab]?.isLineupVisible && renderFormationPitch(opponentPlayers)}
                                <div className="flex items-center justify-between">
                                    <Label>Set plays</Label>
                                    <Switch
@@ -365,13 +361,11 @@ export function MatchPlan({ matchId }: { matchId: string }) {
                     </div>
                     
                     <div className="space-y-2">
-                         <div className="flex justify-between items-center">
+                        <div className="flex justify-between items-center">
                             <Label>Invited - {invitedPlayers.length} Players</Label>
                             <Button variant="ghost" size="icon"><ListFilter className="w-5 h-5"/></Button>
                         </div>
-                        <div
-                            className="flex gap-4 pb-4 overflow-x-auto min-h-[80px] bg-card/50 p-2 rounded-md"
-                        >
+                        <div className="flex gap-4 pb-4 overflow-x-auto min-h-[80px] bg-card/50 p-2 rounded-md">
                             {availablePlayers.map((p) => (
                                 <div
                                     key={p.id}
@@ -395,7 +389,7 @@ export function MatchPlan({ matchId }: { matchId: string }) {
                             <Label>Line up - {planData.teamLineup?.lineup?.playerPositions.length || 0}v{planData.teamLineup?.lineup?.playerPositions.length || 0}</Label>
                             <Button variant="ghost" size="icon"><ListFilter className="w-5 h-5"/></Button>
                         </div>
-                        <div className="relative h-[450px] bg-center bg-no-repeat bg-contain" style={{backgroundImage: "url('/football-pitch-vertical.svg')"}}>
+                         <div className="relative h-[450px] bg-center bg-no-repeat bg-contain" style={{backgroundImage: "url('/football-pitch-vertical.svg')"}}>
                             <div className="absolute top-[8%] left-[50%] -translate-x-1/2 grid grid-cols-3 gap-x-8 gap-y-2">
                                 {renderPlayerOnPitch('LW')}
                                 {renderPlayerOnPitch('ST')}
@@ -423,30 +417,37 @@ export function MatchPlan({ matchId }: { matchId: string }) {
                             <Label>Planned exchanges</Label>
                             <Switch checked={planData.teamLineup?.plannedExchanges?.isEnabled} onCheckedChange={(c) => handlePlanChange('teamLineup.plannedExchanges.isEnabled', c)} />
                         </div>
-                        {planData.teamLineup?.plannedExchanges?.isEnabled && planData.teamLineup?.plannedExchanges?.substitutions.map((sub, index) => (
-                             <div key={index} className="flex items-center justify-between gap-2">
-                                <Select onValueChange={(playerId) => handlePlanChange(`teamLineup.plannedExchanges.substitutions.${index}.playerOutId`, playerId)} value={sub.playerOutId}>
-                                    <SelectTrigger className="w-20 h-20 bg-card rounded-md flex items-center justify-center">
-                                        <SelectValue placeholder={<Plus className="w-6 h-6 text-muted-foreground"/>} />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {invitedPlayers.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-                                    </SelectContent>
-                                </Select>
-                                <NumberInput value={sub.minute} onValueChange={(v) => handlePlanChange(`teamLineup.plannedExchanges.substitutions.${index}.minute`, v)} />
-                                 <Select onValueChange={(playerId) => handlePlanChange(`teamLineup.plannedExchanges.substitutions.${index}.playerInId`, playerId)} value={sub.playerInId}>
-                                    <SelectTrigger className="w-20 h-20 bg-card rounded-md flex items-center justify-center">
-                                        <SelectValue placeholder={<Plus className="w-6 h-6 text-muted-foreground"/>} />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {invitedPlayers.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-                                    </SelectContent>
-                                </Select>
-                                <Button size="icon" variant="ghost" className="rounded-full bg-card w-10 h-10" onClick={handleAddSubstitution}>
-                                    <Plus className="w-5 h-5"/>
-                                </Button>
-                            </div>
-                        ))}
+                        {planData.teamLineup?.plannedExchanges?.isEnabled && (
+                            <>
+                                {planData.teamLineup?.plannedExchanges?.substitutions.map((sub, index) => (
+                                    <div key={index} className="flex items-center justify-between gap-2">
+                                        <Select onValueChange={(playerId) => handlePlanChange(`teamLineup.plannedExchanges.substitutions.${index}.playerOutId`, playerId)} value={sub.playerOutId}>
+                                            <SelectTrigger className="w-20 h-20 bg-card rounded-md flex items-center justify-center">
+                                                <SelectValue placeholder={<Plus className="w-6 h-6 text-muted-foreground"/>} />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {invitedPlayers.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
+                                        <NumberInput value={sub.minute} onValueChange={(v) => handlePlanChange(`teamLineup.plannedExchanges.substitutions.${index}.minute`, v)} />
+                                        <Select onValueChange={(playerId) => handlePlanChange(`teamLineup.plannedExchanges.substitutions.${index}.playerInId`, playerId)} value={sub.playerInId}>
+                                            <SelectTrigger className="w-20 h-20 bg-card rounded-md flex items-center justify-center">
+                                                <SelectValue placeholder={<Plus className="w-6 h-6 text-muted-foreground"/>} />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {invitedPlayers.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
+                                        <div className="w-10 h-10" />
+                                    </div>
+                                ))}
+                                 <div className="flex justify-end">
+                                    <Button size="icon" variant="ghost" className="rounded-full bg-card w-10 h-10" onClick={handleAddSubstitution}>
+                                        <Plus className="w-5 h-5"/>
+                                    </Button>
+                                </div>
+                            </>
+                        )}
                     </div>
                     
                     <div className="space-y-4 pt-4">
@@ -476,7 +477,65 @@ export function MatchPlan({ matchId }: { matchId: string }) {
                 </TabsContent>
 
                 <TabsContent value="offense" className="pt-4 space-y-4">
-                    <Card><CardContent className="p-4">Offense tactics UI goes here.</CardContent></Card>
+                   <Select onValueChange={(v) => handlePlanChange('offenseTactics.planName', v)} value={planData.offenseTactics?.planName}>
+                       <SelectTrigger>
+                           <SelectValue placeholder="Choose Plan" />
+                       </SelectTrigger>
+                       <SelectContent>
+                           <SelectItem value="New Offense Plan">New Offense Plan</SelectItem>
+                           <SelectItem value="Maj FC - IFK Norrköping">Maj FC - IFK Norrköping</SelectItem>
+                       </SelectContent>
+                   </Select>
+                   <Tabs defaultValue="general" className="w-full">
+                       <TabsList className="grid w-full grid-cols-4">
+                           <TabsTrigger value="general">General</TabsTrigger>
+                           <TabsTrigger value="buildUp">Build up</TabsTrigger>
+                           <TabsTrigger value="attack">Attack</TabsTrigger>
+                           <TabsTrigger value="finishing">Finishing</TabsTrigger>
+                       </TabsList>
+                       {(['general', 'buildUp', 'attack', 'finishing'] as const).map(subTab => (
+                           <TabsContent key={subTab} value={subTab} className="pt-4 space-y-4">
+                               <div className="space-y-2">
+                                   <Label>Tactics summary</Label>
+                                   <Textarea 
+                                     rows={4}
+                                     placeholder="Offense tactics from another match"
+                                     value={planData.offenseTactics?.[subTab]?.summary || ''}
+                                     onChange={(e) => handlePlanChange(`offenseTactics.${subTab}.summary`, e.target.value)}
+                                   />
+                               </div>
+                               <div className="flex gap-2">
+                                   <div className="w-1/2 h-24 bg-card rounded-md flex items-center justify-center">
+                                       <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-primary-foreground">✓</div>
+                                   </div>
+                                   <div className="w-1/2 h-24 bg-card rounded-md flex items-center justify-center">
+                                       <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-primary-foreground">✓</div>
+                                   </div>
+                               </div>
+                               <div className="flex items-center gap-2">
+                                   <Button type="button" variant="outline" size="icon"><Camera className="w-4 h-4" /></Button>
+                                   <Button type="button" variant="outline" size="icon"><Video className="w-4 h-4" /></Button>
+                                   <Button type="button" variant="outline" size="icon"><Plus className="w-4 h-4" /></Button>
+                                   <Button type="button" variant="outline" size="icon"><ZaiIcon className="w-4 h-4" /></Button>
+                               </div>
+                               <div className="flex items-center justify-between">
+                                   <Label>Line up</Label>
+                                   <Switch 
+                                     checked={planData.offenseTactics?.[subTab]?.isLineupVisible}
+                                     onCheckedChange={(c) => handlePlanChange(`offenseTactics.${subTab}.isLineupVisible`, c)}
+                                   />
+                               </div>
+                               {planData.offenseTactics?.[subTab]?.isLineupVisible && renderFormationPitch(opponentPlayers)}
+                               <div className="flex items-center justify-between">
+                                   <Label>Set plays</Label>
+                                   <Switch
+                                     checked={planData.offenseTactics?.[subTab]?.areSetPlaysVisible}
+                                     onCheckedChange={(c) => handlePlanChange(`offenseTactics.${subTab}.areSetPlaysVisible`, c)}
+                                   />
+                               </div>
+                           </TabsContent>
+                       ))}
+                   </Tabs>
                 </TabsContent>
                 
                 <TabsContent value="defense" className="pt-4 space-y-4">
