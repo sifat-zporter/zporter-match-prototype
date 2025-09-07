@@ -70,14 +70,6 @@ export function AppSidebar() {
               Stats
             </SidebarMenuButton>
           </SidebarMenuItem>
-           <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={pathname.startsWith('/plan')}>
-              <Link href="/plan">
-                <ClipboardList />
-                Plan Tab
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton asChild isActive={pathname.startsWith('/match-category')}>
               <Link href="/match-category">
