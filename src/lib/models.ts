@@ -1,4 +1,5 @@
 
+
 /**
  * @fileoverview This file contains the TypeScript type definitions for the API request
  * and response models used throughout the Zporter application, based on the new API documentation.
@@ -168,45 +169,6 @@ export type CreateMatchReviewDto = {
 };
 
 /**
- * @model MatchPlanDto
- * @description Corresponds to the `tacticsNotes` object within PATCH /matches/{id}
- */
-export type MatchPlanDto = {
-  offense?: {
-    general?: string;
-    buildUp?: string;
-    attack?: string;
-    finishing?: string;
-    turnovers?: string;
-    setPieces?: {
-      penalties?: string;
-      corners?: string;
-      freeKicks?: string;
-      throwIns?: string;
-      goalKicks?: string;
-      other?: string;
-    }
-  };
-  defense?: {
-    general?: string;
-    highBlock?: string;
-    midBlock?: string;
-    lowBlock?: string;
-    turnovers?: string;
-    setPieces?: {
-      penalties?: string;
-      corners?: string;
-      freeKicks?: string;
-      throwIns?: string;
-      goalKicks?: string;
-      other?: string;
-    }
-  };
-  opponentTactics?: string;
-}
-
-
-/**
  * @model LogMatchEventDto
  * @description Corresponds to the body of POST /matches/{id}/log-event
  */
@@ -354,17 +316,6 @@ export type UpdateMatchContestDto = Partial<CreateMatchContestDto>;
 // --- User Models ---
 
 /**
- * @model UserSearchResult
- * @description Represents a user object from the old search results.
- * @deprecated Use InviteUserSearchResult instead.
- */
-export type UserSearchResult = {
-  id: string;
-  name: string;
-  avatar: string;
-};
-
-/**
  * @model InviteUserSearchResult
  * @description Represents a user from the new invite search endpoint.
  */
@@ -394,14 +345,6 @@ export type CreateInviteDto = {
 };
 
 /**
- * @model UpdateInviteStatusDto
- * @description DTO for updating an invitation's status.
- */
-export type UpdateInviteStatusDto = {
-  status: 'accepted' | 'declined';
-};
-
-/**
  * @model Invite
  * @description Represents an invitation object from the API.
  */
@@ -411,4 +354,91 @@ export type Invite = {
   inviteeId: string;
   type: string;
   status: 'pending' | 'accepted' | 'declined';
+};
+
+
+// --- Match Plan Models ---
+
+type PlayerPosition = {
+    playerId: string;
+    position: string;
+};
+
+type TacticLineup = {
+    formation: string;
+    playerPositions: PlayerPosition[];
+};
+
+type TacticDetail = {
+    selectedReviewId: string;
+    summary: string;
+    attachedMedia: string[];
+    isLineupVisible: boolean;
+    areSetPlaysVisible: boolean;
+    lineup: TacticLineup;
+};
+
+/**
+ * @model MatchPlanPayload
+ * @description The full payload for PATCH /matches/:id to update the plan.
+ */
+export type MatchPlanPayload = {
+  main: {
+    matchHeadLine: string;
+    isPrivate: boolean;
+  };
+  opponentAnalysis: {
+    general: TacticDetail;
+    offense: TacticDetail;
+    defense: TacticDetail;
+    other: TacticDetail;
+  };
+  teamLineup: {
+    planId: string;
+    planName: string;
+    generalTactics: {
+      summary: string;
+      attachedMedia: string[];
+    };
+    lineup: TacticLineup;
+    plannedExchanges: {
+      isEnabled: boolean;
+      substitutions: Array<{
+        playerInId: string;
+        playerOutId: string;
+        minute: number;
+      }>;
+    };
+    publishingSettings: {
+      isEnabled: boolean;
+      publishInternallyMinutesBefore: number;
+      publishPubliclyMinutesBefore: number;
+    };
+  };
+  offenseTactics: {
+    planId: string;
+    planName: string;
+    general: TacticDetail;
+    buildUp: TacticDetail;
+    attack: TacticDetail;
+    finishing: TacticDetail;
+  };
+  defenseTactics: {
+    planId: string;
+    planName: string;
+    general: TacticDetail;
+    highBlock: TacticDetail;
+    midBlock: TacticDetail;
+    lowBlock: TacticDetail;
+  };
+  otherTactics: {
+    planId: string;
+    planName: string;
+    summary: string;
+    attachedMedia: string[];
+    isLineupVisible: boolean;
+    areSetPlaysVisible: boolean;
+    lineup: TacticLineup;
+  };
+  status: string;
 };

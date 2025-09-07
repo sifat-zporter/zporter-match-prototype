@@ -1,21 +1,21 @@
 
-
 "use client"
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Textarea } from "./ui/textarea";
 import { Button } from "./ui/button";
-import { Plus, Camera, Video, Loader2, ListFilter } from "lucide-react";
-import { ScrollArea, ScrollBar } from "./ui/scroll-area";
+import { Plus, Camera, Video, Loader2, ListFilter, Info } from "lucide-react";
 import { Switch } from "./ui/switch";
 import { apiClient } from "@/lib/api-client";
-import type { MatchPlanDto } from "@/lib/models";
+import type { MatchPlanPayload, Invite } from "@/lib/models";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Label } from "./ui/label";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
+import { ApiDocumentationViewer } from "./api-documentation-viewer";
 
 // Mock data, in a real app this would come from an API
 const pastOpponentReviews = [
@@ -52,14 +52,32 @@ const PlayerOnPitch = ({ player }: { player: typeof opponentLineup[0] }) => (
 export function MatchPlan({ matchId }: { matchId: string }) {
     const { toast } = useToast();
     const [isLoading, setIsLoading] = useState(false);
-    const [plan, setPlan] = useState<MatchPlanDto>({});
+    const [plan, setPlan] = useState<Partial<MatchPlanPayload>>({});
+    const [invitedPlayers, setInvitedPlayers] = useState<Invite[]>([]);
+
+    useEffect(() => {
+        const fetchInvites = async () => {
+            if (!matchId) return;
+            try {
+                const invites = await apiClient<Invite[]>(`/matches/${matchId}/invites`);
+                setInvitedPlayers(invites);
+            } catch (error) {
+                toast({
+                    variant: "destructive",
+                    title: "Failed to load players",
+                    description: "Could not fetch the list of invited players for the lineup.",
+                });
+            }
+        };
+        fetchInvites();
+    }, [matchId, toast]);
 
     const handleSave = async () => {
         setIsLoading(true);
         try {
             await apiClient(`/matches/${matchId}`, {
                 method: 'PATCH',
-                body: { tacticsNotes: plan }, // This matches the old API structure, adjust if backend changes
+                body: plan,
             });
             toast({
                 title: "Plan Saved!",
@@ -70,53 +88,55 @@ export function MatchPlan({ matchId }: { matchId: string }) {
             toast({
                 variant: "destructive",
                 title: "Error",
-                description: "Failed to save match plan. Please try again.",
+                description: "Failed to save match plan. Please check the console for details.",
             });
         } finally {
             setIsLoading(false);
         }
     };
 
-    const handleTacticChange = (section: 'offense' | 'defense', field: string, value: string, subField?: string) => {
-        setPlan(p => {
-            const newPlan = JSON.parse(JSON.stringify(p)); // Deep copy
-            if (subField) {
-                if (!newPlan[section]) newPlan[section] = {};
-                if (!newPlan[section][field]) newPlan[section][field] = {};
-                newPlan[section][field][subField] = value;
-            } else {
-                if (!newPlan[section]) newPlan[section] = {};
-                newPlan[section][field] = value;
+    // Generic handler to update nested state
+    const handlePlanChange = (path: string, value: any) => {
+        setPlan(prev => {
+            const newPlan = JSON.parse(JSON.stringify(prev)); // Deep copy
+            const keys = path.split('.');
+            let current = newPlan;
+            for (let i = 0; i < keys.length - 1; i++) {
+                if (!current[keys[i]]) {
+                    current[keys[i]] = {};
+                }
+                current = current[keys[i]];
             }
+            current[keys[keys.length - 1]] = value;
             return newPlan;
         });
-    }
+    };
 
-    const TacticSubTabs = ({ section }: { section: 'offense' | 'defense' }) => {
-        const fields = section === 'offense' 
-            ? ["general", "buildUp", "attack", "finishing", "turnovers"] 
-            : ["general", "highBlock", "midBlock", "lowBlock", "turnovers"];
-        
-        const setPieceFields = ["penalties", "corners", "freeKicks", "throwIns", "goalKicks", "other"];
-
+    const TacticSubTabs = ({ section, subTabs }: { section: 'offenseTactics' | 'defenseTactics', subTabs: Record<string, string> }) => {
         return (
-             <Tabs defaultValue="general" className="w-full">
-                <TabsList className="grid w-full grid-cols-5">
-                    <TabsTrigger value="general">General</TabsTrigger>
-                    <TabsTrigger value="buildup">{section === 'offense' ? 'Build Up' : 'High Block'}</TabsTrigger>
-                    <TabsTrigger value="attack">{section === 'offense' ? 'Attack' : 'Mid Block'}</TabsTrigger>
-                    <TabsTrigger value="finishing">{section === 'offense' ? 'Finishing' : 'Low Block'}</TabsTrigger>
-                    <TabsTrigger value="other">Other</TabsTrigger>
+             <Tabs defaultValue={Object.keys(subTabs)[0]} className="w-full">
+                <TabsList className={`grid w-full grid-cols-${Object.keys(subTabs).length}`}>
+                    {Object.entries(subTabs).map(([key, title]) => (
+                        <TabsTrigger key={key} value={key}>{title}</TabsTrigger>
+                    ))}
                 </TabsList>
-                <TabsContent value="general" className="pt-4">
-                    <Textarea 
-                        placeholder={`General notes on ${section}...`}
-                        // @ts-ignore
-                        value={plan[section]?.general || ''}
-                        onChange={(e) => handleTacticChange(section, 'general', e.target.value)}
-                    />
-                </TabsContent>
-                {/* Add other TabsContent here */}
+                {Object.keys(subTabs).map(tabKey => (
+                    <TabsContent key={tabKey} value={tabKey} className="pt-4">
+                        <Label>Tactics summary for {subTabs[tabKey]}</Label>
+                        <Textarea 
+                            placeholder={`Notes on ${subTabs[tabKey]}...`}
+                            value={(plan[section] as any)?.[tabKey]?.summary || ''}
+                            onChange={(e) => handlePlanChange(`${section}.${tabKey}.summary`, e.target.value)}
+                        />
+                         <div className="flex items-center justify-between pt-4">
+                           <Label>Show Lineup</Label>
+                           <Switch
+                             checked={(plan[section] as any)?.[tabKey]?.isLineupVisible || false}
+                             onCheckedChange={(checked) => handlePlanChange(`${section}.${tabKey}.isLineupVisible`, checked)}
+                           />
+                        </div>
+                    </TabsContent>
+                ))}
             </Tabs>
         )
     };
@@ -134,130 +154,123 @@ export function MatchPlan({ matchId }: { matchId: string }) {
                 </TabsList>
                 
                 <TabsContent value="opponent" className="pt-4 space-y-4">
-                    <Card>
-                        <CardContent className="p-4 space-y-4">
-                            <div>
-                                <Label>Choose Opponent review</Label>
-                                <Select onValueChange={(value) => {
-                                    const selectedReview = pastOpponentReviews.find(r => r.id === value);
-                                    if (selectedReview) {
-                                        setPlan(p => ({...p, opponentTactics: selectedReview.summary}));
-                                    }
-                                }}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select a past match for analysis" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {pastOpponentReviews.map(r => (
-                                            <SelectItem key={r.id} value={r.id}>
-                                                <div className="flex flex-col">
-                                                    <span className="text-xs text-muted-foreground">{r.date}</span>
-                                                    <span>{r.teams}</span>
-                                                </div>
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            
-                            <Tabs defaultValue="general" className="w-full">
-                                <TabsList className="grid w-full grid-cols-4">
-                                    <TabsTrigger value="general">General</TabsTrigger>
-                                    <TabsTrigger value="offense">Offense</TabsTrigger>
-                                    <TabsTrigger value="defense">Defense</TabsTrigger>
-                                    <TabsTrigger value="other">Other</TabsTrigger>
-                                </TabsList>
-                                <TabsContent value="general" className="pt-4">
-                                    <Label>Tactics summary</Label>
-                                    <Textarea 
-                                        placeholder="General review from another match which a coach could use to create his own opponent analysis from." 
-                                        rows={4} 
-                                        value={plan.opponentTactics || ''}
-                                        onChange={(e) => setPlan(p => ({...p, opponentTactics: e.target.value}))}
-                                    />
-                                     <div className="flex items-center gap-2 mt-2">
-                                        <Button type="button" variant="outline" size="icon"><Camera className="w-4 h-4" /></Button>
-                                        <Button type="button" variant="outline" size="icon"><Video className="w-4 h-4" /></Button>
-                                        <Button type="button" variant="outline" size="icon"><Plus className="w-4 h-4" /></Button>
-                                    </div>
-                                </TabsContent>
-                            </Tabs>
-
-                            <div className="flex items-center justify-between pt-4">
-                               <Label>Line up</Label>
-                               <Switch />
-                            </div>
-                            <div>
-                                <Label>Choose Opponent line up</Label>
-                                <Select>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select opponent lineup" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      {/* Options would be populated from API */}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            
-                            <div className="relative h-[600px] bg-center bg-no-repeat bg-contain" style={{backgroundImage: "url('/football-pitch.svg')"}}>
-                                <div className="absolute top-[8%] left-[50%] -translate-x-1/2 grid grid-cols-3 gap-x-8 gap-y-2">
-                                    <PlayerOnPitch player={opponentLineup[0]} />
-                                    <PlayerOnPitch player={opponentLineup[1]} />
-                                    <PlayerOnPitch player={opponentLineup[2]} />
-                                </div>
-                                 <div className="absolute top-[25%] left-[50%] -translate-x-1/2 grid grid-cols-2 gap-x-20 gap-y-4">
-                                    <PlayerOnPitch player={opponentLineup[3]} />
-                                    <PlayerOnPitch player={opponentLineup[4]} />
-                                </div>
-                                <div className="absolute top-[40%] left-[50%] -translate-x-1/2">
-                                     <PlayerOnPitch player={opponentLineup[5]} />
-                                </div>
-                                 <div className="absolute top-[55%] left-[50%] -translate-x-1/2 grid grid-cols-4 gap-x-4 gap-y-4">
-                                    <PlayerOnPitch player={opponentLineup[6]} />
-                                    <PlayerOnPitch player={opponentLineup[7]} />
-                                    <PlayerOnPitch player={opponentLineup[8]} />
-                                    <PlayerOnPitch player={opponentLineup[9]} />
-                                </div>
-                                <div className="absolute top-[78%] left-[50%] -translate-x-1/2">
-                                     <PlayerOnPitch player={opponentLineup[10]} />
-                                </div>
-                            </div>
-
-                             <div className="flex items-center justify-between pt-4">
-                               <Label>Set plays</Label>
-                               <Switch />
-                            </div>
+                     <Card>
+                        <CardHeader><CardTitle>Opponent Analysis</CardTitle></CardHeader>
+                        <CardContent>
+                            <TacticSubTabs section="defenseTactics" subTabs={{ general: 'General', offense: 'Offense', defense: 'Defense', other: 'Other' }} />
                         </CardContent>
                     </Card>
                 </TabsContent>
 
                 <TabsContent value="line-up" className="pt-4 space-y-4">
                      <Card>
-                        <CardHeader><CardTitle>Line Up</CardTitle></CardHeader>
-                        <CardContent>
-                            <div className="text-muted-foreground p-8 text-center">Line Up planning UI goes here.</div>
+                        <CardHeader><CardTitle>Your Team Line Up</CardTitle></CardHeader>
+                        <CardContent className="space-y-4">
+                           <div>
+                                <Label>Plan Name</Label>
+                                <Input 
+                                    placeholder="e.g., Plan A, Starting XI..." 
+                                    value={plan.teamLineup?.planName || ''}
+                                    onChange={(e) => handlePlanChange('teamLineup.planName', e.target.value)}
+                                />
+                           </div>
+                           <div>
+                                <Label>General Tactics Summary</Label>
+                                <Textarea 
+                                     value={plan.teamLineup?.generalTactics?.summary || ''}
+                                     onChange={(e) => handlePlanChange('teamLineup.generalTactics.summary', e.target.value)}
+                                />
+                           </div>
+                           <div>
+                                <Label>Formation</Label>
+                                <Select
+                                    value={plan.teamLineup?.lineup?.formation}
+                                    onValueChange={(value) => handlePlanChange('teamLineup.lineup.formation', value)}
+                                >
+                                    <SelectTrigger><SelectValue placeholder="Select formation..." /></SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="4-3-3">4-3-3</SelectItem>
+                                        <SelectItem value="4-4-2">4-4-2</SelectItem>
+                                        <SelectItem value="3-5-2">3-5-2</SelectItem>
+                                        <SelectItem value="5-3-2">5-3-2</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                           </div>
+                           <p className="text-sm font-medium">Invited Players ({invitedPlayers.length})</p>
+                           {/* Add player selection for lineup here */}
                         </CardContent>
                     </Card>
                 </TabsContent>
 
                 <TabsContent value="offense" className="pt-4 space-y-4">
-                    <TacticSubTabs section="offense" />
+                     <Card>
+                        <CardHeader><CardTitle>Offense Tactics</CardTitle></CardHeader>
+                        <CardContent>
+                            <TacticSubTabs section="offenseTactics" subTabs={{ general: 'General', buildUp: 'Build Up', attack: 'Attack', finishing: 'Finishing' }} />
+                        </CardContent>
+                    </Card>
                 </TabsContent>
                 
                 <TabsContent value="defense" className="pt-4 space-y-4">
-                    <TacticSubTabs section="defense" />
+                    <Card>
+                        <CardHeader><CardTitle>Defense Tactics</CardTitle></CardHeader>
+                        <CardContent>
+                             <TacticSubTabs section="defenseTactics" subTabs={{ general: 'General', highBlock: 'High Block', midBlock: 'Mid Block', lowBlock: 'Low Block' }} />
+                        </CardContent>
+                    </Card>
                 </TabsContent>
 
                 <TabsContent value="other" className="pt-4">
-                     <div className="text-muted-foreground p-8 text-center">Other planning UI goes here.</div>
+                    <Card>
+                        <CardHeader><CardTitle>Other Tactics</CardTitle></CardHeader>
+                        <CardContent>
+                            <Textarea 
+                                placeholder="Other tactical notes..." 
+                                value={plan.otherTactics?.summary || ''}
+                                onChange={(e) => handlePlanChange('otherTactics.summary', e.target.value)}
+                            />
+                        </CardContent>
+                    </Card>
                 </TabsContent>
             </Tabs>
 
             <div className="pt-4">
                 <Button onClick={handleSave} disabled={isLoading} className="w-full bg-blue-600 hover:bg-blue-700 text-white">
-                    {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...</> : 'Save'}
+                    {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving Plan...</> : 'Save Plan'}
                 </Button>
             </div>
+            
+             <Accordion type="single" collapsible className="w-full">
+                <AccordionItem value="api-docs">
+                    <AccordionTrigger>
+                        <div className="flex items-center gap-2">
+                            <Info className="w-5 h-5 text-blue-400" />
+                            <span className="font-semibold">Plan Tab API Documentation</span>
+                        </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="space-y-4 pt-4">
+                        <ApiDocumentationViewer
+                            title="Update Match Plan"
+                            description="Saves all the data from the 'Plan' tab. Called when the 'Save Plan' button is clicked."
+                            endpoint="/matches/:id"
+                            method="PATCH"
+                            requestPayload={`{
+  "opponentAnalysis": { ... },
+  "teamLineup": { ... },
+  "offenseTactics": { ... },
+  "defenseTactics": { ... },
+  "otherTactics": { ... }
+}`}
+                            response={`// Returns the updated match object
+{
+  "id": "string",
+  "updatedAt": "string (ISO 8601)",
+  // ... all other match fields
+}`}
+                        />
+                    </AccordionContent>
+                </AccordionItem>
+            </Accordion>
         </div>
     );
 }
