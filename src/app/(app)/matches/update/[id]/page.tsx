@@ -117,8 +117,5 @@ function UpdateMatchView({ matchId }: { matchId: string }) {
 
 // This is the Server Component Page that wraps the client component.
 export default function UpdateMatchPage({ params }: { params: { id: string } }) {
-  // We can safely access params.id here on the server.
-  const matchId = params.id;
-  
-  return <UpdateMatchView matchId={matchId} />;
+  return <UpdateMatchView matchId={params.id} />;
 }
