@@ -35,13 +35,14 @@ export default function UserGeneratedMatchesPage() {
       const response = await apiClient<GetMatchesResponse>("/matches", {
         params: { limit: 100 }
       });
-      setMatches(response.data);
+      setMatches(response.data || []);
     } catch (error) {
       toast({
         variant: "destructive",
         title: "Error",
         description: "Failed to fetch matches.",
       });
+      setMatches([]); // Ensure matches is an array on error
     } finally {
       setIsLoading(false);
     }
