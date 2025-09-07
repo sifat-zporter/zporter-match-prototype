@@ -22,6 +22,7 @@ import {
   LayoutGrid,
   Users,
   Trophy,
+  List,
 } from "lucide-react";
 import { ZporterLogo } from "@/components/icons";
 import Link from 'next/link';
@@ -48,11 +49,19 @@ export function AppSidebar() {
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
+           <SidebarMenuItem>
+            <SidebarMenuButton asChild isActive={pathname.startsWith('/user-generated-matches')}>
+              <Link href="/user-generated-matches">
+                <List />
+                User Matches
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton asChild isActive={pathname.startsWith('/matches/create-v2')}>
               <Link href="/matches/create-v2">
                 <FilePlus2 />
-                Create Match V2
+                Create Match
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

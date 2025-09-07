@@ -5,7 +5,7 @@
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { Calendar as CalendarIcon, Clock, Search, MapPin, Loader2, Camera, Video, Link as LinkIcon, Info, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -87,9 +87,11 @@ const createMatchSchema = z.object({
 
 interface CreateMatchFormProps {
   onMatchCreated: (newMatch: Match) => void;
+  initialData?: Match | null;
+  isUpdateMode?: boolean;
 }
 
-export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
+export function CreateMatchForm({ onMatchCreated, initialData = null, isUpdateMode = false }: CreateMatchFormProps) {
   const { toast } = useToast();
   const [categories, setCategories] = useState<MatchCategory[]>([]);
   const [formats, setFormats] = useState<MatchFormat[]>([]);
@@ -109,6 +111,33 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
   const debouncedHomeSearch = useDebounce(homeSearchQuery, 300);
   const debouncedAwaySearch = useDebounce(awaySearchQuery, 300);
 
+  const form = useForm<z.infer<typeof createMatchSchema>>({
+    resolver: zodResolver(createMatchSchema),
+    defaultValues: {
+      homeTeamId: "",
+      awayTeamId: "",
+      matchDate: new Date(),
+      matchStartTime: "16:00",
+      matchLocation: "Sollentunavallen",
+      matchArena: "Main Pitch",
+      categoryId: "",
+      formatId: "",
+      matchType: "HOME",
+      matchPeriod: 2,
+      matchTime: 45,
+      matchPause: 15,
+      matchHeadLine: "Match Zporter Cup 2023",
+      description: 'Match against FC Barcelona U15 starts at 16.00.',
+      gatheringTime: new Date(),
+      fullDayScheduling: false,
+      endTime: new Date(),
+      isRecurring: false,
+      notificationMinutesBefore: 60,
+      markAsOccupied: true,
+      isPrivate: false,
+    },
+  });
+
   useEffect(() => {
     async function fetchDropdownData() {
       try {
@@ -121,6 +150,29 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
         setCategories(catData.filter(c => c.name));
         setFormats(formatData.filter(f => f.name));
         setContests(contestData.filter(c => c.name));
+
+        if (initialData) {
+            form.reset({
+                ...initialData.eventDetails,
+                ...initialData.scheduleDetails,
+                ...initialData.settings,
+                homeTeamId: initialData.homeTeam.id,
+                awayTeamId: initialData.awayTeam.id,
+                matchDate: parseISO(initialData.matchDate),
+                matchStartTime: initialData.startTime,
+                matchPeriod: initialData.scheduleDetails.numberOfPeriods,
+                matchTime: initialData.scheduleDetails.periodTime,
+                matchPause: initialData.scheduleDetails.pauseTime,
+                matchHeadLine: initialData.eventDetails.headline,
+                matchLocation: initialData.location.name,
+                matchArena: initialData.location.address, // Assuming address is arena
+                gatheringTime: parseISO(initialData.eventDetails.gatheringTime!),
+                endTime: parseISO(initialData.eventDetails.endTime!),
+            });
+            setSelectedHomeTeam(initialData.homeTeam);
+            setSelectedAwayTeam(initialData.awayTeam);
+        }
+
       } catch (error) {
         toast({
           variant: "destructive",
@@ -132,7 +184,7 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
       }
     }
     fetchDropdownData();
-  }, [toast]);
+  }, [toast, initialData, form]);
 
   const searchTeams = useCallback(async (query: string, setSearchResults: React.Dispatch<React.SetStateAction<TeamDto[]>>, setIsLoading: React.Dispatch<React.SetStateAction<boolean>>) => {
     if (query.length < 2) {
@@ -171,33 +223,6 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
     searchTeams(debouncedAwaySearch, setAwaySearchResults, setIsAwaySearching);
   }, [debouncedAwaySearch, searchTeams]);
   
-  const form = useForm<z.infer<typeof createMatchSchema>>({
-    resolver: zodResolver(createMatchSchema),
-    defaultValues: {
-      homeTeamId: "",
-      awayTeamId: "",
-      matchDate: new Date(),
-      matchStartTime: "16:00",
-      matchLocation: "Sollentunavallen",
-      matchArena: "Main Pitch",
-      categoryId: "",
-      formatId: "",
-      matchType: "HOME",
-      matchPeriod: 2,
-      matchTime: 45,
-      matchPause: 15,
-      matchHeadLine: "Match Zporter Cup 2023",
-      description: 'Match against FC Barcelona U15 starts at 16.00.',
-      gatheringTime: new Date(),
-      fullDayScheduling: false,
-      endTime: new Date(),
-      isRecurring: false,
-      notificationMinutesBefore: 60,
-      markAsOccupied: true,
-      isPrivate: false,
-    },
-  });
-  
   const handleSelectHomeTeam = (team: TeamDto) => {
     setSelectedHomeTeam(team);
     form.setValue("homeTeamId", team.id);
@@ -223,7 +248,6 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
         return;
       }
 
-      // Construct the payload with the correct field names for the backend
       const payload: CreateMatchDto = {
         ...values,
         yourTeamName: selectedHomeTeam.name,
@@ -233,12 +257,20 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
         endTime: values.endTime.toISOString(),
       };
       
-      const newMatchResponse = await apiClient<MatchEntity>('/matches', {
-        method: 'POST',
-        body: payload,
-      });
+      let newMatchResponse: MatchEntity;
+      if (isUpdateMode && initialData) {
+         newMatchResponse = await apiClient<MatchEntity>(`/matches/${initialData.id}`, {
+            method: 'PATCH',
+            body: payload,
+         });
+      } else {
+         newMatchResponse = await apiClient<MatchEntity>('/matches', {
+            method: 'POST',
+            body: payload,
+         });
+      }
 
-      // Transform the response to the frontend Match type
+
       const transformedMatch: Match = {
         id: newMatchResponse.id,
         homeTeam: { id: newMatchResponse.homeTeam.id, name: newMatchResponse.homeTeam.name, logoUrl: newMatchResponse.homeTeam.logoUrl || 'https://placehold.co/40x40.png' },
@@ -253,11 +285,11 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
       onMatchCreated(transformedMatch);
 
     } catch (error) {
-      console.error("Failed to create match draft:", error);
+      console.error("Failed to save match:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to create match draft. Please try again.",
+        description: `Failed to ${isUpdateMode ? 'update' : 'create'} match. Please try again.`,
       });
     }
   }
@@ -277,7 +309,7 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
                 render={({ field }) => (
                     <FormItem>
                     <FormLabel>Category</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                         <SelectTrigger>
                             <SelectValue placeholder="Select a category..." />
@@ -297,7 +329,7 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
                 render={({ field }) => (
                     <FormItem>
                     <FormLabel>Format</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                         <SelectTrigger>
                             <SelectValue placeholder="Select a format..." />
@@ -317,7 +349,7 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
                 render={({ field }) => (
                 <FormItem>
                     <FormLabel>Ev. Contest</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                         <SelectTrigger>
                             <SelectValue placeholder="Select a contest..." />
@@ -340,7 +372,7 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
                     render={({ field }) => (
                         <FormItem>
                         <FormLabel>Home/Away</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
                             <SelectTrigger>
                                 <SelectValue placeholder="Select type" />
@@ -403,7 +435,7 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
                 render={({ field }) => (
                     <FormItem>
                     <FormLabel>Periods</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={String(field.value)}>
+                    <Select onValueChange={field.onChange} value={String(field.value)}>
                         <FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl>
                         <SelectContent>
                             <SelectItem value="1">1</SelectItem>
@@ -420,7 +452,7 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
                 render={({ field }) => (
                     <FormItem>
                     <FormLabel>Time</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={String(field.value)}>
+                    <Select onValueChange={field.onChange} value={String(field.value)}>
                         <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                         <SelectContent>
                         {[...Array(60).keys()].map(i => <SelectItem key={i+1} value={String(i+1)}>{i+1} m</SelectItem>)}
@@ -435,7 +467,7 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
                 render={({ field }) => (
                     <FormItem>
                     <FormLabel>Pause</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={String(field.value)}>
+                        <Select onValueChange={field.onChange} value={String(field.value)}>
                             <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                             <SelectContent>
                             {[...Array(30).keys()].map(i => <SelectItem key={i+1} value={String(i+1)}>{i+1} m</SelectItem>)}
@@ -677,7 +709,7 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
                 name="notificationMinutesBefore"
                 render={({ field }) => (
                     <FormItem className="w-1/2">
-                    <Select onValueChange={field.onChange} defaultValue={String(field.value)}>
+                    <Select onValueChange={field.onChange} value={String(field.value)}>
                         <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                         <SelectContent>
                             <SelectItem value="15">15 min before</SelectItem>
@@ -711,7 +743,7 @@ export function CreateMatchForm({ onMatchCreated }: CreateMatchFormProps) {
             </div>
 
             <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white" disabled={form.formState.isSubmitting}>
-            {form.formState.isSubmitting ? 'Saving...' : 'Save Draft & Continue'}
+            {form.formState.isSubmitting ? 'Saving...' : (isUpdateMode ? 'Update Match' : 'Save Draft & Continue')}
             </Button>
         </form>
         </Form>
