@@ -32,7 +32,9 @@ export default function UserGeneratedMatchesPage() {
     try {
       setIsLoading(true);
       // Assuming user-generated matches can be filtered, or we just get all for now
-      const response = await apiClient<GetMatchesResponse>("/matches?limit=100");
+      const response = await apiClient<GetMatchesResponse>("/matches", {
+        params: { limit: 100 }
+      });
       setMatches(response.data);
     } catch (error) {
       toast({
@@ -158,3 +160,4 @@ export default function UserGeneratedMatchesPage() {
       </main>
     </div>
   );
+}

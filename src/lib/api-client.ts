@@ -25,6 +25,7 @@ type ApiClientOptions = {
   method?: 'GET' | 'POST' | 'PATCH' | 'DELETE';
   body?: object;
   headers?: Record<string, string>;
+  params?: Record<string, any>; // <-- Added for query parameters
 };
 
 class ApiError extends Error {
@@ -42,12 +43,12 @@ class ApiError extends Error {
 /**
  * Performs a request to the backend API.
  * @param path The endpoint path (e.g., '/api/matches').
- * @param options Configuration for the request (method, body, headers).
+ * @param options Configuration for the request (method, body, headers, params).
  * @returns A promise that resolves with the JSON response from the API.
  * @throws {ApiError} If the API response is not successful.
  */
 export async function apiClient<T>(path: string, options: ApiClientOptions = {}): Promise<T> {
-  const { method = 'GET', body, headers = {} } = options;
+  const { method = 'GET', body, headers = {}, params } = options;
   const { token, userId } = getAuthCredentials();
 
   const defaultHeaders: Record<string, string> = {
@@ -59,8 +60,13 @@ export async function apiClient<T>(path: string, options: ApiClientOptions = {})
     defaultHeaders['Authorization'] = `Bearer ${token}`;
     defaultHeaders['roleid'] = userId;
   }
+
+  const url = new URL(`${API_BASE_URL}${path}`);
+  if (params) {
+    Object.keys(params).forEach(key => url.searchParams.append(key, params[key]));
+  }
   
-  const fullUrl = `${API_BASE_URL}${path}`;
+  const fullUrl = url.toString();
 
   const config: RequestInit = {
     method,

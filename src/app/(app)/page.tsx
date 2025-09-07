@@ -106,7 +106,9 @@ export default function MatchesHubPage() {
       try {
         const dateString = format(date, 'yyyy-MM-dd');
         // Using the new API response structure
-        const response = await apiClient<GetMatchesResponse>(`/matches?date=${dateString}&limit=50`);
+        const response = await apiClient<GetMatchesResponse>('/matches', {
+          params: { date: dateString, limit: 50 }
+        });
         const transformedMatches = (response.data || []).map(transformApiMatchToFrontendMatch);
         setMatches(transformedMatches);
       } catch (error) {
