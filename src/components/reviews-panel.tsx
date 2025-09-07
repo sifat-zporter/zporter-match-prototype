@@ -229,7 +229,7 @@ export function ReviewsPanel({ match }: { match: Match }) {
                             avatarUrl: user.media.faceImage || `https://picsum.photos/seed/${user.userId}/40/40`,
                             number: user.playerCareer?.shirtNumber || Math.floor(Math.random() * 99) + 1,
                             zporterId: user.username,
-                            role: invite.role,
+                            role: invite.role, // Use the role from the invite
                         };
                     } catch (error) {
                         console.error(`Failed to fetch details for user ${invite.inviteeId}`, error);
@@ -239,9 +239,9 @@ export function ReviewsPanel({ match }: { match: Match }) {
 
             const users = (await Promise.all(userPromises)).filter(Boolean) as Player[];
 
-            setHomePlayers(users.filter(u => u.role === 'PLAYER_HOME'));
-            setAwayPlayers(users.filter(u => u.role === 'COACH_AWAY' || u.role === 'PLAYER_AWAY')); // Assuming away team can have coaches and players
-            setReferees(users.filter(u => u.role === 'REFEREE'));
+            setHomePlayers(users.filter(u => u.role?.includes('HOME')));
+            setAwayPlayers(users.filter(u => u.role?.includes('AWAY')));
+            setReferees(users.filter(u => u.role === 'REFEREE' || u.role === 'HOST' || u.role === 'ADMIN'));
 
         } catch (error) {
             toast({
