@@ -1,4 +1,3 @@
-
 // src/components/match-plan.tsx
 "use client";
 
@@ -93,6 +92,7 @@ export function MatchPlan({ matchId }: { matchId: string }) {
                                 avatarUrl: user.media.faceImage || 'https://placehold.co/40x40.png',
                                 number: user.playerCareer?.shirtNumber || Math.floor(Math.random() * 99) + 1,
                                 zporterId: user.username,
+                                role: user.type, // Assuming type is the role
                             };
                         } catch (error) {
                             console.error(`Failed to fetch details for user ${invite.inviteeId}`, error);
@@ -127,6 +127,13 @@ export function MatchPlan({ matchId }: { matchId: string }) {
             return newPlan;
         });
     };
+    
+    const handleSubstitutionChange = (index: number, field: 'playerInId' | 'playerOutId', playerId: string) => {
+        const newSubstitutions = [...(planData.teamLineup?.plannedExchanges?.substitutions || [])];
+        newSubstitutions[index] = { ...newSubstitutions[index], [field]: playerId };
+        handlePlanChange('teamLineup.plannedExchanges.substitutions', newSubstitutions);
+    };
+
 
     const handleSave = async () => {
         setIsLoading(true);
@@ -162,7 +169,10 @@ export function MatchPlan({ matchId }: { matchId: string }) {
         // Dragging from the invited players list to a pitch position
         if (sourceId === 'invited-players' && destinationId.startsWith('pos-')) {
             const position = destinationId.replace('pos-', '');
-            const player = invitedPlayers[source.index];
+            // IMPORTANT: Use the master invitedPlayers list, not the derived availablePlayers
+            const player = invitedPlayers.find(p => p.id === result.draggableId);
+
+            if (!player) return;
 
             // Check if player is already on the pitch
             if (currentPositions.some(p => p.playerId === player.id)) {
@@ -181,7 +191,7 @@ export function MatchPlan({ matchId }: { matchId: string }) {
         }
 
         // Dragging from the pitch back to the invited players list (or off the pitch)
-        if (sourceId.startsWith('pos-') && destinationId === 'invited-players') {
+        if (sourceId.startsWith('pos-')) {
             const position = sourceId.replace('pos-', '');
             const newPositions = currentPositions.filter(p => p.position !== position);
             handlePlanChange('teamLineup.lineup.playerPositions', newPositions);
@@ -329,13 +339,23 @@ export function MatchPlan({ matchId }: { matchId: string }) {
                         </div>
                         {planData.teamLineup?.plannedExchanges?.isEnabled && planData.teamLineup?.plannedExchanges?.substitutions.map((sub, index) => (
                              <div key={index} className="flex items-center justify-between gap-2">
-                                 <Droppable droppableId={`sub-out-${index}`}>
-                                    {(provided) => <div ref={provided.innerRef} {...provided.droppableProps} className="w-20 h-20 bg-card rounded-md flex items-center justify-center"><Plus className="w-6 h-6 text-muted-foreground"/>{provided.placeholder}</div>}
-                                 </Droppable>
+                                <Select onValueChange={(playerId) => handleSubstitutionChange(index, 'playerOutId', playerId)} value={sub.playerOutId}>
+                                    <SelectTrigger className="w-20 h-20 bg-card rounded-md flex items-center justify-center">
+                                        <SelectValue placeholder={<Plus className="w-6 h-6 text-muted-foreground"/>} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {invitedPlayers.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
                                 <NumberInput value={sub.minute} onValueChange={(v) => handlePlanChange(`teamLineup.plannedExchanges.substitutions.${index}.minute`, v)} />
-                                <Droppable droppableId={`sub-in-${index}`}>
-                                    {(provided) => <div ref={provided.innerRef} {...provided.droppableProps} className="w-20 h-20 bg-card rounded-md flex items-center justify-center"><Plus className="w-6 h-6 text-muted-foreground"/>{provided.placeholder}</div>}
-                                 </Droppable>
+                                 <Select onValueChange={(playerId) => handleSubstitutionChange(index, 'playerInId', playerId)} value={sub.playerInId}>
+                                    <SelectTrigger className="w-20 h-20 bg-card rounded-md flex items-center justify-center">
+                                        <SelectValue placeholder={<Plus className="w-6 h-6 text-muted-foreground"/>} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {invitedPlayers.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
                                 <Button size="icon" variant="ghost" className="rounded-full bg-card w-10 h-10"><Plus className="w-5 h-5"/></Button>
                             </div>
                         ))}
