@@ -174,21 +174,50 @@ export type UpdateMatchNoteDto = {
 export type PlayerReviewDto = {
     playerId: string;
     rating: number; // 1-5
-    notes: string;
+    comment: string;
+};
+
+/**
+ * @model TacticalRatingsDto
+ * @description Ratings for tactical aspects.
+ */
+export type TacticalRatingsDto = {
+  attack: number;
+  defence: number;
+  technique: number;
+  intelligence: number;
+  physical: number;
+};
+
+/**
+ * @model MentalRatingsDto
+ * @description Ratings for mental aspects.
+ */
+export type MentalRatingsDto = {
+  attitude: number;
+  composure: number;
+  concentration: number;
+  determination: number;
+  teamWork: number;
 };
 
 /**
  * @model CreateMatchReviewDto
- * @description Corresponds to the body of POST /matches/{id}/reviews.
+ * @description Corresponds to the body of POST /matches/:matchId/reviews.
  */
 export type CreateMatchReviewDto = {
-  authorId: string;
+  subjectId: string;
   reviewType: string;
-  starPlayerId?: string;
-  overallReview: string;
+  ztarOfTheMatchPlayerId?: string;
+  overallMatchReview: string;
   teamRating: number;
   playerReviews: PlayerReviewDto[];
+  tacticalRatings: TacticalRatingsDto;
+  mentalRatings: MentalRatingsDto;
+  comment: string;
+  isShared: boolean;
 };
+
 
 /**
  * @model LogMatchEventDto
