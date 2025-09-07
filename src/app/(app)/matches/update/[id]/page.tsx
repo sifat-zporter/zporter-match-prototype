@@ -1,9 +1,13 @@
-
-// This is the Server Component Page that wraps the client component.
+// This file is now correctly split into a Server Component Page
+// and a Client Component View to handle Next.js 15's async params.
+import { use } from 'react';
 import UpdateMatchView from './UpdateMatchView';
 
-// Making the page component async allows us to correctly handle the params promise.
-export default async function UpdateMatchPage({ params }: { params: { id: string } }) {
-  // Now we can safely access params.id and pass it to the client component.
-  return <UpdateMatchView matchId={params.id} />;
+// This is the Server Component Page.
+// It correctly handles the `params` promise.
+export default function UpdateMatchPage({ params }: { params: Promise<{ id: string }> }) {
+  // We MUST use `React.use()` to unwrap the promise as per Next.js 15+ standards.
+  const resolvedParams = use(params);
+  
+  return <UpdateMatchView matchId={resolvedParams.id} />;
 }
