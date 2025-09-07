@@ -132,14 +132,14 @@ export type GetMatchesResponse = {
  */
 export type MatchNote = {
   id: string;
-  authorId: string; // Assuming the API provides this
+  authorId: string;
   text: string;
   isStarred: boolean;
   isReply: boolean;
   parentNoteId: string | null;
   createdAt: string;
   updatedAt: string;
-  authorDetails?: { // To be populated client-side
+  authorDetails?: {
       name: string;
       avatarUrl?: string;
   };
@@ -212,10 +212,10 @@ export type CreateMatchReviewDto = {
   overallMatchReview: string;
   teamRating: number;
   playerReviews: PlayerReviewDto[];
-  tacticalRatings: TacticalRatingsDto;
-  mentalRatings: MentalRatingsDto;
-  comment: string;
-  isShared: boolean;
+  tacticalRatings?: TacticalRatingsDto;
+  mentalRatings?: MentalRatingsDto;
+  comment?: string;
+  isShared?: boolean;
 };
 
 
@@ -404,7 +404,7 @@ export type UserDto = {
 
 // --- Invite Models ---
 
-export type InvitationRole = 'PLAYER_HOME' | 'COACH_AWAY' | 'REFEREE' | 'HOST' | 'ADMIN';
+export type InvitationRole = 'PLAYER_HOME' | 'COACH_AWAY' | 'REFEREE' | 'HOST' | 'ADMIN' | 'PLAYER_AWAY';
 
 /**
  * @model CreateInviteDto
@@ -429,6 +429,7 @@ export type Invite = {
   type: string;
   status: 'pending' | 'accepted' | 'declined';
   inviteeDetails?: InviteUserSearchResult; // Add this to hold user details
+  role: InvitationRole;
 };
 
 

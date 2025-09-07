@@ -1,5 +1,5 @@
-
-"use client"
+// src/components/reviews-panel.tsx
+"use client";
 
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
@@ -8,31 +8,30 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Star, Camera, Video, ListFilter, Loader2, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Card, CardContent } from "./ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { apiClient } from "@/lib/api-client";
 import { useToast } from "@/hooks/use-toast";
-import type { CreateMatchReviewDto, PlayerReviewDto, TacticalRatingsDto, MentalRatingsDto, Invite, UserDto } from "@/lib/models";
+import type { CreateMatchReviewDto, PlayerReviewDto, Invite, UserDto } from "@/lib/models";
 import type { Match, Player } from "@/lib/data";
 import { Label } from "./ui/label";
-import { Switch } from "./ui/switch";
 import { ApiDocumentationViewer } from "./api-documentation-viewer";
 
-const StarRating = ({ rating, setRating }: { rating: number, setRating: (rating: number) => void }) => {
+const StarRating = ({ rating, setRating, size = "md" }: { rating: number; setRating?: (rating: number) => void; size?: "sm" | "md" }) => {
     return (
         <div className="flex items-center">
             {[1, 2, 3, 4, 5].map((star) => (
                 <button
                     key={star}
                     type="button"
-                    onClick={() => setRating(star)}
-                    className="p-1"
+                    onClick={() => setRating?.(star)}
+                    className="p-1 disabled:cursor-default"
                     aria-label={`Rate ${star} stars`}
+                    disabled={!setRating}
                 >
                     <Star
                         className={cn(
-                            "w-6 h-6",
+                            size === "md" ? "w-6 h-6" : "w-5 h-5",
                             star <= rating ? "text-primary fill-primary" : "text-muted-foreground/50"
                         )}
                     />
@@ -42,7 +41,7 @@ const StarRating = ({ rating, setRating }: { rating: number, setRating: (rating:
     );
 };
 
-const PlayerReviewItem = ({ player, onReviewChange, initialReview }: { player: Player, onReviewChange: (review: PlayerReviewDto) => void, initialReview?: PlayerReviewDto }) => {
+const PlayerReviewItem = ({ player, onReviewChange, initialReview }: { player: Player; onReviewChange: (review: PlayerReviewDto) => void; initialReview?: PlayerReviewDto }) => {
     const [rating, setRating] = useState(initialReview?.rating || 0);
     const [comment, setComment] = useState(initialReview?.comment || "");
 
@@ -50,7 +49,7 @@ const PlayerReviewItem = ({ player, onReviewChange, initialReview }: { player: P
         setRating(newRating);
         onReviewChange({ playerId: player.id, rating: newRating, comment });
     };
-    
+
     const handleCommentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         const newComment = e.target.value;
         setComment(newComment);
@@ -69,16 +68,17 @@ const PlayerReviewItem = ({ player, onReviewChange, initialReview }: { player: P
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
-                        <StarRating rating={rating} setRating={handleRatingChange} />
+                        <StarRating rating={rating} setRating={handleRatingChange} size="sm" />
                     </div>
                 </div>
             </AccordionTrigger>
             <AccordionContent>
                 <div className="space-y-2 pt-2">
-                    <Textarea 
-                      placeholder="Describe what they did well and what they could have done better" 
-                      value={comment}
-                      onChange={handleCommentChange}
+                    <Label className="text-xs text-muted-foreground">Match review</Label>
+                    <Textarea
+                        placeholder="Describe what he/she did well and what he could have done better"
+                        value={comment}
+                        onChange={handleCommentChange}
                     />
                     <div className="flex items-center gap-2">
                         <Button variant="ghost" size="icon"><Camera className="w-5 h-5" /></Button>
@@ -88,33 +88,16 @@ const PlayerReviewItem = ({ player, onReviewChange, initialReview }: { player: P
             </AccordionContent>
         </AccordionItem>
     );
-}
+};
 
-const RatingCategory = ({ title, ratings, onRatingChange }: { title: string, ratings: Record<string, number>, onRatingChange: (field: string, value: number) => void }) => (
-    <div className="space-y-2">
-        <h4 className="font-semibold">{title}</h4>
-        {Object.entries(ratings).map(([key, value]) => (
-            <div key={key} className="flex items-center justify-between">
-                <p className="text-sm capitalize">{key.replace(/([A-Z])/g, ' $1')}</p>
-                <StarRating rating={value} setRating={(rating) => onRatingChange(key, rating)} />
-            </div>
-        ))}
-    </div>
-);
-
-
-function TeamReviewForm({ match, players, teamId, reviewType }: { match: Match, players: Player[], teamId: string, reviewType: string }) {
+function TeamReviewForm({ match, players, teamId, reviewType }: { match: Match; players: Player[]; teamId: string; reviewType: string }) {
     const { toast } = useToast();
     const [isLoading, setIsLoading] = useState(false);
-    
+
     const [review, setReview] = useState<Partial<CreateMatchReviewDto>>({
         playerReviews: [],
         teamRating: 0,
-        tacticalRatings: { attack: 0, defence: 0, technique: 0, intelligence: 0, physical: 0 },
-        mentalRatings: { attitude: 0, composure: 0, concentration: 0, determination: 0, teamWork: 0 },
-        isShared: true,
         overallMatchReview: "",
-        comment: "",
     });
 
     const handlePlayerReviewChange = (playerReview: PlayerReviewDto) => {
@@ -122,23 +105,9 @@ function TeamReviewForm({ match, players, teamId, reviewType }: { match: Match, 
             const existingReviews = prev.playerReviews?.filter(r => r.playerId !== playerReview.playerId) || [];
             return {
                 ...prev,
-                playerReviews: [...existingReviews, playerReview]
+                playerReviews: [...existingReviews, playerReview],
             };
         });
-    };
-    
-    const handleTacticalRatingChange = (field: string, value: number) => {
-        setReview(prev => ({
-            ...prev,
-            tacticalRatings: { ...prev.tacticalRatings!, [field]: value }
-        }));
-    };
-    
-    const handleMentalRatingChange = (field: string, value: number) => {
-        setReview(prev => ({
-            ...prev,
-            mentalRatings: { ...prev.mentalRatings!, [field]: value }
-        }));
     };
 
     const handleSave = async () => {
@@ -150,10 +119,6 @@ function TeamReviewForm({ match, players, teamId, reviewType }: { match: Match, 
             overallMatchReview: review.overallMatchReview || '',
             teamRating: review.teamRating || 0,
             playerReviews: review.playerReviews || [],
-            tacticalRatings: review.tacticalRatings as TacticalRatingsDto,
-            mentalRatings: review.mentalRatings as MentalRatingsDto,
-            comment: review.comment || "",
-            isShared: review.isShared || false,
         };
 
         try {
@@ -186,88 +151,59 @@ function TeamReviewForm({ match, players, teamId, reviewType }: { match: Match, 
     }
 
     return (
-         <Card>
-            <CardContent className="p-4 space-y-4">
-                <div className="space-y-2">
-                    <Label>Your Star of the Match</Label>
-                    <Select onValueChange={(value) => setReview(prev => ({...prev, ztarOfTheMatchPlayerId: value}))}>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Choose player" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {players.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-                        </SelectContent>
-                    </Select>
-                </div>
-                <div className="space-y-2">
-                    <Label>Overall Match review</Label>
-                    <Textarea onChange={(e) => setReview(prev => ({...prev, overallMatchReview: e.target.value}))} />
-                </div>
-                <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="icon"><Camera className="w-5 h-5" /></Button>
-                    <Button variant="ghost" size="icon"><Video className="w-5 h-5" /></Button>
-                </div>
-                
-                <div className="flex items-center justify-between">
-                    <p className="font-medium">Team review</p>
-                    <StarRating 
-                      rating={review.teamRating || 0} 
-                      setRating={(rating) => setReview(prev => ({...prev, teamRating: rating}))}
-                    />
-                </div>
-                
-                <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium">{players.length} Players</p>
-                    <Button variant="ghost" size="icon"><ListFilter className="w-4 h-4" /></Button>
-                </div>
+        <div className="space-y-4">
+            <div className="space-y-2">
+                <Label>Your Ztar of the Match</Label>
+                <Select onValueChange={(value) => setReview(prev => ({ ...prev, ztarOfTheMatchPlayerId: value }))}>
+                    <SelectTrigger>
+                        <SelectValue placeholder="Choose player" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {players.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                    </SelectContent>
+                </Select>
+            </div>
+            <div className="space-y-2">
+                <Label>Match review</Label>
+                <Textarea onChange={(e) => setReview(prev => ({ ...prev, overallMatchReview: e.target.value }))} />
+            </div>
+            <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon"><Camera className="w-5 h-5" /></Button>
+                <Button variant="ghost" size="icon"><Video className="w-5 h-5" /></Button>
+            </div>
 
-                <Accordion type="multiple" className="w-full">
-                    {players.map((player) => (
-                        <PlayerReviewItem 
-                            key={player.id} 
-                            player={player} 
-                            onReviewChange={handlePlayerReviewChange}
-                            initialReview={review.playerReviews?.find(r => r.playerId === player.id)}
-                        />
-                    ))}
-                </Accordion>
-                
-                <RatingCategory 
-                    title="Tactical review" 
-                    ratings={review.tacticalRatings!}
-                    onRatingChange={handleTacticalRatingChange}
+            <div className="flex items-center justify-between">
+                <p className="font-medium">Team review</p>
+                <StarRating
+                    rating={review.teamRating || 0}
+                    setRating={(rating) => setReview(prev => ({ ...prev, teamRating: rating }))}
                 />
+            </div>
 
-                <RatingCategory 
-                    title="Mental review" 
-                    ratings={review.mentalRatings!}
-                    onRatingChange={handleMentalRatingChange}
-                />
-                
-                <div className="space-y-2">
-                    <Label>Comment</Label>
-                    <Textarea onChange={(e) => setReview(prev => ({...prev, comment: e.target.value}))} />
-                </div>
-                
-                <div className="flex items-center justify-between">
-                    <Label>Share review</Label>
-                    <Switch 
-                      checked={review.isShared}
-                      onCheckedChange={(checked) => setReview(prev => ({...prev, isShared: checked}))}
+            <div className="flex items-center justify-between">
+                <p className="text-sm font-medium">{players.length} Players</p>
+                <Button variant="ghost" size="icon"><ListFilter className="w-4 h-4" /></Button>
+            </div>
+
+            <Accordion type="multiple" className="w-full">
+                {players.map((player) => (
+                    <PlayerReviewItem
+                        key={player.id}
+                        player={player}
+                        onReviewChange={handlePlayerReviewChange}
+                        initialReview={review.playerReviews?.find(r => r.playerId === player.id)}
                     />
-                </div>
+                ))}
+            </Accordion>
 
-                <div className="pt-4">
-                    <Button className="w-full" onClick={handleSave} disabled={isLoading}>
-                        {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...</> : 'Save Review'}
-                    </Button>
-                </div>
-
-            </CardContent>
-        </Card>
-    )
+            <div className="pt-4">
+                <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white" onClick={handleSave} disabled={isLoading}>
+                    {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...</> : 'Save'}
+                </Button>
+            </div>
+        </div>
+    );
 }
-
 
 export function ReviewsPanel({ match }: { match: Match }) {
     const { toast } = useToast();
@@ -281,7 +217,7 @@ export function ReviewsPanel({ match }: { match: Match }) {
         setIsLoadingPlayers(true);
         try {
             const invites = await apiClient<Invite[]>(`/matches/${match.id}/invites`);
-            
+
             const userPromises = invites
                 .filter(invite => invite.inviteeId)
                 .map(async (invite) => {
@@ -293,7 +229,7 @@ export function ReviewsPanel({ match }: { match: Match }) {
                             avatarUrl: user.media.faceImage || `https://picsum.photos/seed/${user.userId}/40/40`,
                             number: user.playerCareer?.shirtNumber || Math.floor(Math.random() * 99) + 1,
                             zporterId: user.username,
-                            role: invite.role, // Use role from invite
+                            role: invite.role,
                         };
                     } catch (error) {
                         console.error(`Failed to fetch details for user ${invite.inviteeId}`, error);
@@ -304,7 +240,7 @@ export function ReviewsPanel({ match }: { match: Match }) {
             const users = (await Promise.all(userPromises)).filter(Boolean) as Player[];
 
             setHomePlayers(users.filter(u => u.role === 'PLAYER_HOME'));
-            setAwayPlayers(users.filter(u => u.role === 'PLAYER_AWAY'));
+            setAwayPlayers(users.filter(u => u.role === 'COACH_AWAY' || u.role === 'PLAYER_AWAY')); // Assuming away team can have coaches and players
             setReferees(users.filter(u => u.role === 'REFEREE'));
 
         } catch (error) {
@@ -322,40 +258,40 @@ export function ReviewsPanel({ match }: { match: Match }) {
         fetchInvitedUsers();
     }, [fetchInvitedUsers]);
 
-  return (
-    <div className="space-y-4">
-        <Tabs defaultValue="home" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 bg-transparent p-0">
-                <TabsTrigger value="home" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Home</TabsTrigger>
-                <TabsTrigger value="ref-org" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Ref & Org</TabsTrigger>
-                <TabsTrigger value="away" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Away</TabsTrigger>
-            </TabsList>
-            <TabsContent value="home" className="pt-6">
-                {isLoadingPlayers ? <Loader2 className="mx-auto my-16 w-8 h-8 animate-spin" /> : <TeamReviewForm match={match} players={homePlayers} teamId={match.homeTeam.id} reviewType="TeamPerformance" />}
-            </TabsContent>
-            <TabsContent value="ref-org" className="pt-6">
-                 {isLoadingPlayers ? <Loader2 className="mx-auto my-16 w-8 h-8 animate-spin" /> : <TeamReviewForm match={match} players={referees} teamId={"organization-placeholder"} reviewType="RefereePerformance" />}
-            </TabsContent>
-            <TabsContent value="away" className="pt-6">
-                 {isLoadingPlayers ? <Loader2 className="mx-auto my-16 w-8 h-8 animate-spin" /> : <TeamReviewForm match={match} players={awayPlayers} teamId={match.awayTeam.id} reviewType="TeamPerformance" />}
-            </TabsContent>
-        </Tabs>
+    return (
+        <div className="space-y-4">
+            <Tabs defaultValue="home" className="w-full">
+                <TabsList className="grid w-full grid-cols-3 bg-transparent p-0">
+                    <TabsTrigger value="home" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Home</TabsTrigger>
+                    <TabsTrigger value="ref-org" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Ref & Org</TabsTrigger>
+                    <TabsTrigger value="away" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Away</TabsTrigger>
+                </TabsList>
+                <TabsContent value="home" className="pt-6">
+                    {isLoadingPlayers ? <Loader2 className="mx-auto my-16 w-8 h-8 animate-spin" /> : <TeamReviewForm match={match} players={homePlayers} teamId={match.homeTeam.id} reviewType="TeamPerformance" />}
+                </TabsContent>
+                <TabsContent value="ref-org" className="pt-6">
+                    {isLoadingPlayers ? <Loader2 className="mx-auto my-16 w-8 h-8 animate-spin" /> : <TeamReviewForm match={match} players={referees} teamId={"organization-placeholder"} reviewType="RefereePerformance" />}
+                </TabsContent>
+                <TabsContent value="away" className="pt-6">
+                    {isLoadingPlayers ? <Loader2 className="mx-auto my-16 w-8 h-8 animate-spin" /> : <TeamReviewForm match={match} players={awayPlayers} teamId={match.awayTeam.id} reviewType="TeamPerformance" />}
+                </TabsContent>
+            </Tabs>
 
-        <Accordion type="single" collapsible className="w-full">
-            <AccordionItem value="api-docs">
-                <AccordionTrigger>
-                    <div className="flex items-center gap-2">
-                        <Info className="w-5 h-5 text-blue-400" />
-                        <span className="font-semibold">Reviews Tab API Documentation</span>
-                    </div>
-                </AccordionTrigger>
-                <AccordionContent className="space-y-4 pt-4">
-                    <ApiDocumentationViewer
-                        title="1. Create a Match Review"
-                        description="Called when the 'Save Review' button is clicked. Submits the entire review form for the match."
-                        endpoint="/matches/{matchId}/reviews"
-                        method="POST"
-                        requestPayload={`{
+            <Accordion type="single" collapsible className="w-full">
+                <AccordionItem value="api-docs">
+                    <AccordionTrigger>
+                        <div className="flex items-center gap-2">
+                            <Info className="w-5 h-5 text-blue-400" />
+                            <span className="font-semibold">Reviews Tab API Documentation</span>
+                        </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="space-y-4 pt-4">
+                        <ApiDocumentationViewer
+                            title="1. Create a Match Review"
+                            description="Called when the 'Save' button is clicked. Submits the entire review form for the match."
+                            endpoint="/matches/{matchId}/reviews"
+                            method="POST"
+                            requestPayload={`{
   "subjectId": "user-id-of-player-or-team",
   "reviewType": "PlayerPerformance",
   "ztarOfTheMatchPlayerId": "player-user-id-abc",
@@ -377,20 +313,20 @@ export function ReviewsPanel({ match }: { match: Match }) {
   "comment": "Overall, a very positive performance.",
   "isShared": true
 }`}
-                        response={`// The newly created review object is returned
+                            response={`// The newly created review object is returned
 {
   "id": "review-xyz-789",
   "matchId": "match-abc-123",
   "reviewerId": "current-user-id",
   // ... all other fields from the request
 }`}
-                    />
-                     <ApiDocumentationViewer
-                        title="2. Get All Reviews for a Match"
-                        description="Could be called when the component loads to see if any reviews already exist for this match."
-                        endpoint="/matches/{matchId}/reviews"
-                        method="GET"
-                        response={`// An array of review objects
+                        />
+                         <ApiDocumentationViewer
+                            title="2. Get All Reviews for a Match"
+                            description="Could be called when the component loads to see if any reviews already exist for this match."
+                            endpoint="/matches/{matchId}/reviews"
+                            method="GET"
+                            response={`// An array of review objects
 [
   {
     "id": "review-xyz-789",
@@ -398,30 +334,30 @@ export function ReviewsPanel({ match }: { match: Match }) {
     // ... all other review fields
   }
 ]`}
-                    />
-                    <ApiDocumentationViewer
-                        title="3. Get a Single Review"
-                        description="Used to fetch the details of one specific review."
-                        endpoint="/matches/{matchId}/reviews/{reviewId}"
-                        method="GET"
-                        response={`// A single complete review object
+                        />
+                        <ApiDocumentationViewer
+                            title="3. Get a Single Review"
+                            description="Used to fetch the details of one specific review."
+                            endpoint="/matches/{matchId}/reviews/{reviewId}"
+                            method="GET"
+                            response={`// A single complete review object
 {
   "id": "review-xyz-789",
   "matchId": "match-abc-123",
   // ... all other review fields
 }`}
-                    />
-                    <ApiDocumentationViewer
-                        title="4. Update a Match Review"
-                        description="Allows the author of a review to update specific fields without sending the whole object again."
-                        endpoint="/matches/{matchId}/reviews/{reviewId}"
-                        method="PATCH"
-                        requestPayload={`{
+                        />
+                        <ApiDocumentationViewer
+                            title="4. Update a Match Review"
+                            description="Allows the author of a review to update specific fields without sending the whole object again."
+                            endpoint="/matches/{matchId}/reviews/{reviewId}"
+                            method="PATCH"
+                            requestPayload={`{
   "overallMatchReview": "An updated review.",
   "teamRating": 4,
   "isShared": false
 }`}
-                        response={`// The complete, updated review object is returned
+                            response={`// The complete, updated review object is returned
 {
   "id": "review-xyz-789",
   "overallMatchReview": "An updated review.",
@@ -429,20 +365,20 @@ export function ReviewsPanel({ match }: { match: Match }) {
   "isShared": false,
   // ... other fields remain
 }`}
-                    />
-                    <ApiDocumentationViewer
-                        title="5. Delete a Match Review"
-                        description="Allows the author of a review to delete it permanently."
-                        endpoint="/matches/{matchId}/reviews/{reviewId}"
-                        method="DELETE"
-                        response={`{
+                        />
+                        <ApiDocumentationViewer
+                            title="5. Delete a Match Review"
+                            description="Allows the author of a review to delete it permanently."
+                            endpoint="/matches/{matchId}/reviews/{reviewId}"
+                            method="DELETE"
+                            response={`{
   "id": "review-xyz-789",
   "message": "Review successfully deleted."
 }`}
-                    />
-                </AccordionContent>
-            </AccordionItem>
-        </Accordion>
-    </div>
-  );
+                        />
+                    </AccordionContent>
+                </AccordionItem>
+            </Accordion>
+        </div>
+    );
 }
