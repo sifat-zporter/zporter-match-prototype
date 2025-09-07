@@ -15,9 +15,9 @@ import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { apiClient } from "@/lib/api-client";
-import { notFound } from "next/navigation";
 
-export default function UpdateMatchPage({ params }: { params: { id: string } }) {
+// This is now the client-side view component.
+function UpdateMatchView({ matchId }: { matchId: string }) {
     const { toast } = useToast();
     const [match, setMatch] = useState<Match | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -25,7 +25,7 @@ export default function UpdateMatchPage({ params }: { params: { id: string } }) 
     const fetchMatch = useCallback(async () => {
         try {
             setIsLoading(true);
-            const fetchedMatch = await apiClient<Match>(`/matches/${params.id}`);
+            const fetchedMatch = await apiClient<Match>(`/matches/${matchId}`);
             setMatch(fetchedMatch);
         } catch (error) {
             console.error("Failed to fetch match for update:", error);
@@ -34,11 +34,10 @@ export default function UpdateMatchPage({ params }: { params: { id: string } }) 
                 title: "Error",
                 description: "Could not load the match data. Please try again.",
             });
-            // notFound(); // Or handle error state appropriately
         } finally {
             setIsLoading(false);
         }
-    }, [params.id, toast]);
+    }, [matchId, toast]);
 
     useEffect(() => {
         fetchMatch();
@@ -98,7 +97,7 @@ export default function UpdateMatchPage({ params }: { params: { id: string } }) 
           
           <TabsContent value="event" className="pt-4">
             <CreateMatchForm onMatchCreated={handleMatchUpdated} initialData={match} isUpdateMode={true} />
-          </TabsContent>
+          </Tabs.Content>
           <TabsContent value="invites" className="pt-4">
             <InvitePlayers matchId={match.id} homeTeam={match.homeTeam} awayTeam={match.awayTeam} />
           </TabsContent>
@@ -115,4 +114,12 @@ export default function UpdateMatchPage({ params }: { params: { id: string } }) 
       </main>
     </div>
   );
+}
+
+// This is the new Server Component Page that wraps the client component.
+export default async function UpdateMatchPage({ params }: { params: { id: string } }) {
+  // We can safely access params.id here on the server.
+  const matchId = params.id;
+  
+  return <UpdateMatchView matchId={matchId} />;
 }
