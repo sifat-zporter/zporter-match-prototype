@@ -1,4 +1,3 @@
-
 // src/components/match-plan.tsx
 "use client";
 
@@ -21,7 +20,7 @@ import type { Player } from "@/lib/data";
 import { DragDropContext, Droppable, Draggable, type DropResult } from 'react-beautiful-dnd';
 
 const PlayerOnPitch = ({ player, droppableId }: { player: Player, droppableId: string }) => (
-     <Droppable droppableId={droppableId} isDropDisabled={true}>
+     <Droppable droppableId={droppableId}>
         {(provided) => (
             <div ref={provided.innerRef} {...provided.droppableProps}>
                 <Draggable draggableId={player.id} index={0}>
@@ -75,6 +74,7 @@ export function MatchPlan({ matchId }: { matchId: string }) {
     const { toast } = useToast();
     const [isLoading, setIsLoading] = useState(false);
     const [invitedPlayers, setInvitedPlayers] = useState<Player[]>([]);
+    const [draggingPlayerId, setDraggingPlayerId] = useState<string | null>(null);
     
     const [planData, setPlanData] = useState<Partial<MatchPlanPayload>>({
         main: { matchHeadLine: "", isPrivate: false },
@@ -177,6 +177,7 @@ export function MatchPlan({ matchId }: { matchId: string }) {
     };
     
     const onDragEnd = (result: DropResult) => {
+        setDraggingPlayerId(null);
         const { source, destination, draggableId } = result;
         if (!destination) return;
 
@@ -215,7 +216,7 @@ export function MatchPlan({ matchId }: { matchId: string }) {
     };
     
     const playersOnPitchIds = new Set((planData.teamLineup?.lineup?.playerPositions || []).map(p => p.playerId));
-    const availablePlayers = invitedPlayers.filter(p => !playersOnPitchIds.has(p.id));
+    const availablePlayers = invitedPlayers.filter(p => !playersOnPitchIds.has(p.id) || p.id === draggingPlayerId);
 
     const renderPlayerOnPitch = (position: string) => {
         const playerPosition = planData.teamLineup?.lineup?.playerPositions.find(p => p.position === position);
@@ -230,7 +231,7 @@ export function MatchPlan({ matchId }: { matchId: string }) {
     
 
     return (
-      <DragDropContext onDragEnd={onDragEnd}>
+      <DragDropContext onDragEnd={onDragEnd} onDragStart={(start) => setDraggingPlayerId(start.draggableId)}>
         <div className="space-y-4">
             <Tabs defaultValue="line-up" className="w-full">
                 <TabsList className="grid w-full grid-cols-5 bg-transparent p-0">
