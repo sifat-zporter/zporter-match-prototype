@@ -124,26 +124,48 @@ export type GetMatchesResponse = {
   offset: number;
 };
 
+// --- Match Note Models ---
 
 /**
- * @model CreateMatchNoteDto
- * @description Corresponds to the body of POST /matches/{id}/notes.
+ * @model MatchNote
+ * @description Represents a match note object from the API.
  */
-export type CreateMatchNoteDto = {
-  content: string;
+export type MatchNote = {
+  noteId: string;
+  authorId: string; // Assuming the API provides this
+  text: string;
+  isStarred: boolean;
+  isReply: boolean;
+  parentNoteId: string | null;
+  createdAt: string;
+  updatedAt: string;
+  authorDetails?: { // To be populated client-side
+      name: string;
+      avatarUrl?: string;
+  };
+  replies?: MatchNote[];
 };
 
 /**
- * @model MatchNoteResponse
- * @description The response DTO from POST /matches/{id}/notes.
+ * @model CreateMatchNoteDto
+ * @description DTO for POST /matches/{matchId}/notes.
  */
-export type MatchNoteResponse = {
-    id: string;
-    matchId: string;
-    author: string;
-    content: string;
-    createdAt: string;
-}
+export type CreateMatchNoteDto = {
+  text: string;
+  isReply?: boolean;
+  parentNoteId?: string;
+  isStarred?: boolean;
+};
+
+/**
+ * @model UpdateMatchNoteDto
+ * @description DTO for PATCH /matches/{matchId}/notes/{noteId}.
+ */
+export type UpdateMatchNoteDto = {
+  text?: string;
+  isStarred?: boolean;
+};
+
 
 /**
  * @model PlayerReviewDto
@@ -337,6 +359,8 @@ export type UserDto = {
   profile: {
     firstName: string;
     lastName: string;
+    gender?: string;
+    city?: string;
   };
   media: {
     faceImage: string | null;
@@ -344,7 +368,8 @@ export type UserDto = {
   playerCareer?: {
       shirtNumber?: number;
   };
-  [key: string]: any;
+  type: string; // PLAYER, COACH etc.
+  [key: string]: any; // Allow other fields from the large user object
 };
 
 
