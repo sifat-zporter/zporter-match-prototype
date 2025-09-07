@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
@@ -16,51 +16,22 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Label } from "./ui/label";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
 import { ApiDocumentationViewer } from "./api-documentation-viewer";
-
-// Mock data, in a real app this would come from an API
-const pastOpponentReviews = [
-    { id: 'review-1', date: '2023/10/11 16:00', teams: 'IF Brommapojkarna - IFK Norrköping', summary: 'Opponent focused on a high press and fast counter-attacks. Vulnerable to long balls over the top.' },
-    { id: 'review-2', date: '2023/09/28 18:30', teams: 'AIK - IFK Norrköping', summary: 'They played a very defensive 5-3-2 formation, absorbing pressure and looking for set-piece opportunities.' },
-];
-
-const opponentLineup = [
-    { id: 'p1', name: 'Sterling', avatar: 'https://placehold.co/40x40.png', rating: 173, number: 11, position: 'LW' },
-    { id: 'p2', name: 'Ronaldinho', avatar: 'https://placehold.co/40x40.png', rating: 173, number: 14, position: 'ST' },
-    { id: 'p3', name: 'Iniesta', avatar: 'https://placehold.co/40x40.png', rating: 173, number: 10, position: 'RW' },
-    { id: 'p4', name: 'Sterling', avatar: 'https://placehold.co/40x40.png', rating: 173, number: 8, position: 'LCM' },
-    { id: 'p5', name: 'Iniesta', avatar: 'https://placehold.co/40x40.png', rating: 173, number: 19, position: 'RCM' },
-    { id: 'p6', name: 'Xavi', avatar: 'https://placehold.co/40x40.png', rating: 173, number: 6, position: 'CDM' },
-    { id: 'p7', name: 'Alba', avatar: 'https://placehold.co/40x40.png', rating: 173, number: 3, position: 'LB' },
-    { id: 'p8', name: 'Pique', avatar: 'https://placehold.co/40x40.png', rating: 177, number: 5, position: 'LCB' },
-    { id: 'p9', name: 'Ramos', avatar: 'https://placehold.co/40x40.png', rating: 173, number: 4, position: 'RCB' },
-    { id: 'p10', name: 'Alves', avatar: 'https://placehold.co/40x40.png', rating: 173, number: 2, position: 'RB' },
-    { id: 'p11', name: 'Casillas', avatar: 'https://placehold.co/40x40.png', rating: 173, number: 1, position: 'GK' },
-];
-
-const PlayerOnPitch = ({ player }: { player: typeof opponentLineup[0] }) => (
-    <div className="flex flex-col items-center justify-center gap-1 text-center w-16">
-        <div className="relative">
-            <Image src={player.avatar} alt={player.name} width={40} height={40} className="rounded-full" data-ai-hint="player avatar" />
-            <div className="absolute -top-1 -left-4 text-xs font-semibold text-purple-400">{player.rating}</div>
-            <div className="absolute -top-1 -right-4 text-xs font-semibold">{player.number}</div>
-        </div>
-        <p className="text-xs font-semibold truncate w-full">{player.name}</p>
-    </div>
-);
+import type { Player } from "@/lib/data";
 
 // Main Component
 export function MatchPlan({ matchId }: { matchId: string }) {
     const { toast } = useToast();
     const [isLoading, setIsLoading] = useState(false);
     const [plan, setPlan] = useState<Partial<MatchPlanPayload>>({});
-    const [invitedPlayers, setInvitedPlayers] = useState<Invite[]>([]);
+    const [invitedPlayers, setInvitedPlayers] = useState<Player[]>([]);
 
     useEffect(() => {
         const fetchInvites = async () => {
             if (!matchId) return;
             try {
-                const invites = await apiClient<Invite[]>(`/matches/${matchId}/invites`);
-                setInvitedPlayers(invites);
+                // Using the search endpoint to get players for the home team
+                const homeTeamPlayers = await apiClient<Player[]>(`/matches/${matchId}/invites/search-users?role=PLAYER_HOME`);
+                setInvitedPlayers(homeTeamPlayers);
             } catch (error) {
                 toast({
                     variant: "destructive",
@@ -88,7 +59,7 @@ export function MatchPlan({ matchId }: { matchId: string }) {
             toast({
                 variant: "destructive",
                 title: "Error",
-                description: "Failed to save match plan. Please check the console for details.",
+                description: "Failed to save match plan. Please try again.",
             });
         } finally {
             setIsLoading(false);
@@ -98,7 +69,7 @@ export function MatchPlan({ matchId }: { matchId: string }) {
     // Generic handler to update nested state
     const handlePlanChange = (path: string, value: any) => {
         setPlan(prev => {
-            const newPlan = JSON.parse(JSON.stringify(prev)); // Deep copy
+            const newPlan = JSON.parse(JSON.stringify(prev || {})); // Deep copy
             const keys = path.split('.');
             let current = newPlan;
             for (let i = 0; i < keys.length - 1; i++) {
@@ -112,7 +83,8 @@ export function MatchPlan({ matchId }: { matchId: string }) {
         });
     };
 
-    const TacticSubTabs = ({ section, subTabs }: { section: 'offenseTactics' | 'defenseTactics', subTabs: Record<string, string> }) => {
+    const TacticSubTabs = ({ section, subTabs }: { section: 'offenseTactics' | 'defenseTactics' | 'opponentAnalysis', subTabs: Record<string, string> }) => {
+        const sectionData = plan[section] || {};
         return (
              <Tabs defaultValue={Object.keys(subTabs)[0]} className="w-full">
                 <TabsList className={`grid w-full grid-cols-${Object.keys(subTabs).length}`}>
@@ -125,13 +97,13 @@ export function MatchPlan({ matchId }: { matchId: string }) {
                         <Label>Tactics summary for {subTabs[tabKey]}</Label>
                         <Textarea 
                             placeholder={`Notes on ${subTabs[tabKey]}...`}
-                            value={(plan[section] as any)?.[tabKey]?.summary || ''}
+                            value={(sectionData as any)?.[tabKey]?.summary || ''}
                             onChange={(e) => handlePlanChange(`${section}.${tabKey}.summary`, e.target.value)}
                         />
                          <div className="flex items-center justify-between pt-4">
                            <Label>Show Lineup</Label>
                            <Switch
-                             checked={(plan[section] as any)?.[tabKey]?.isLineupVisible || false}
+                             checked={(sectionData as any)?.[tabKey]?.isLineupVisible || false}
                              onCheckedChange={(checked) => handlePlanChange(`${section}.${tabKey}.isLineupVisible`, checked)}
                            />
                         </div>
@@ -140,7 +112,6 @@ export function MatchPlan({ matchId }: { matchId: string }) {
             </Tabs>
         )
     };
-
 
     return (
         <div className="space-y-4">
@@ -157,7 +128,7 @@ export function MatchPlan({ matchId }: { matchId: string }) {
                      <Card>
                         <CardHeader><CardTitle>Opponent Analysis</CardTitle></CardHeader>
                         <CardContent>
-                            <TacticSubTabs section="defenseTactics" subTabs={{ general: 'General', offense: 'Offense', defense: 'Defense', other: 'Other' }} />
+                            <TacticSubTabs section="opponentAnalysis" subTabs={{ general: 'General', offense: 'Offense', defense: 'Defense', other: 'Other' }} />
                         </CardContent>
                     </Card>
                 </TabsContent>
@@ -168,7 +139,7 @@ export function MatchPlan({ matchId }: { matchId: string }) {
                         <CardContent className="space-y-4">
                            <div>
                                 <Label>Plan Name</Label>
-                                <Input 
+                                <Textarea 
                                     placeholder="e.g., Plan A, Starting XI..." 
                                     value={plan.teamLineup?.planName || ''}
                                     onChange={(e) => handlePlanChange('teamLineup.planName', e.target.value)}
