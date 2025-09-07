@@ -1,7 +1,7 @@
 // src/components/match-plan.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
@@ -129,6 +129,26 @@ export function MatchPlan({ matchId }: { matchId: string }) {
             buildUp: { summary: '', isLineupVisible: true, areSetPlaysVisible: false, lineup: { formation: "4-3-3", playerPositions: [] } },
             attack: { summary: '', isLineupVisible: true, areSetPlaysVisible: false, lineup: { formation: "4-3-3", playerPositions: [] } },
             finishing: { summary: '', isLineupVisible: true, areSetPlaysVisible: false, lineup: { formation: "4-3-3", playerPositions: [] } },
+        },
+        defenseTactics: {
+            planId: "",
+            planName: "New Defense Plan",
+            general: { summary: 'Defense tactics from another match.', isLineupVisible: true, areSetPlaysVisible: false, lineup: { formation: "4-3-3", playerPositions: [] } },
+            highBlock: { summary: '', isLineupVisible: true, areSetPlaysVisible: false, lineup: { formation: "4-3-3", playerPositions: [] } },
+            midBlock: { summary: '', isLineupVisible: true, areSetPlaysVisible: false, lineup: { formation: "4-3-3", playerPositions: [] } },
+            lowBlock: { summary: '', isLineupVisible: true, areSetPlaysVisible: false, lineup: { formation: "4-3-3", playerPositions: [] } },
+        },
+         otherTactics: {
+            planId: "",
+            planName: "New Other Plan",
+            summary: "Other tactics from another match.",
+            attachedMedia: [],
+            isLineupVisible: true,
+            areSetPlaysVisible: false,
+            lineup: {
+                formation: "4-3-3",
+                playerPositions: []
+            }
         },
     });
 
@@ -539,11 +559,111 @@ export function MatchPlan({ matchId }: { matchId: string }) {
                 </TabsContent>
                 
                 <TabsContent value="defense" className="pt-4 space-y-4">
-                     <Card><CardContent className="p-4">Defense tactics UI goes here.</CardContent></Card>
+                     <Select onValueChange={(v) => handlePlanChange('defenseTactics.planName', v)} value={planData.defenseTactics?.planName}>
+                       <SelectTrigger>
+                           <SelectValue placeholder="Choose Plan" />
+                       </SelectTrigger>
+                       <SelectContent>
+                           <SelectItem value="New Defense Plan">New Defense Plan</SelectItem>
+                           <SelectItem value="IF Brommapojkarna - Maj FC">IF Brommapojkarna - Maj FC</SelectItem>
+                       </SelectContent>
+                   </Select>
+                   <Tabs defaultValue="general" className="w-full">
+                       <TabsList className="grid w-full grid-cols-4">
+                           <TabsTrigger value="general">General</TabsTrigger>
+                           <TabsTrigger value="highBlock">High Block</TabsTrigger>
+                           <TabsTrigger value="midBlock">Mid Block</TabsTrigger>
+                           <TabsTrigger value="lowBlock">Low Block</TabsTrigger>
+                       </TabsList>
+                       {(['general', 'highBlock', 'midBlock', 'lowBlock'] as const).map(subTab => (
+                           <TabsContent key={subTab} value={subTab} className="pt-4 space-y-4">
+                               <div className="space-y-2">
+                                   <Label>Tactics summary</Label>
+                                   <Textarea 
+                                     rows={4}
+                                     placeholder="Defense tactics from another match"
+                                     value={planData.defenseTactics?.[subTab]?.summary || ''}
+                                     onChange={(e) => handlePlanChange(`defenseTactics.${subTab}.summary`, e.target.value)}
+                                   />
+                               </div>
+                               <div className="grid grid-cols-3 gap-2">
+                                   <div className="h-24 bg-card rounded-md flex items-center justify-center"><div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-primary-foreground">✓</div></div>
+                                   <div className="h-24 bg-card rounded-md flex items-center justify-center"><div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-primary-foreground">✓</div></div>
+                                   <div className="h-24 bg-card rounded-md flex items-center justify-center"><div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-primary-foreground">✓</div></div>
+                                   <div className="h-24 bg-card rounded-md flex items-center justify-center"><div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-primary-foreground">✓</div></div>
+                                   <div className="h-24 bg-card rounded-md flex items-center justify-center"><div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-primary-foreground">✓</div></div>
+                                   <div className="h-24 bg-card rounded-md flex items-center justify-center"></div>
+                               </div>
+                               <div className="flex items-center gap-2">
+                                   <Button type="button" variant="outline" size="icon"><Camera className="w-4 h-4" /></Button>
+                                   <Button type="button" variant="outline" size="icon"><Video className="w-4 h-4" /></Button>
+                                   <Button type="button" variant="outline" size="icon"><Plus className="w-4 h-4" /></Button>
+                                   <Button type="button" variant="outline" size="icon"><ZaiIcon className="w-4 h-4" /></Button>
+                               </div>
+                               <div className="flex items-center justify-between">
+                                   <Label>Line up</Label>
+                                   <Switch 
+                                     checked={planData.defenseTactics?.[subTab]?.isLineupVisible}
+                                     onCheckedChange={(c) => handlePlanChange(`defenseTactics.${subTab}.isLineupVisible`, c)}
+                                   />
+                               </div>
+                               {planData.defenseTactics?.[subTab]?.isLineupVisible && renderFormationPitch(opponentPlayers)}
+                               <div className="flex items-center justify-between">
+                                   <Label>Set plays</Label>
+                                   <Switch
+                                     checked={planData.defenseTactics?.[subTab]?.areSetPlaysVisible}
+                                     onCheckedChange={(c) => handlePlanChange(`defenseTactics.${subTab}.areSetPlaysVisible`, c)}
+                                   />
+                               </div>
+                           </TabsContent>
+                       ))}
+                   </Tabs>
                 </TabsContent>
 
-                <TabsContent value="other" className="pt-4">
-                     <Card><CardContent className="p-4">Other tactics UI goes here.</CardContent></Card>
+                <TabsContent value="other" className="pt-4 space-y-4">
+                    <Select onValueChange={(v) => handlePlanChange('otherTactics.planName', v)} value={planData.otherTactics?.planName}>
+                       <SelectTrigger>
+                           <SelectValue placeholder="Choose Plan" />
+                       </SelectTrigger>
+                       <SelectContent>
+                           <SelectItem value="New Other Plan">New Other Plan</SelectItem>
+                       </SelectContent>
+                   </Select>
+                    <div className="space-y-2">
+                       <Label>Tactics summary</Label>
+                       <Textarea 
+                         rows={4}
+                         placeholder="Other tactics from another match"
+                         value={planData.otherTactics?.summary || ''}
+                         onChange={(e) => handlePlanChange(`otherTactics.summary`, e.target.value)}
+                       />
+                   </div>
+                   <div className="grid grid-cols-3 gap-2">
+                       <div className="h-24 bg-card rounded-md flex items-center justify-center"><div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-primary-foreground">✓</div></div>
+                       <div className="h-24 bg-card rounded-md flex items-center justify-center"><div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-primary-foreground">✓</div></div>
+                       <div className="h-24 bg-card rounded-md flex items-center justify-center"></div>
+                   </div>
+                   <div className="flex items-center gap-2">
+                       <Button type="button" variant="outline" size="icon"><Camera className="w-4 h-4" /></Button>
+                       <Button type="button" variant="outline" size="icon"><Video className="w-4 h-4" /></Button>
+                       <Button type="button" variant="outline" size="icon"><Plus className="w-4 h-4" /></Button>
+                       <Button type="button" variant="outline" size="icon"><ZaiIcon className="w-4 h-4" /></Button>
+                   </div>
+                   <div className="flex items-center justify-between">
+                       <Label>Line up</Label>
+                       <Switch 
+                         checked={planData.otherTactics?.isLineupVisible}
+                         onCheckedChange={(c) => handlePlanChange(`otherTactics.isLineupVisible`, c)}
+                       />
+                   </div>
+                   {planData.otherTactics?.isLineupVisible && renderFormationPitch(opponentPlayers)}
+                   <div className="flex items-center justify-between">
+                       <Label>Set plays</Label>
+                       <Switch
+                         checked={planData.otherTactics?.areSetPlaysVisible}
+                         onCheckedChange={(c) => handlePlanChange(`otherTactics.areSetPlaysVisible`, c)}
+                       />
+                   </div>
                 </TabsContent>
             </Tabs>
 
