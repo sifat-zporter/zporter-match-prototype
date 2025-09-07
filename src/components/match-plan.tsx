@@ -20,20 +20,20 @@ import type { Player } from "@/lib/data";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "./ui/command";
 
-const PlayerOnPitch = ({ player, onRemove }: { player: Player, onRemove: () => void }) => (
+const PlayerOnPitch = ({ player, onRemove, isOpponent = false }: { player: Player, onRemove?: () => void, isOpponent?: boolean }) => (
     <div className="flex flex-col items-center justify-center gap-1 text-center w-16 relative group/player">
         <div className="relative">
             <Image src={player.avatarUrl} alt={player.name} width={40} height={40} className="rounded-full" data-ai-hint="player avatar" />
-            <div className="absolute -top-1 -left-4 text-xs font-semibold text-purple-400">{player.zporterId}</div>
+            {!isOpponent && <div className="absolute -top-1 -left-4 text-xs font-semibold text-purple-400">{player.zporterId}</div>}
             <div className="absolute -top-1 -right-4 text-xs font-semibold">{player.number}</div>
-             <Button
+             {onRemove && <Button
                 variant="destructive"
                 size="icon"
                 className="absolute -top-2 -right-2 w-5 h-5 rounded-full opacity-0 group-hover/player:opacity-100 transition-opacity"
                 onClick={onRemove}
             >
                 <X className="w-3 h-3" />
-            </Button>
+            </Button>}
         </div>
         <p className="text-xs font-semibold truncate w-full">{player.name}</p>
     </div>
@@ -95,8 +95,23 @@ export function MatchPlan({ matchId }: { matchId: string }) {
     const [isLoading, setIsLoading] = useState(false);
     const [invitedPlayers, setInvitedPlayers] = useState<Player[]>([]);
     
+    // Mock opponent players for UI demonstration
+    const opponentPlayers: Player[] = Array.from({ length: 11 }, (_, i) => ({
+        id: `opponent-${i + 1}`,
+        name: ['Sterling', 'Ronaldinho', 'Iniesta'][i % 3],
+        avatarUrl: `https://picsum.photos/id/${10 + i}/40/40`,
+        number: [11, 14, 10, 8, 19, 3, 2, 6, 5, 4, 1][i],
+        zporterId: `zpid${1000 + i}`
+    }));
+
     const [planData, setPlanData] = useState<Partial<MatchPlanPayload>>({
         main: { matchHeadLine: "", isPrivate: false },
+        opponentAnalysis: {
+            general: { summary: 'General review from another match which a coach could use to create his own opponent analysis from.', isLineupVisible: true, areSetPlaysVisible: false, lineup: { formation: "4-3-3", playerPositions: [] } },
+            offense: { summary: '', isLineupVisible: true, areSetPlaysVisible: false, lineup: { formation: "4-3-3", playerPositions: [] } },
+            defense: { summary: '', isLineupVisible: true, areSetPlaysVisible: false, lineup: { formation: "4-3-3", playerPositions: [] } },
+            other: { summary: '', isLineupVisible: true, areSetPlaysVisible: false, lineup: { formation: "4-3-3", playerPositions: [] } },
+        },
         teamLineup: {
             planId: "", planName: "New Plan",
             generalTactics: { summary: "", attachedMedia: [] },
@@ -120,7 +135,7 @@ export function MatchPlan({ matchId }: { matchId: string }) {
                             return {
                                 id: user.userId,
                                 name: `${user.profile.firstName} ${user.profile.lastName}`,
-                                avatarUrl: user.media.faceImage || 'https://placehold.co/40x40.png',
+                                avatarUrl: user.media.faceImage || `https://picsum.photos/seed/${user.userId}/40/40`,
                                 number: user.playerCareer?.shirtNumber || Math.floor(Math.random() * 99) + 1,
                                 zporterId: user.username,
                                 role: user.type,
@@ -158,16 +173,10 @@ export function MatchPlan({ matchId }: { matchId: string }) {
             return newPlan;
         });
     };
-    
-    const handleSubstitutionChange = (index: number, field: 'playerInId' | 'playerOutId', playerId: string) => {
-        const newSubstitutions = [...(planData.teamLineup?.plannedExchanges?.substitutions || [])];
-        newSubstitutions[index] = { ...newSubstitutions[index], [field]: playerId };
-        handlePlanChange('teamLineup.plannedExchanges.substitutions', newSubstitutions);
-    };
 
     const handleAddSubstitution = () => {
-        const newSubstitutions = [...(planData.teamLineup?.plannedExchanges?.substitutions || [])];
-        newSubstitutions.push({ playerInId: '', playerOutId: '', minute: 0 });
+        const currentSubs = planData.teamLineup?.plannedExchanges?.substitutions || [];
+        const newSubstitutions = [...currentSubs, { playerInId: '', playerOutId: '', minute: 0 }];
         handlePlanChange('teamLineup.plannedExchanges.substitutions', newSubstitutions);
     };
 
@@ -183,7 +192,7 @@ export function MatchPlan({ matchId }: { matchId: string }) {
                 title: "Plan Saved!",
                 description: "Your match plan has been updated successfully.",
             });
-        } catch (error) {
+        } catch (error) => {
             console.error("Failed to save match plan:", error);
             toast({
                 variant: "destructive",
@@ -210,7 +219,6 @@ export function MatchPlan({ matchId }: { matchId: string }) {
         handlePlanChange('teamLineup.lineup.playerPositions', newPositions);
     };
 
-
     const renderPlayerOnPitch = (position: string) => {
         const playerPosition = planData.teamLineup?.lineup?.playerPositions.find(p => p.position === position);
         if (playerPosition) {
@@ -221,10 +229,51 @@ export function MatchPlan({ matchId }: { matchId: string }) {
         }
         return <EmptySlot availablePlayers={availablePlayers} onSelectPlayer={(playerId) => handleSelectPlayerForPosition(position, playerId)} />;
     };
+
+    const renderOpponentPitch = (subTab: 'general' | 'offense' | 'defense' | 'other') => {
+        const opponentLineupVisible = planData.opponentAnalysis?.[subTab]?.isLineupVisible;
+
+        if (!opponentLineupVisible) return null;
+        
+        // This is a static representation for now. It could be made dynamic.
+        const opponentFormation = {
+            forwards: [opponentPlayers[0], opponentPlayers[1], opponentPlayers[2]],
+            midfielders: [opponentPlayers[3], opponentPlayers[4]],
+            defenders: [opponentPlayers[5], opponentPlayers[6], opponentPlayers[7], opponentPlayers[8]],
+            goalkeeper: [opponentPlayers[9]],
+        };
+        
+        return (
+            <div className="space-y-4">
+                 <Select>
+                    <SelectTrigger>
+                        <SelectValue placeholder="Choose Opponent line up" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="if-bromma">IF Brommapojkarna - IFK Norrköping</SelectItem>
+                    </SelectContent>
+                </Select>
+                <div className="relative h-[450px] bg-center bg-no-repeat bg-contain" style={{backgroundImage: "url('/football-pitch-vertical.svg')"}}>
+                    <div className="absolute top-[8%] left-[50%] -translate-x-1/2 grid grid-cols-3 gap-x-8 gap-y-2">
+                        {opponentFormation.forwards.map(p => <PlayerOnPitch key={p.id} player={p} isOpponent />)}
+                    </div>
+                    <div className="absolute top-[28%] left-[50%] -translate-x-1/2 grid grid-cols-2 gap-x-8 gap-y-4">
+                        {opponentFormation.midfielders.map(p => <PlayerOnPitch key={p.id} player={p} isOpponent />)}
+                    </div>
+                    <div className="absolute top-[55%] left-[50%] -translate-x-1/2 grid grid-cols-4 gap-x-2 gap-y-4">
+                       {opponentFormation.defenders.map(p => <PlayerOnPitch key={p.id} player={p} isOpponent />)}
+                    </div>
+                    <div className="absolute top-[80%] left-[50%] -translate-x-1/2">
+                       {opponentFormation.goalkeeper.map(p => <PlayerOnPitch key={p.id} player={p} isOpponent />)}
+                    </div>
+                </div>
+            </div>
+        )
+    };
     
     return (
         <div className="space-y-4">
-            <Tabs defaultValue="line-up" className="w-full">
+            <Tabs defaultValue="opponent" className="w-full">
                 <TabsList className="grid w-full grid-cols-5 bg-transparent p-0">
                     <TabsTrigger value="opponent" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Opponent</TabsTrigger>
                     <TabsTrigger value="line-up" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Line Up</TabsTrigger>
@@ -234,7 +283,63 @@ export function MatchPlan({ matchId }: { matchId: string }) {
                 </TabsList>
                 
                 <TabsContent value="opponent" className="pt-4 space-y-4">
-                   <Card><CardContent className="p-4">Opponent analysis UI goes here.</CardContent></Card>
+                   <Select>
+                       <SelectTrigger>
+                           <SelectValue placeholder="Choose Opponent review" />
+                       </SelectTrigger>
+                       <SelectContent>
+                           <SelectItem value="if-bromma">IF Brommapojkarna - IFK Norrköping</SelectItem>
+                       </SelectContent>
+                   </Select>
+                   <Tabs defaultValue="general" className="w-full">
+                       <TabsList className="grid w-full grid-cols-4">
+                           <TabsTrigger value="general">General</TabsTrigger>
+                           <TabsTrigger value="offense">Offense</TabsTrigger>
+                           <TabsTrigger value="defense">Defense</TabsTrigger>
+                           <TabsTrigger value="other">Other</TabsTrigger>
+                       </TabsList>
+                       {(['general', 'offense', 'defense', 'other'] as const).map(subTab => (
+                           <TabsContent key={subTab} value={subTab} className="pt-4 space-y-4">
+                               <div className="space-y-2">
+                                   <Label>Tactics summary</Label>
+                                   <Textarea 
+                                     rows={4}
+                                     value={planData.opponentAnalysis?.[subTab]?.summary || ''}
+                                     onChange={(e) => handlePlanChange(`opponentAnalysis.${subTab}.summary`, e.target.value)}
+                                   />
+                               </div>
+                               <div className="flex gap-2">
+                                   <div className="w-1/2 h-24 bg-card rounded-md flex items-center justify-center">
+                                       <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-primary-foreground">✓</div>
+                                   </div>
+                                   <div className="w-1/2 h-24 bg-card rounded-md flex items-center justify-center">
+                                       <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-primary-foreground">✓</div>
+                                   </div>
+                               </div>
+                               <div className="flex items-center gap-2">
+                                   <Button type="button" variant="outline" size="icon"><Camera className="w-4 h-4" /></Button>
+                                   <Button type="button" variant="outline" size="icon"><Video className="w-4 h-4" /></Button>
+                                   <Button type="button" variant="outline" size="icon"><Plus className="w-4 h-4" /></Button>
+                                   <Button type="button" variant="outline" size="icon"><ZaiIcon className="w-4 h-4" /></Button>
+                               </div>
+                               <div className="flex items-center justify-between">
+                                   <Label>Line up</Label>
+                                   <Switch 
+                                     checked={planData.opponentAnalysis?.[subTab]?.isLineupVisible}
+                                     onCheckedChange={(c) => handlePlanChange(`opponentAnalysis.${subTab}.isLineupVisible`, c)}
+                                   />
+                               </div>
+                               {renderOpponentPitch(subTab)}
+                               <div className="flex items-center justify-between">
+                                   <Label>Set plays</Label>
+                                   <Switch
+                                     checked={planData.opponentAnalysis?.[subTab]?.areSetPlaysVisible}
+                                     onCheckedChange={(c) => handlePlanChange(`opponentAnalysis.${subTab}.areSetPlaysVisible`, c)}
+                                   />
+                               </div>
+                           </TabsContent>
+                       ))}
+                   </Tabs>
                 </TabsContent>
 
                 <TabsContent value="line-up" className="pt-4 space-y-4">
@@ -322,7 +427,7 @@ export function MatchPlan({ matchId }: { matchId: string }) {
                         </div>
                         {planData.teamLineup?.plannedExchanges?.isEnabled && planData.teamLineup?.plannedExchanges?.substitutions.map((sub, index) => (
                              <div key={index} className="flex items-center justify-between gap-2">
-                                <Select onValueChange={(playerId) => handleSubstitutionChange(index, 'playerOutId', playerId)} value={sub.playerOutId}>
+                                <Select onValueChange={(playerId) => handlePlanChange(`teamLineup.plannedExchanges.substitutions.${index}.playerOutId`, playerId)} value={sub.playerOutId}>
                                     <SelectTrigger className="w-20 h-20 bg-card rounded-md flex items-center justify-center">
                                         <SelectValue placeholder={<Plus className="w-6 h-6 text-muted-foreground"/>} />
                                     </SelectTrigger>
@@ -331,7 +436,7 @@ export function MatchPlan({ matchId }: { matchId: string }) {
                                     </SelectContent>
                                 </Select>
                                 <NumberInput value={sub.minute} onValueChange={(v) => handlePlanChange(`teamLineup.plannedExchanges.substitutions.${index}.minute`, v)} />
-                                 <Select onValueChange={(playerId) => handleSubstitutionChange(index, 'playerInId', playerId)} value={sub.playerInId}>
+                                 <Select onValueChange={(playerId) => handlePlanChange(`teamLineup.plannedExchanges.substitutions.${index}.playerInId`, playerId)} value={sub.playerInId}>
                                     <SelectTrigger className="w-20 h-20 bg-card rounded-md flex items-center justify-center">
                                         <SelectValue placeholder={<Plus className="w-6 h-6 text-muted-foreground"/>} />
                                     </SelectTrigger>
