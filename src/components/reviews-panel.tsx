@@ -1,3 +1,4 @@
+
 // src/components/reviews-panel.tsx
 "use client";
 
@@ -119,6 +120,7 @@ function TeamReviewForm({ match, players, teamId, reviewType }: { match: Match; 
             overallMatchReview: review.overallMatchReview || '',
             teamRating: review.teamRating || 0,
             playerReviews: review.playerReviews || [],
+            comment: review.comment,
         };
 
         try {
@@ -239,8 +241,8 @@ export function ReviewsPanel({ match }: { match: Match }) {
 
             const users = (await Promise.all(userPromises)).filter(Boolean) as Player[];
 
-            setHomePlayers(users.filter(u => u.role?.includes('HOME')));
-            setAwayPlayers(users.filter(u => u.role?.includes('AWAY')));
+            setHomePlayers(users.filter(u => u.role && u.role.includes('HOME')));
+            setAwayPlayers(users.filter(u => u.role && u.role.includes('AWAY')));
             setReferees(users.filter(u => u.role === 'REFEREE' || u.role === 'HOST' || u.role === 'ADMIN'));
 
         } catch (error) {
@@ -302,6 +304,11 @@ export function ReviewsPanel({ match }: { match: Match }) {
       "playerId": "player-user-id-abc",
       "rating": 5,
       "comment": "Scored the winning goal."
+    },
+    {
+      "playerId": "player-user-id-def",
+      "rating": 4,
+      "comment": "Solid defensive work."
     }
   ],
   "tacticalRatings": {
@@ -313,12 +320,32 @@ export function ReviewsPanel({ match }: { match: Match }) {
   "comment": "Overall, a very positive performance.",
   "isShared": true
 }`}
-                            response={`// The newly created review object is returned
-{
+                            response={`{
   "id": "review-xyz-789",
   "matchId": "match-abc-123",
   "reviewerId": "current-user-id",
-  // ... all other fields from the request
+  "subjectId": "user-id-of-player-or-team",
+  "reviewType": "PlayerPerformance",
+  "ztarOfTheMatchPlayerId": "player-user-id-abc",
+  "overallMatchReview": "A fantastic display of skill and teamwork.",
+  "teamRating": 5,
+  "playerReviews": [
+    {
+      "playerId": "player-user-id-abc",
+      "rating": 5,
+      "comment": "Scored the winning goal."
+    }
+  ],
+  "tacticalRatings": {
+    "attack": 5, "defence": 4, "technique": 5, "intelligence": 4, "physical": 5
+  },
+  "mentalRatings": {
+    "attitude": 5, "composure": 5, "concentration": 4, "determination": 5, "teamWork": 5
+  },
+  "comment": "Overall, a very positive performance.",
+  "isShared": true,
+  "createdAt": "2025-09-07T10:00:00.000Z",
+  "updatedAt": "2025-09-07T10:00:00.000Z"
 }`}
                         />
                          <ApiDocumentationViewer
@@ -326,12 +353,29 @@ export function ReviewsPanel({ match }: { match: Match }) {
                             description="Could be called when the component loads to see if any reviews already exist for this match."
                             endpoint="/matches/{matchId}/reviews"
                             method="GET"
-                            response={`// An array of review objects
-[
+                            response={`[
   {
     "id": "review-xyz-789",
     "matchId": "match-abc-123",
-    // ... all other review fields
+    "reviewerId": "user-id-of-reviewer-1",
+    "subjectId": "user-id-of-player-or-team",
+    "reviewType": "PlayerPerformance",
+    "ztarOfTheMatchPlayerId": "player-user-id-abc",
+    "overallMatchReview": "A fantastic display of skill and teamwork.",
+    "teamRating": 5,
+    "playerReviews": [
+      {
+        "playerId": "player-user-id-abc",
+        "rating": 5,
+        "comment": "Scored the winning goal."
+      }
+    ],
+    "tacticalRatings": { "attack": 5, "defence": 4, "technique": 5, "intelligence": 4, "physical": 5 },
+    "mentalRatings": { "attitude": 5, "composure": 5, "concentration": 4, "determination": 5, "teamWork": 5 },
+    "comment": "Overall, a very positive performance.",
+    "isShared": true,
+    "createdAt": "2025-09-07T10:00:00.000Z",
+    "updatedAt": "2025-09-07T10:00:00.000Z"
   }
 ]`}
                         />
@@ -340,11 +384,28 @@ export function ReviewsPanel({ match }: { match: Match }) {
                             description="Used to fetch the details of one specific review."
                             endpoint="/matches/{matchId}/reviews/{reviewId}"
                             method="GET"
-                            response={`// A single complete review object
-{
+                            response={`{
   "id": "review-xyz-789",
   "matchId": "match-abc-123",
-  // ... all other review fields
+  "reviewerId": "user-id-of-reviewer-1",
+  "subjectId": "user-id-of-player-or-team",
+  "reviewType": "PlayerPerformance",
+  "ztarOfTheMatchPlayerId": "player-user-id-abc",
+  "overallMatchReview": "A fantastic display of skill and teamwork.",
+  "teamRating": 5,
+  "playerReviews": [
+    {
+      "playerId": "player-user-id-abc",
+      "rating": 5,
+      "comment": "Scored the winning goal."
+    }
+  ],
+  "tacticalRatings": { "attack": 5, "defence": 4, "technique": 5, "intelligence": 4, "physical": 5 },
+  "mentalRatings": { "attitude": 5, "composure": 5, "concentration": 4, "determination": 5, "teamWork": 5 },
+  "comment": "Overall, a very positive performance.",
+  "isShared": true,
+  "createdAt": "2025-09-07T10:00:00.000Z",
+  "updatedAt": "2025-09-07T10:15:00.000Z"
 }`}
                         />
                         <ApiDocumentationViewer
@@ -353,17 +414,32 @@ export function ReviewsPanel({ match }: { match: Match }) {
                             endpoint="/matches/{matchId}/reviews/{reviewId}"
                             method="PATCH"
                             requestPayload={`{
-  "overallMatchReview": "An updated review.",
+  "overallMatchReview": "An updated and more detailed review of the performance.",
   "teamRating": 4,
   "isShared": false
 }`}
-                            response={`// The complete, updated review object is returned
-{
+                            response={`{
   "id": "review-xyz-789",
-  "overallMatchReview": "An updated review.",
+  "matchId": "match-abc-123",
+  "reviewerId": "current-user-id",
+  "subjectId": "user-id-of-player-or-team",
+  "reviewType": "PlayerPerformance",
+  "ztarOfTheMatchPlayerId": "player-user-id-abc",
+  "overallMatchReview": "An updated and more detailed review of the performance.",
   "teamRating": 4,
+  "playerReviews": [
+    {
+      "playerId": "player-user-id-abc",
+      "rating": 5,
+      "comment": "Scored the winning goal."
+    }
+  ],
+  "tacticalRatings": { "attack": 5, "defence": 4, "technique": 5, "intelligence": 4, "physical": 5 },
+  "mentalRatings": { "attitude": 5, "composure": 5, "concentration": 4, "determination": 5, "teamWork": 5 },
+  "comment": "Overall, a very positive performance from the team.",
   "isShared": false,
-  // ... other fields remain
+  "createdAt": "2025-09-07T10:00:00.000Z",
+  "updatedAt": "2025-09-07T10:20:00.000Z"
 }`}
                         />
                         <ApiDocumentationViewer
