@@ -354,6 +354,7 @@ export type Invite = {
   inviteeId: string;
   type: string;
   status: 'pending' | 'accepted' | 'declined';
+  inviteeDetails?: InviteUserSearchResult; // Add this to hold user details
 };
 
 
@@ -370,7 +371,7 @@ type TacticLineup = {
 };
 
 type TacticDetail = {
-    selectedReviewId: string;
+    selectedReviewId?: string;
     summary: string;
     attachedMedia: string[];
     isLineupVisible: boolean;
@@ -387,13 +388,13 @@ export type MatchPlanPayload = {
     matchHeadLine: string;
     isPrivate: boolean;
   };
-  opponentAnalysis: {
+  opponentAnalysis?: {
     general: TacticDetail;
     offense: TacticDetail;
     defense: TacticDetail;
     other: TacticDetail;
   };
-  teamLineup: {
+  teamLineup?: {
     planId: string;
     planName: string;
     generalTactics: {
@@ -415,7 +416,7 @@ export type MatchPlanPayload = {
       publishPubliclyMinutesBefore: number;
     };
   };
-  offenseTactics: {
+  offenseTactics?: {
     planId: string;
     planName: string;
     general: TacticDetail;
@@ -423,7 +424,7 @@ export type MatchPlanPayload = {
     attack: TacticDetail;
     finishing: TacticDetail;
   };
-  defenseTactics: {
+  defenseTactics?: {
     planId: string;
     planName: string;
     general: TacticDetail;
@@ -431,7 +432,7 @@ export type MatchPlanPayload = {
     midBlock: TacticDetail;
     lowBlock: TacticDetail;
   };
-  otherTactics: {
+  otherTactics?: {
     planId: string;
     planName: string;
     summary: string;

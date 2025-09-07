@@ -1,8 +1,7 @@
-
 // src/components/match-plan.tsx
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
@@ -11,7 +10,7 @@ import { Button } from "./ui/button";
 import { Plus, Camera, Video, Loader2, ListFilter, Mic, ChevronUp, ChevronDown } from "lucide-react";
 import { Switch } from "./ui/switch";
 import { apiClient } from "@/lib/api-client";
-import type { MatchPlanPayload } from "@/lib/models";
+import type { MatchPlanPayload, Invite, InviteUserSearchResult } from "@/lib/models";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "./ui/card";
 import { Label } from "./ui/label";
@@ -19,26 +18,6 @@ import { ZaiIcon } from "./icons";
 import { cn } from "@/lib/utils";
 import type { Player } from "@/lib/data";
 import { DragDropContext, Droppable, Draggable, type DropResult } from 'react-beautiful-dnd';
-
-// Mock data, in a real app this would come from an API
-const pastOpponentReviews = [
-    { id: 'review-1', date: '2023/10/11 16:00', teams: 'IF Brommapojkarna - IFK Norrköping', summary: 'Opponent focused on a high press and fast counter-attacks. Vulnerable to long balls over the top.' },
-    { id: 'review-2', date: '2023/09/28 18:30', teams: 'AIK - IFK Norrköping', summary: 'They played a very defensive 5-3-2 formation, absorbing pressure and looking for set-piece opportunities.' },
-];
-
-const opponentPlayers: Record<string, Player> = {
-    'p1': { id: 'p1', name: 'Sterling', avatarUrl: 'https://placehold.co/40x40.png', zporterId: '173', number: 11 },
-    'p2': { id: 'p2', name: 'Ronaldinho', avatarUrl: 'https://placehold.co/40x40.png', zporterId: '173', number: 14 },
-    'p3': { id: 'p3', name: 'Iniesta', avatarUrl: 'https://placehold.co/40x40.png', zporterId: '173', number: 10 },
-    'p4': { id: 'p4', name: 'Sterling', avatarUrl: 'https://placehold.co/40x40.png', zporterId: '173', number: 8 },
-    'p5': { id: 'p5', name: 'Iniesta', avatarUrl: 'https://placehold.co/40x40.png', zporterId: '173', number: 19 },
-    'p6': { id: 'p6', name: 'Xavi', avatarUrl: 'https://placehold.co/40x40.png', zporterId: '173', number: 6 },
-    'p7': { id: 'p7', name: 'Alba', avatarUrl: 'https://placehold.co/40x40.png', zporterId: '173', number: 3 },
-    'p8': { id: 'p8', name: 'Pique', avatarUrl: 'https://placehold.co/40x40.png', zporterId: '177', number: 5 },
-    'p9': { id: 'p9', name: 'Ramos', avatarUrl: 'https://placehold.co/40x40.png', zporterId: '173', number: 4 },
-    'p10': { id: 'p10', name: 'Alves', avatarUrl: 'https://placehold.co/40x40.png', zporterId: '173', number: 2 },
-    'p11': { id: 'p11', name: 'Casillas', avatarUrl: 'https://placehold.co/40x40.png', zporterId: '173', number: 1 },
-};
 
 const PlayerOnPitch = ({ player }: { player: Player }) => (
     <div className="flex flex-col items-center justify-center gap-1 text-center w-16">
@@ -85,7 +64,6 @@ export function MatchPlan({ matchId }: { matchId: string }) {
     const [isLoading, setIsLoading] = useState(false);
     const [invitedPlayers, setInvitedPlayers] = useState<Player[]>([]);
     
-    // State to hold the entire plan data, mirroring the final JSON structure
     const [planData, setPlanData] = useState<Partial<MatchPlanPayload>>({
         main: { matchHeadLine: "", isPrivate: false },
         teamLineup: {
@@ -95,23 +73,32 @@ export function MatchPlan({ matchId }: { matchId: string }) {
             plannedExchanges: { isEnabled: false, substitutions: [{ playerInId: '', playerOutId: '', minute: 65 }] },
             publishingSettings: { isEnabled: false, publishInternallyMinutesBefore: 240, publishPubliclyMinutesBefore: 60 }
         },
-        // ... other sections initialized ...
     });
 
     useEffect(() => {
         const fetchInvites = async () => {
             if (!matchId) return;
             try {
-                // Assuming we're planning for the home team
-                const homeTeamPlayers = await apiClient<any[]>(`/matches/${matchId}/invites/search-users?role=PLAYER_HOME`);
-                const transformedPlayers: Player[] = homeTeamPlayers.map(p => ({
-                    id: p.userId,
-                    name: p.name,
-                    avatarUrl: p.faceImage || 'https://placehold.co/40x40.png',
-                    number: Math.floor(Math.random() * 99) + 1, // Placeholder
-                    zporterId: '173', // Placeholder
-                }));
-                setInvitedPlayers(transformedPlayers);
+                // Corrected: Fetch actual invites, not search results.
+                const invites = await apiClient<Invite[]>(`/matches/${matchId}/invites`);
+                
+                // Now, fetch details for each invited user.
+                const playerPromises = invites
+                    .filter(invite => invite.inviteeDetails) // Ensure details exist
+                    .map(async (invite) => {
+                        const user = invite.inviteeDetails as InviteUserSearchResult;
+                        return {
+                            id: user.userId,
+                            name: user.name,
+                            avatarUrl: user.faceImage || 'https://placehold.co/40x40.png',
+                            number: Math.floor(Math.random() * 99) + 1, // Placeholder
+                            zporterId: '173', // Placeholder
+                        };
+                    });
+
+                const players = await Promise.all(playerPromises);
+                setInvitedPlayers(players);
+
             } catch (error) {
                 toast({
                     variant: "destructive",
@@ -142,7 +129,7 @@ export function MatchPlan({ matchId }: { matchId: string }) {
         try {
             await apiClient(`/matches/${matchId}`, {
                 method: 'PATCH',
-                body: planData,
+                body: { ...planData, status: 'draft' }, // ensure status is sent
             });
             toast({
                 title: "Plan Saved!",
@@ -170,12 +157,10 @@ export function MatchPlan({ matchId }: { matchId: string }) {
         const sourceId = source.droppableId;
         const destinationId = destination.droppableId;
 
-        // Player is dragged from the invited list to a pitch position
         if (sourceId === 'invited-players' && destinationId.startsWith('pos-')) {
             const position = destinationId.split('-')[1];
             const player = invitedPlayers[source.index];
 
-            // Check if player is already on the pitch
             const playerOnPitch = planData.teamLineup?.lineup?.playerPositions.find(p => p.playerId === player.id);
             if (playerOnPitch) {
                 toast({ variant: "destructive", title: "Player already in lineup" });
