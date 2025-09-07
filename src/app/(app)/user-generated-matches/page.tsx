@@ -131,20 +131,31 @@ export default function UserGeneratedMatchesPage() {
                         endpoint="/matches"
                         method="GET"
                         response={`{
-  "data": [
+  "pagination": {
+    "total": 2,
+    "limit": "100",
+    "offset": 0,
+    "page": 1,
+    "totalPages": 1
+  },
+  "matches": [
     {
-      "id": "string",
-      "homeTeam": { "id": "string", "name": "string", "logoUrl": "string" },
-      "awayTeam": { "id": "string", "name": "string", "logoUrl": "string" },
-      "matchDate": "string (YYYY-MM-DD)",
-      "startTime": "string (HH:MM)",
-      "location": { "name": "string", "address": "string" },
-      "status": "string",
-      "score": { "home": "number", "away": "number" },
-      "featuredPlayer": { "id": "string", "name": "string", "imageUrl": "string" } (nullable)
+      "id": "match-1757261521844",
+      "source": "user-generated",
+      "status": "draft",
+      "createdAt": "2025-09-07T16:12:01.844Z",
+      "updatedAt": "2025-09-07T16:12:01.844Z",
+      "name": "Match Zporter Cup 2023",
+      "description": "Match against FC Barcelona U15 starts at 16.00.",
+      "startDate": { "_seconds": 1757239200, "_nanoseconds": 0 },
+      "endDate": { "_seconds": 1757241900, "_nanoseconds": 0 },
+      "homeTeam": { "id": "xjW4II6khRys9SFDTunP", "name": "Home Team", "logoUrl": "" },
+      "awayTeam": { "id": "fYv81QZ1K7ya7SUYqHoZ", "name": "Away Team", "logoUrl": "" },
+      "venue": { "name": "Sollentunavallen" },
+      "matchDate": "2025-09-07",
+      "matchStartTime": "16:00"
     }
-  ],
-  "total": "number", "limit": "number", "offset": "number"
+  ]
 }`}
                     />
                      <ApiDocumentationViewer

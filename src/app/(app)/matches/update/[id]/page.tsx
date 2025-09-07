@@ -13,7 +13,6 @@ import { ReviewsPanel } from "@/components/reviews-panel";
 import type { Match } from "@/lib/data";
 import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { apiClient } from "@/lib/api-client";
 
 // This is now the client-side view component.
@@ -97,7 +96,7 @@ function UpdateMatchView({ matchId }: { matchId: string }) {
           
           <TabsContent value="event" className="pt-4">
             <CreateMatchForm onMatchCreated={handleMatchUpdated} initialData={match} isUpdateMode={true} />
-          </Tabs.Content>
+          </TabsContent>
           <TabsContent value="invites" className="pt-4">
             <InvitePlayers matchId={match.id} homeTeam={match.homeTeam} awayTeam={match.awayTeam} />
           </TabsContent>
@@ -117,7 +116,7 @@ function UpdateMatchView({ matchId }: { matchId: string }) {
 }
 
 // This is the new Server Component Page that wraps the client component.
-export default async function UpdateMatchPage({ params }: { params: { id: string } }) {
+export default function UpdateMatchPage({ params }: { params: { id: string } }) {
   // We can safely access params.id here on the server.
   const matchId = params.id;
   
