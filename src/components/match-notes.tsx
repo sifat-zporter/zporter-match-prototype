@@ -4,7 +4,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Send, Star, Reply, MoreVertical, Pencil, Trash2, Info, Loader2, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiClient } from "@/lib/api-client";
@@ -12,9 +12,9 @@ import type { MatchNote, CreateMatchNoteDto, UpdateMatchNoteDto } from "@/lib/mo
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
-import { Textarea } from "./ui/textarea";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
 import { ApiDocumentationViewer } from "./api-documentation-viewer";
+import { ScrollArea } from "./ui/scroll-area";
 
 interface NoteItemProps {
     note: MatchNote;
@@ -183,7 +183,7 @@ export function MatchNotes({ matchId, initialNotes = [] }: MatchNotesProps) {
     };
     
     const topLevelNotes = useMemo(() => {
-        const noteMap = new Map(notes.map(n => [n.noteId, {...n, replies: []}]));
+        const noteMap = new Map(notes.map(n => [n.noteId, {...n, replies: [] as MatchNote[]} ]));
         const topLevel: MatchNote[] = [];
 
         for (const note of noteMap.values()) {
@@ -198,30 +198,32 @@ export function MatchNotes({ matchId, initialNotes = [] }: MatchNotesProps) {
     
     return (
         <div className="space-y-4">
-            <div className="flex flex-col h-[calc(100vh-350px)] border rounded-lg">
-                <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                    {isLoading ? (
-                        <div className="flex justify-center items-center h-full"><Loader2 className="w-8 h-8 animate-spin" /></div>
-                    ) : topLevelNotes.length > 0 ? (
-                        topLevelNotes.map((note) => (
-                            <div key={note.noteId}>
-                                <NoteItem note={note} onReply={(noteId, authorName) => setReplyingTo({noteId, authorName})} onEdit={handleEdit} onDelete={handleDelete} />
-                                {note.replies && note.replies.length > 0 && (
-                                    <div className="space-y-4 mt-2">
-                                        {note.replies.sort((a,b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()).map(reply => (
-                                             <NoteItem key={reply.noteId} note={reply} onReply={(noteId, authorName) => setReplyingTo({noteId, authorName})} onEdit={handleEdit} onDelete={handleDelete} isReply />
-                                        ))}
-                                    </div>
-                                )}
+            <div className="flex flex-col border rounded-lg h-[calc(100vh-350px)]">
+                <ScrollArea className="flex-1">
+                    <div className="p-4 space-y-4">
+                        {isLoading ? (
+                            <div className="flex justify-center items-center h-full pt-16"><Loader2 className="w-8 h-8 animate-spin" /></div>
+                        ) : topLevelNotes.length > 0 ? (
+                            topLevelNotes.map((note) => (
+                                <div key={note.noteId}>
+                                    <NoteItem note={note} onReply={(noteId, authorName) => setReplyingTo({noteId, authorName})} onEdit={handleEdit} onDelete={handleDelete} />
+                                    {note.replies && note.replies.length > 0 && (
+                                        <div className="space-y-4 mt-2">
+                                            {note.replies.sort((a,b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()).map(reply => (
+                                                <NoteItem key={reply.noteId} note={reply} onReply={(noteId, authorName) => setReplyingTo({noteId, authorName})} onEdit={handleEdit} onDelete={handleDelete} isReply />
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            ))
+                        ) : (
+                            <div className="text-center text-muted-foreground pt-16">
+                                <p>No notes for this match yet.</p>
+                                <p>Add the first one below!</p>
                             </div>
-                        ))
-                    ) : (
-                        <div className="text-center text-muted-foreground pt-16">
-                            <p>No notes for this match yet.</p>
-                            <p>Add the first one below!</p>
-                        </div>
-                    )}
-                </div>
+                        )}
+                    </div>
+                </ScrollArea>
 
                 <div className="p-4 border-t bg-background rounded-b-lg">
                      {replyingTo && (
@@ -278,14 +280,24 @@ export function MatchNotes({ matchId, initialNotes = [] }: MatchNotesProps) {
                             method="GET"
                             response={`[
   {
-    "noteId": "string",
-    "authorId": "string",
-    "text": "string",
-    "isStarred": "boolean",
-    "isReply": "boolean",
-    "parentNoteId": "string | null",
-    "createdAt": "string (ISO 8601)",
-    "updatedAt": "string (ISO 8601)"
+    "noteId": "note-id-123",
+    "authorId": "user-id-abc",
+    "text": "The opponent's defense is weak on the left flank.",
+    "isStarred": true,
+    "isReply": false,
+    "parentNoteId": null,
+    "createdAt": "2024-09-01T10:00:00Z",
+    "updatedAt": "2024-09-01T10:00:00Z"
+  },
+  {
+    "noteId": "note-id-456",
+    "authorId": "user-id-def",
+    "text": "Agreed, we should exploit that.",
+    "isStarred": false,
+    "isReply": true,
+    "parentNoteId": "note-id-123",
+    "createdAt": "2024-09-01T10:05:00Z",
+    "updatedAt": "2024-09-01T10:05:00Z"
   }
 ]`}
                         />
@@ -301,9 +313,14 @@ export function MatchNotes({ matchId, initialNotes = [] }: MatchNotesProps) {
   "isStarred": "boolean (optional)"
 }`}
                             response={`{
-  "noteId": "string",
-  "authorId": "string",
-  ... // The full note object
+  "noteId": "new-note-id-789",
+  "authorId": "current-user-id",
+  "text": "The new note content.",
+  "isStarred": false,
+  "isReply": false,
+  "parentNoteId": null,
+  "createdAt": "2024-09-01T11:00:00Z",
+  "updatedAt": "2024-09-01T11:00:00Z"
 }`}
                         />
                          <ApiDocumentationViewer
@@ -312,12 +329,18 @@ export function MatchNotes({ matchId, initialNotes = [] }: MatchNotesProps) {
                             endpoint="/matches/{matchId}/notes/{noteId}"
                             method="PATCH"
                             requestPayload={`{
-  "text": "string (optional)",
-  "isStarred": "boolean (optional)"
+  "text": "Updated note content.",
+  "isStarred": true
 }`}
                             response={`{
-  "noteId": "string",
-  ... // The updated note object
+  "noteId": "note-id-123",
+  "authorId": "user-id-abc",
+  "text": "Updated note content.",
+  "isStarred": true,
+  "isReply": false,
+  "parentNoteId": null,
+  "createdAt": "2024-09-01T10:00:00Z",
+  "updatedAt": "2024-09-01T11:30:00Z"
 }`}
                         />
                          <ApiDocumentationViewer
