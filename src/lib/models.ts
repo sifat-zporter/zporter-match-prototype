@@ -332,10 +332,18 @@ export type InviteUserSearchResult = {
  * @description Represents a user object from GET /users/:id
  */
 export type UserDto = {
-  id: string;
-  firstName: string;
-  lastName: string;
-  faceImage: string;
+  userId: string;
+  username: string;
+  profile: {
+    firstName: string;
+    lastName: string;
+  };
+  media: {
+    faceImage: string | null;
+  };
+  playerCareer?: {
+      shirtNumber?: number;
+  };
   [key: string]: any;
 };
 

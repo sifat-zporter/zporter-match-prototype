@@ -1,3 +1,4 @@
+
 // src/components/match-plan.tsx
 "use client";
 
@@ -85,22 +86,21 @@ export function MatchPlan({ matchId }: { matchId: string }) {
                     .filter(invite => invite.inviteeId)
                     .map(async (invite) => {
                         try {
-                            // Fetch full user details for each invitee
                             const user = await apiClient<UserDto>(`/users/${invite.inviteeId}`);
                             return {
-                                id: user.id,
-                                name: `${user.firstName} ${user.lastName}`,
-                                avatarUrl: user.faceImage || 'https://placehold.co/40x40.png',
-                                number: Math.floor(Math.random() * 99) + 1, // Placeholder
-                                zporterId: '173', // Placeholder
+                                id: user.userId,
+                                name: `${user.profile.firstName} ${user.profile.lastName}`,
+                                avatarUrl: user.media.faceImage || 'https://placehold.co/40x40.png',
+                                number: user.playerCareer?.shirtNumber || Math.floor(Math.random() * 99) + 1,
+                                zporterId: user.username,
                             };
                         } catch (error) {
                             console.error(`Failed to fetch details for user ${invite.inviteeId}`, error);
-                            return null; // Return null for failed fetches
+                            return null;
                         }
                     });
 
-                const players = (await Promise.all(playerPromises)).filter(Boolean) as Player[]; // Filter out any nulls
+                const players = (await Promise.all(playerPromises)).filter(Boolean) as Player[];
                 setInvitedPlayers(players);
 
             } catch (error) {
@@ -133,7 +133,7 @@ export function MatchPlan({ matchId }: { matchId: string }) {
         try {
             await apiClient(`/matches/${matchId}`, {
                 method: 'PATCH',
-                body: { ...planData, status: 'draft' }, // ensure status is sent
+                body: { ...planData, status: 'draft' },
             });
             toast({
                 title: "Plan Saved!",
@@ -153,36 +153,65 @@ export function MatchPlan({ matchId }: { matchId: string }) {
     
     const onDragEnd = (result: DropResult) => {
         const { source, destination } = result;
-
-        if (!destination) {
-            return;
-        }
+        if (!destination) return;
 
         const sourceId = source.droppableId;
         const destinationId = destination.droppableId;
+        const currentPositions = planData.teamLineup?.lineup?.playerPositions || [];
 
+        // Dragging from the invited players list to a pitch position
         if (sourceId === 'invited-players' && destinationId.startsWith('pos-')) {
-            const position = destinationId.split('-')[1];
+            const position = destinationId.replace('pos-', '');
             const player = invitedPlayers[source.index];
 
-            const playerOnPitch = planData.teamLineup?.lineup?.playerPositions.find(p => p.playerId === player.id);
-            if (playerOnPitch) {
+            // Check if player is already on the pitch
+            if (currentPositions.some(p => p.playerId === player.id)) {
                 toast({ variant: "destructive", title: "Player already in lineup" });
                 return;
             }
-
+            // Check if position is already taken
+            if (currentPositions.some(p => p.position === position)) {
+                toast({ variant: "destructive", title: "Position already taken" });
+                return;
+            }
+            
             const newPlayerPosition = { playerId: player.id, position };
-            const newPositions = [...(planData.teamLineup?.lineup?.playerPositions || []), newPlayerPosition];
+            const newPositions = [...currentPositions, newPlayerPosition];
+            handlePlanChange('teamLineup.lineup.playerPositions', newPositions);
+        }
+
+        // Dragging from the pitch back to the invited players list (or off the pitch)
+        if (sourceId.startsWith('pos-') && destinationId === 'invited-players') {
+            const position = sourceId.replace('pos-', '');
+            const newPositions = currentPositions.filter(p => p.position !== position);
             handlePlanChange('teamLineup.lineup.playerPositions', newPositions);
         }
     };
+    
+    const playersOnPitchIds = new Set((planData.teamLineup?.lineup?.playerPositions || []).map(p => p.playerId));
+    const availablePlayers = invitedPlayers.filter(p => !playersOnPitchIds.has(p.id));
 
     const renderPlayerOnPitch = (position: string) => {
         const playerPosition = planData.teamLineup?.lineup?.playerPositions.find(p => p.position === position);
         if (playerPosition) {
             const playerDetails = invitedPlayers.find(p => p.id === playerPosition.playerId);
             if (playerDetails) {
-                return <PlayerOnPitch player={playerDetails} />;
+                return (
+                    <Droppable droppableId={`pos-${position}`}>
+                        {(provided) => (
+                            <div ref={provided.innerRef} {...provided.droppableProps}>
+                                <Draggable draggableId={playerDetails.id} index={0}>
+                                    {(provided) => (
+                                        <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
+                                            <PlayerOnPitch player={playerDetails} />
+                                        </div>
+                                    )}
+                                </Draggable>
+                                {provided.placeholder}
+                            </div>
+                        )}
+                    </Droppable>
+                );
             }
         }
         return <EmptySlot droppableId={`pos-${position}`} position={position} />;
@@ -230,7 +259,7 @@ export function MatchPlan({ matchId }: { matchId: string }) {
                     
                     <div className="space-y-2">
                         <div className="flex justify-between items-center">
-                            <Label>Invited - {invitedPlayers.length} Players</Label>
+                            <Label>Invited - {availablePlayers.length} Players</Label>
                             <Button variant="ghost" size="icon"><ListFilter className="w-5 h-5"/></Button>
                         </div>
                         <Droppable droppableId="invited-players" direction="horizontal">
@@ -238,9 +267,9 @@ export function MatchPlan({ matchId }: { matchId: string }) {
                                 <div
                                     ref={provided.innerRef}
                                     {...provided.droppableProps}
-                                    className="flex gap-4 pb-4 overflow-x-auto"
+                                    className="flex gap-4 pb-4 overflow-x-auto min-h-[80px] bg-card/50 p-2 rounded-md"
                                 >
-                                    {invitedPlayers.map((p, index) => (
+                                    {availablePlayers.map((p, index) => (
                                         <Draggable key={p.id} draggableId={p.id} index={index}>
                                             {(provided) => (
                                                 <div
@@ -300,9 +329,13 @@ export function MatchPlan({ matchId }: { matchId: string }) {
                         </div>
                         {planData.teamLineup?.plannedExchanges?.isEnabled && planData.teamLineup?.plannedExchanges?.substitutions.map((sub, index) => (
                              <div key={index} className="flex items-center justify-between gap-2">
-                                <div className="w-20 h-20 bg-card rounded-md flex items-center justify-center"><Plus className="w-6 h-6 text-muted-foreground"/></div>
+                                 <Droppable droppableId={`sub-out-${index}`}>
+                                    {(provided) => <div ref={provided.innerRef} {...provided.droppableProps} className="w-20 h-20 bg-card rounded-md flex items-center justify-center"><Plus className="w-6 h-6 text-muted-foreground"/>{provided.placeholder}</div>}
+                                 </Droppable>
                                 <NumberInput value={sub.minute} onValueChange={(v) => handlePlanChange(`teamLineup.plannedExchanges.substitutions.${index}.minute`, v)} />
-                                <div className="w-20 h-20 bg-card rounded-md flex items-center justify-center"><Plus className="w-6 h-6 text-muted-foreground"/></div>
+                                <Droppable droppableId={`sub-in-${index}`}>
+                                    {(provided) => <div ref={provided.innerRef} {...provided.droppableProps} className="w-20 h-20 bg-card rounded-md flex items-center justify-center"><Plus className="w-6 h-6 text-muted-foreground"/>{provided.placeholder}</div>}
+                                 </Droppable>
                                 <Button size="icon" variant="ghost" className="rounded-full bg-card w-10 h-10"><Plus className="w-5 h-5"/></Button>
                             </div>
                         ))}
