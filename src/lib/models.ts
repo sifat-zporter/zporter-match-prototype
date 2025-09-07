@@ -327,6 +327,18 @@ export type InviteUserSearchResult = {
     type: string; // e.g., PLAYER, COACH
 }
 
+/**
+ * @model UserDto
+ * @description Represents a user object from GET /users/:id
+ */
+export type UserDto = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  faceImage: string;
+  [key: string]: any;
+};
+
 
 // --- Invite Models ---
 

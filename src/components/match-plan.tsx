@@ -10,7 +10,7 @@ import { Button } from "./ui/button";
 import { Plus, Camera, Video, Loader2, ListFilter, Mic, ChevronUp, ChevronDown } from "lucide-react";
 import { Switch } from "./ui/switch";
 import { apiClient } from "@/lib/api-client";
-import type { MatchPlanPayload, Invite, InviteUserSearchResult } from "@/lib/models";
+import type { MatchPlanPayload, Invite, UserDto } from "@/lib/models";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "./ui/card";
 import { Label } from "./ui/label";
@@ -76,27 +76,31 @@ export function MatchPlan({ matchId }: { matchId: string }) {
     });
 
     useEffect(() => {
-        const fetchInvites = async () => {
+        const fetchInvitedPlayers = async () => {
             if (!matchId) return;
             try {
-                // Corrected: Fetch actual invites, not search results.
                 const invites = await apiClient<Invite[]>(`/matches/${matchId}/invites`);
                 
-                // Now, fetch details for each invited user.
                 const playerPromises = invites
-                    .filter(invite => invite.inviteeDetails) // Ensure details exist
+                    .filter(invite => invite.inviteeId)
                     .map(async (invite) => {
-                        const user = invite.inviteeDetails as InviteUserSearchResult;
-                        return {
-                            id: user.userId,
-                            name: user.name,
-                            avatarUrl: user.faceImage || 'https://placehold.co/40x40.png',
-                            number: Math.floor(Math.random() * 99) + 1, // Placeholder
-                            zporterId: '173', // Placeholder
-                        };
+                        try {
+                            // Fetch full user details for each invitee
+                            const user = await apiClient<UserDto>(`/users/${invite.inviteeId}`);
+                            return {
+                                id: user.id,
+                                name: `${user.firstName} ${user.lastName}`,
+                                avatarUrl: user.faceImage || 'https://placehold.co/40x40.png',
+                                number: Math.floor(Math.random() * 99) + 1, // Placeholder
+                                zporterId: '173', // Placeholder
+                            };
+                        } catch (error) {
+                            console.error(`Failed to fetch details for user ${invite.inviteeId}`, error);
+                            return null; // Return null for failed fetches
+                        }
                     });
 
-                const players = await Promise.all(playerPromises);
+                const players = (await Promise.all(playerPromises)).filter(Boolean) as Player[]; // Filter out any nulls
                 setInvitedPlayers(players);
 
             } catch (error) {
@@ -107,7 +111,7 @@ export function MatchPlan({ matchId }: { matchId: string }) {
                 });
             }
         };
-        fetchInvites();
+        fetchInvitedPlayers();
     }, [matchId, toast]);
 
     const handlePlanChange = (path: string, value: any) => {
