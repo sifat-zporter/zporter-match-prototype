@@ -19,18 +19,29 @@ import { cn } from "@/lib/utils";
 import type { Player } from "@/lib/data";
 import { DragDropContext, Droppable, Draggable, type DropResult } from 'react-beautiful-dnd';
 
-const PlayerOnPitch = ({ player }: { player: Player }) => (
-    <div className="flex flex-col items-center justify-center gap-1 text-center w-16">
-        <div className="relative">
-            <Image src={player.avatarUrl} alt={player.name} width={40} height={40} className="rounded-full" data-ai-hint="player avatar" />
-            <div className="absolute -top-1 -left-4 text-xs font-semibold text-purple-400">{player.zporterId}</div>
-            <div className="absolute -top-1 -right-4 text-xs font-semibold">{player.number}</div>
-        </div>
-        <p className="text-xs font-semibold truncate w-full">{player.name}</p>
-    </div>
+const PlayerOnPitch = ({ player, droppableId }: { player: Player, droppableId: string }) => (
+     <Droppable droppableId={droppableId} isDropDisabled={true}>
+        {(provided) => (
+            <div ref={provided.innerRef} {...provided.droppableProps}>
+                <Draggable draggableId={player.id} index={0}>
+                    {(provided) => (
+                        <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} className="flex flex-col items-center justify-center gap-1 text-center w-16">
+                            <div className="relative">
+                                <Image src={player.avatarUrl} alt={player.name} width={40} height={40} className="rounded-full" data-ai-hint="player avatar" />
+                                <div className="absolute -top-1 -left-4 text-xs font-semibold text-purple-400">{player.zporterId}</div>
+                                <div className="absolute -top-1 -right-4 text-xs font-semibold">{player.number}</div>
+                            </div>
+                            <p className="text-xs font-semibold truncate w-full">{player.name}</p>
+                        </div>
+                    )}
+                </Draggable>
+                {provided.placeholder}
+            </div>
+        )}
+    </Droppable>
 );
 
-const EmptySlot = ({ droppableId, position }: { droppableId: string, position: string }) => (
+const EmptySlot = ({ droppableId }: { droppableId: string }) => (
     <Droppable droppableId={droppableId}>
         {(provided, snapshot) => (
             <div
@@ -92,7 +103,7 @@ export function MatchPlan({ matchId }: { matchId: string }) {
                                 avatarUrl: user.media.faceImage || 'https://placehold.co/40x40.png',
                                 number: user.playerCareer?.shirtNumber || Math.floor(Math.random() * 99) + 1,
                                 zporterId: user.username,
-                                role: user.type, // Assuming type is the role
+                                role: user.type,
                             };
                         } catch (error) {
                             console.error(`Failed to fetch details for user ${invite.inviteeId}`, error);
@@ -134,6 +145,12 @@ export function MatchPlan({ matchId }: { matchId: string }) {
         handlePlanChange('teamLineup.plannedExchanges.substitutions', newSubstitutions);
     };
 
+    const handleAddSubstitution = () => {
+        const newSubstitutions = [...(planData.teamLineup?.plannedExchanges?.substitutions || [])];
+        newSubstitutions.push({ playerInId: '', playerOutId: '', minute: 0 });
+        handlePlanChange('teamLineup.plannedExchanges.substitutions', newSubstitutions);
+    };
+
 
     const handleSave = async () => {
         setIsLoading(true);
@@ -169,31 +186,29 @@ export function MatchPlan({ matchId }: { matchId: string }) {
         // Dragging from the invited players list to a pitch position
         if (sourceId === 'invited-players' && destinationId.startsWith('pos-')) {
             const position = destinationId.replace('pos-', '');
-            // IMPORTANT: Use the master invitedPlayers list, not the derived availablePlayers
             const player = invitedPlayers.find(p => p.id === result.draggableId);
 
             if (!player) return;
+            if (currentPositions.some(p => p.position === position)) return; // Position taken
 
-            // Check if player is already on the pitch
-            if (currentPositions.some(p => p.playerId === player.id)) {
-                toast({ variant: "destructive", title: "Player already in lineup" });
-                return;
-            }
-            // Check if position is already taken
-            if (currentPositions.some(p => p.position === position)) {
-                toast({ variant: "destructive", title: "Position already taken" });
-                return;
-            }
-            
-            const newPlayerPosition = { playerId: player.id, position };
-            const newPositions = [...currentPositions, newPlayerPosition];
+            const newPositions = [...currentPositions.filter(p => p.playerId !== player.id), { playerId: player.id, position }];
             handlePlanChange('teamLineup.lineup.playerPositions', newPositions);
         }
 
         // Dragging from the pitch back to the invited players list (or off the pitch)
         if (sourceId.startsWith('pos-')) {
             const position = sourceId.replace('pos-', '');
-            const newPositions = currentPositions.filter(p => p.position !== position);
+            let newPositions = currentPositions.filter(p => p.position !== position);
+            
+            // If dropping on another position
+            if(destinationId.startsWith('pos-')) {
+                 const destPosition = destinationId.replace('pos-', '');
+                 // if dest position is empty, move player there
+                 if (!newPositions.some(p => p.position === destPosition)) {
+                    newPositions = [...newPositions, { playerId: result.draggableId, position: destPosition }];
+                 }
+            }
+            
             handlePlanChange('teamLineup.lineup.playerPositions', newPositions);
         }
     };
@@ -206,25 +221,10 @@ export function MatchPlan({ matchId }: { matchId: string }) {
         if (playerPosition) {
             const playerDetails = invitedPlayers.find(p => p.id === playerPosition.playerId);
             if (playerDetails) {
-                return (
-                    <Droppable droppableId={`pos-${position}`}>
-                        {(provided) => (
-                            <div ref={provided.innerRef} {...provided.droppableProps}>
-                                <Draggable draggableId={playerDetails.id} index={0}>
-                                    {(provided) => (
-                                        <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
-                                            <PlayerOnPitch player={playerDetails} />
-                                        </div>
-                                    )}
-                                </Draggable>
-                                {provided.placeholder}
-                            </div>
-                        )}
-                    </Droppable>
-                );
+                return <PlayerOnPitch player={playerDetails} droppableId={`pos-${position}`} />;
             }
         }
-        return <EmptySlot droppableId={`pos-${position}`} position={position} />;
+        return <EmptySlot droppableId={`pos-${position}`} />;
     };
     
 
@@ -356,7 +356,9 @@ export function MatchPlan({ matchId }: { matchId: string }) {
                                         {invitedPlayers.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
                                     </SelectContent>
                                 </Select>
-                                <Button size="icon" variant="ghost" className="rounded-full bg-card w-10 h-10"><Plus className="w-5 h-5"/></Button>
+                                <Button size="icon" variant="ghost" className="rounded-full bg-card w-10 h-10" onClick={handleAddSubstitution}>
+                                    <Plus className="w-5 h-5"/>
+                                </Button>
                             </div>
                         ))}
                     </div>
