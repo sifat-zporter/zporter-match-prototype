@@ -1,19 +1,19 @@
 
 "use client"
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Star, Camera, Video, ListFilter, Loader2, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
+import { Card, CardContent } from "./ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { apiClient } from "@/lib/api-client";
 import { useToast } from "@/hooks/use-toast";
-import type { CreateMatchReviewDto, PlayerReviewDto, TacticalRatingsDto, MentalRatingsDto } from "@/lib/models";
+import type { CreateMatchReviewDto, PlayerReviewDto, TacticalRatingsDto, MentalRatingsDto, Invite, UserDto } from "@/lib/models";
 import type { Match, Player } from "@/lib/data";
 import { Label } from "./ui/label";
 import { Switch } from "./ui/switch";
@@ -103,7 +103,7 @@ const RatingCategory = ({ title, ratings, onRatingChange }: { title: string, rat
 );
 
 
-function HomeReviews({ match }: { match: Match }) {
+function TeamReviewForm({ match, players, teamId, reviewType }: { match: Match, players: Player[], teamId: string, reviewType: string }) {
     const { toast } = useToast();
     const [isLoading, setIsLoading] = useState(false);
     
@@ -116,8 +116,6 @@ function HomeReviews({ match }: { match: Match }) {
         overallMatchReview: "",
         comment: "",
     });
-
-    const players = match.homeTeam.players || [];
 
     const handlePlayerReviewChange = (playerReview: PlayerReviewDto) => {
         setReview(prev => {
@@ -145,10 +143,9 @@ function HomeReviews({ match }: { match: Match }) {
 
     const handleSave = async () => {
         setIsLoading(true);
-        // Add required fields that are not in the form yet
         const payload: CreateMatchReviewDto = {
-            subjectId: match.homeTeam.id,
-            reviewType: 'TeamPerformance', // Or determine dynamically
+            subjectId: teamId,
+            reviewType: reviewType,
             ztarOfTheMatchPlayerId: review.ztarOfTheMatchPlayerId,
             overallMatchReview: review.overallMatchReview || '',
             teamRating: review.teamRating || 0,
@@ -179,6 +176,14 @@ function HomeReviews({ match }: { match: Match }) {
             setIsLoading(false);
         }
     };
+
+    if (players.length === 0) {
+        return (
+            <div className="text-center py-16 text-muted-foreground">
+                <p>No players available to review for this team.</p>
+            </div>
+        );
+    }
 
     return (
          <Card>
@@ -265,23 +270,75 @@ function HomeReviews({ match }: { match: Match }) {
 
 
 export function ReviewsPanel({ match }: { match: Match }) {
+    const { toast } = useToast();
+    const [isLoadingPlayers, setIsLoadingPlayers] = useState(true);
+    const [homePlayers, setHomePlayers] = useState<Player[]>([]);
+    const [awayPlayers, setAwayPlayers] = useState<Player[]>([]);
+    const [referees, setReferees] = useState<Player[]>([]);
+
+    const fetchInvitedUsers = useCallback(async () => {
+        if (!match.id) return;
+        setIsLoadingPlayers(true);
+        try {
+            const invites = await apiClient<Invite[]>(`/matches/${match.id}/invites`);
+            
+            const userPromises = invites
+                .filter(invite => invite.inviteeId)
+                .map(async (invite) => {
+                    try {
+                        const user = await apiClient<UserDto>(`/users/${invite.inviteeId}`);
+                        return {
+                            id: user.userId,
+                            name: `${user.profile.firstName} ${user.profile.lastName}`,
+                            avatarUrl: user.media.faceImage || `https://picsum.photos/seed/${user.userId}/40/40`,
+                            number: user.playerCareer?.shirtNumber || Math.floor(Math.random() * 99) + 1,
+                            zporterId: user.username,
+                            role: invite.role, // Use role from invite
+                        };
+                    } catch (error) {
+                        console.error(`Failed to fetch details for user ${invite.inviteeId}`, error);
+                        return null;
+                    }
+                });
+
+            const users = (await Promise.all(userPromises)).filter(Boolean) as Player[];
+
+            setHomePlayers(users.filter(u => u.role === 'PLAYER_HOME'));
+            setAwayPlayers(users.filter(u => u.role === 'PLAYER_AWAY'));
+            setReferees(users.filter(u => u.role === 'REFEREE'));
+
+        } catch (error) {
+            toast({
+                variant: "destructive",
+                title: "Failed to load players",
+                description: "Could not fetch the list of invited players for reviews.",
+            });
+        } finally {
+            setIsLoadingPlayers(false);
+        }
+    }, [match.id, toast]);
+
+    useEffect(() => {
+        fetchInvitedUsers();
+    }, [fetchInvitedUsers]);
+
   return (
     <div className="space-y-4">
         <Tabs defaultValue="home" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 bg-transparent p-0">
-            <TabsTrigger value="home" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Home</TabsTrigger>
-            <TabsTrigger value="ref-org" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Ref & Org</TabsTrigger>
-            <TabsTrigger value="away" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Away</TabsTrigger>
-        </TabsList>
-        <TabsContent value="home" className="pt-6">
-            <HomeReviews match={match} />
-        </TabsContent>
-        <TabsContent value="ref-org">
-            <p className="text-muted-foreground text-center p-8">Referee & Organization reviews will appear here.</p>
-        </TabsContent>
-        <TabsContent value="away">
-            <p className="text-muted-foreground text-center p-8">Away team reviews will appear here.</p>
-        </TabsContent>
+            <TabsList className="grid w-full grid-cols-3 bg-transparent p-0">
+                <TabsTrigger value="home" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Home</TabsTrigger>
+                <TabsTrigger value="ref-org" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Ref & Org</TabsTrigger>
+                <TabsTrigger value="away" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Away</TabsTrigger>
+            </TabsList>
+            <TabsContent value="home" className="pt-6">
+                {isLoadingPlayers ? <Loader2 className="mx-auto my-16 w-8 h-8 animate-spin" /> : <TeamReviewForm match={match} players={homePlayers} teamId={match.homeTeam.id} reviewType="TeamPerformance" />}
+            </TabsContent>
+            <TabsContent value="ref-org" className="pt-6">
+                 {isLoadingPlayers ? <Loader2 className="mx-auto my-16 w-8 h-8 animate-spin" /> : <TeamReviewForm match={match} players={referees} teamId={"organization-placeholder"} reviewType="RefereePerformance" />}
+            </TabsContent>
+            <TabsContent value="away" className="pt-6">
+                 {isLoadingPlayers ? <Loader2 className="mx-auto my-16 w-8 h-8 animate-spin" /> : <TeamReviewForm match={match} players={awayPlayers} teamId={match.awayTeam.id} reviewType="TeamPerformance" />}
+            </TabsContent>
         </Tabs>
 
         <Accordion type="single" collapsible className="w-full">
