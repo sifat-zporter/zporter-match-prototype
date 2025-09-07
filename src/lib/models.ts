@@ -131,7 +131,7 @@ export type GetMatchesResponse = {
  * @description Represents a match note object from the API.
  */
 export type MatchNote = {
-  noteId: string;
+  id: string;
   authorId: string; // Assuming the API provides this
   text: string;
   isStarred: boolean;

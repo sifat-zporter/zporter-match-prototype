@@ -26,7 +26,7 @@ interface NoteItemProps {
 
 const NoteItem = ({ note, onReply, onEdit, onDelete, isReply = false }: NoteItemProps) => {
     // A real app would get the current user's ID from an auth context
-    const currentUserId = "current-user-placeholder"; 
+    const currentUserId = "4uc8OAiLTLZXAxNFa96fNW0pcDH3"; 
     const isAuthor = note.authorId === currentUserId;
 
     return (
@@ -49,7 +49,7 @@ const NoteItem = ({ note, onReply, onEdit, onDelete, isReply = false }: NoteItem
                 </div>
                 <p className="text-sm text-foreground whitespace-pre-line">{note.text}</p>
                 <div className="flex items-center gap-2 mt-1">
-                    <Button variant="ghost" size="sm" className="h-auto px-2 py-1 text-xs" onClick={() => onReply(note.noteId, note.authorDetails?.name || 'User')}>
+                    <Button variant="ghost" size="sm" className="h-auto px-2 py-1 text-xs" onClick={() => onReply(note.id, note.authorDetails?.name || 'User')}>
                         <Reply className="w-3 h-3 mr-1" />
                         Reply
                     </Button>
@@ -64,7 +64,7 @@ const NoteItem = ({ note, onReply, onEdit, onDelete, isReply = false }: NoteItem
                                 <DropdownMenuItem onClick={() => onEdit(note)}>
                                     <Pencil className="w-4 h-4 mr-2" /> Edit
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => onDelete(note.noteId)} className="text-destructive">
+                                <DropdownMenuItem onClick={() => onDelete(note.id)} className="text-destructive">
                                     <Trash2 className="w-4 h-4 mr-2" /> Delete
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
@@ -154,7 +154,7 @@ export function MatchNotes({ matchId, initialNotes = [] }: MatchNotesProps) {
                     text: noteContent,
                     isStarred: isStarred,
                 };
-                await apiClient(`/matches/${matchId}/notes/${editingNote.noteId}`, {
+                await apiClient(`/matches/${matchId}/notes/${editingNote.id}`, {
                     method: 'PATCH',
                     body: payload
                 });
@@ -183,7 +183,7 @@ export function MatchNotes({ matchId, initialNotes = [] }: MatchNotesProps) {
     };
     
     const topLevelNotes = useMemo(() => {
-        const noteMap = new Map(notes.map(n => [n.noteId, {...n, replies: [] as MatchNote[]} ]));
+        const noteMap = new Map(notes.map(n => [n.id, {...n, replies: [] as MatchNote[]} ]));
         const topLevel: MatchNote[] = [];
 
         for (const note of noteMap.values()) {
@@ -198,19 +198,19 @@ export function MatchNotes({ matchId, initialNotes = [] }: MatchNotesProps) {
     
     return (
         <div className="space-y-4">
-            <div className="flex flex-col border rounded-lg h-[calc(100vh-350px)]">
+            <div className="flex flex-col border rounded-lg h-[calc(100vh-280px)]">
                 <ScrollArea className="flex-1">
                     <div className="p-4 space-y-4">
                         {isLoading ? (
                             <div className="flex justify-center items-center h-full pt-16"><Loader2 className="w-8 h-8 animate-spin" /></div>
                         ) : topLevelNotes.length > 0 ? (
                             topLevelNotes.map((note) => (
-                                <div key={note.noteId}>
+                                <div key={note.id}>
                                     <NoteItem note={note} onReply={(noteId, authorName) => setReplyingTo({noteId, authorName})} onEdit={handleEdit} onDelete={handleDelete} />
                                     {note.replies && note.replies.length > 0 && (
                                         <div className="space-y-4 mt-2">
                                             {note.replies.sort((a,b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()).map(reply => (
-                                                <NoteItem key={reply.noteId} note={reply} onReply={(noteId, authorName) => setReplyingTo({noteId, authorName})} onEdit={handleEdit} onDelete={handleDelete} isReply />
+                                                <NoteItem key={reply.id} note={reply} onReply={(noteId, authorName) => setReplyingTo({noteId, authorName})} onEdit={handleEdit} onDelete={handleDelete} isReply />
                                             ))}
                                         </div>
                                     )}
@@ -280,7 +280,7 @@ export function MatchNotes({ matchId, initialNotes = [] }: MatchNotesProps) {
                             method="GET"
                             response={`[
   {
-    "noteId": "note-id-123",
+    "id": "note-id-123",
     "authorId": "user-id-abc",
     "text": "The opponent's defense is weak on the left flank.",
     "isStarred": true,
@@ -290,7 +290,7 @@ export function MatchNotes({ matchId, initialNotes = [] }: MatchNotesProps) {
     "updatedAt": "2024-09-01T10:00:00Z"
   },
   {
-    "noteId": "note-id-456",
+    "id": "note-id-456",
     "authorId": "user-id-def",
     "text": "Agreed, we should exploit that.",
     "isStarred": false,
@@ -313,7 +313,7 @@ export function MatchNotes({ matchId, initialNotes = [] }: MatchNotesProps) {
   "isStarred": "boolean (optional)"
 }`}
                             response={`{
-  "noteId": "new-note-id-789",
+  "id": "new-note-id-789",
   "authorId": "current-user-id",
   "text": "The new note content.",
   "isStarred": false,
@@ -333,7 +333,7 @@ export function MatchNotes({ matchId, initialNotes = [] }: MatchNotesProps) {
   "isStarred": true
 }`}
                             response={`{
-  "noteId": "note-id-123",
+  "id": "note-id-123",
   "authorId": "user-id-abc",
   "text": "Updated note content.",
   "isStarred": true,
