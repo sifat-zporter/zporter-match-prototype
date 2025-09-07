@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Textarea } from "./ui/textarea";
 import { Button } from "./ui/button";
-import { Plus, Camera, Video, Loader2, ListFilter, Mic, ChevronUp, ChevronDown, X, UserPlus } from "lucide-react";
+import { Plus, Camera, Video, Loader2, ListFilter, Mic, ChevronUp, ChevronDown, X, UserPlus, Info } from "lucide-react";
 import { Switch } from "./ui/switch";
 import { apiClient } from "@/lib/api-client";
 import type { MatchPlanPayload, Invite, UserDto } from "@/lib/models";
@@ -19,6 +19,8 @@ import { cn } from "@/lib/utils";
 import type { Player } from "@/lib/data";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "./ui/command";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
+import { ApiDocumentationViewer } from "./api-documentation-viewer";
 
 
 const PlayerOnPitch = ({ player, onRemove, isOpponent = false }: { player: Player, onRemove?: () => void, isOpponent?: boolean }) => (
@@ -216,7 +218,7 @@ export function MatchPlan({ matchId }: { matchId: string }) {
         try {
             await apiClient(`/matches/${matchId}`, {
                 method: 'PATCH',
-                body: { ...planData, status: 'draft' },
+                body: { tacticsNotes: { ...planData }, status: 'draft' }, // This structure might need adjustment based on exact API spec
             });
             toast({
                 title: "Plan Saved!",
@@ -666,6 +668,92 @@ export function MatchPlan({ matchId }: { matchId: string }) {
                    </div>
                 </TabsContent>
             </Tabs>
+
+            <Accordion type="single" collapsible className="w-full pt-4">
+                <AccordionItem value="api-docs">
+                    <AccordionTrigger>
+                        <div className="flex items-center gap-2">
+                            <Info className="w-5 h-5 text-blue-400" />
+                            <span className="font-semibold">Plan Tab API Documentation</span>
+                        </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="space-y-4 pt-4">
+                        <ApiDocumentationViewer
+                            title="1. Fetch Invited Players"
+                            description="Called when the 'Line Up' tab loads to get the list of players who can be placed in the formation. This returns a list of invite objects."
+                            endpoint="/matches/:id/invites"
+                            method="GET"
+                            response={`[
+  {
+    "id": "invite-id-string",
+    "matchId": "match-id-string",
+    "inviteeId": "user-id-string-to-fetch",
+    "role": "PLAYER_HOME",
+    "status": "SCHEDULED"
+  }
+]`}
+                        />
+                        <ApiDocumentationViewer
+                            title="2. Fetch Player Details"
+                            description="For each invite object from the previous step, this endpoint is called using the 'inviteeId' to get the player's full details for display (name, avatar, etc.)."
+                            endpoint="/users/:id"
+                            method="GET"
+                            response={`{
+  "userId": "string",
+  "username": "string",
+  "profile": {
+    "firstName": "string",
+    "lastName": "string"
+  },
+  "media": {
+    "faceImage": "string (URL) | null"
+  },
+  "playerCareer": {
+    "shirtNumber": "number"
+  },
+  "type": "PLAYER | COACH"
+}`}
+                        />
+                         <ApiDocumentationViewer
+                            title="3. Save Match Plan"
+                            description="The main endpoint for the Plan tab. It's called when the 'Save' button is clicked, sending all tactical data from all sub-tabs in a single request body."
+                            endpoint="/matches/:id"
+                            method="PATCH"
+                            requestPayload={`{
+  "tacticsNotes": {
+    "opponentAnalysis": {
+      "general": { "summary": "...", "isLineupVisible": true, ... },
+      "offense": { "summary": "...", ... },
+      "defense": { "summary": "...", ... },
+      "other": { "summary": "...", ... }
+    },
+    "teamLineup": {
+      "planName": "New Plan",
+      "generalTactics": { "summary": "..." },
+      "lineup": {
+        "formation": "4-3-3",
+        "playerPositions": [{ "playerId": "...", "position": "GK" }]
+      },
+      "plannedExchanges": {
+        "isEnabled": true,
+        "substitutions": [{ "playerInId": "...", "playerOutId": "...", "minute": 65 }]
+      },
+      ...
+    },
+    "offenseTactics": { ... },
+    "defenseTactics": { ... },
+    "otherTactics": { ... }
+  }
+}`}
+                            response={`{
+  "id": "match-id-string",
+  "updatedAt": "string (ISO 8601)",
+  // ... other updated match fields
+}`}
+                        />
+                    </AccordionContent>
+                </AccordionItem>
+            </Accordion>
 
             <div className="pt-4">
                 <Button onClick={handleSave} disabled={isLoading} className="w-full bg-blue-600 hover:bg-blue-700 text-white">
