@@ -32,8 +32,8 @@ function transformMatchEntityToMatch(entity: MatchEntity): Match {
             name: entity.awayTeam.name, 
             logoUrl: entity.awayTeam.logoUrl || 'https://placehold.co/40x40.png' 
         },
-        matchDate: entity.matchDate,
-        startTime: entity.matchStartTime,
+        matchDate: entity.userGeneratedData.eventDetails.matchDate,
+        startTime: entity.userGeneratedData.eventDetails.matchStartTime,
         location: { name: entity.venue?.name || 'N/A', address: '' },
         score: entity.scores,
         // Mocked or default values for fields not directly in the MatchEntity
@@ -62,14 +62,6 @@ export default function UpdateMatchView({ matchId }: { matchId: string }) {
             const fetchedMatchEntity = await apiClient<MatchEntity>(`/matches/${matchId}`);
             const transformedMatch = transformMatchEntityToMatch(fetchedMatchEntity);
             setMatch(transformedMatch);
-            
-            // Step 1: Toast the fetched match data
-            toast({
-                title: "Step 1: Match Data Fetched",
-                description: `Category ID from API: ${transformedMatch.userGeneratedData?.eventDetails?.categoryId}`,
-                duration: 3000,
-            });
-
         } catch (error) {
             console.error("Failed to fetch match for update:", error);
             toast({
