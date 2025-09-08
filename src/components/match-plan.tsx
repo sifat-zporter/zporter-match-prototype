@@ -110,7 +110,6 @@ export function MatchPlan({ matchId }: { matchId: string }) {
     }));
 
     const [planData, setPlanData] = useState<Partial<MatchPlanPayload>>({
-        main: { matchHeadLine: "", isPrivate: false },
         opponentAnalysis: {
             general: { summary: 'General review from another match which a coach could use to create his own opponent analysis from.', isLineupVisible: true, areSetPlaysVisible: false, lineup: { formation: "4-3-3", playerPositions: [] } },
             offense: { summary: '', isLineupVisible: true, areSetPlaysVisible: false, lineup: { formation: "4-3-3", playerPositions: [] } },
@@ -216,9 +215,9 @@ export function MatchPlan({ matchId }: { matchId: string }) {
     const handleSave = async () => {
         setIsLoading(true);
         try {
-            await apiClient(`/matches/${matchId}`, {
+            await apiClient(`/matches/${matchId}/plan/plan`, {
                 method: 'PATCH',
-                body: { tacticsNotes: { ...planData }, status: 'draft' }, // This structure might need adjustment based on exact API spec
+                body: { ...planData },
             });
             toast({
                 title: "Plan Saved!",
@@ -717,54 +716,52 @@ export function MatchPlan({ matchId }: { matchId: string }) {
                          <ApiDocumentationViewer
                             title="3. Save Match Plan"
                             description="The main endpoint for the Plan tab. It's called when the 'Save' button is clicked, sending all tactical data from all sub-tabs in a single request body."
-                            endpoint="/matches/:id"
+                            endpoint="/matches/{matchId}/plan/plan"
                             method="PATCH"
                             requestPayload={`{
-  "tacticsNotes": {
-    "opponentAnalysis": {
-      "general": { "summary": "string", "isLineupVisible": true, "areSetPlaysVisible": false, "lineup": {"formation": "4-3-3", "playerPositions": [{ "playerId": "user-id-string-1", "position": "GK" }, { "playerId": "user-id-string-2", "position": "RB" }]} },
-      "offense": { "summary": "string", "isLineupVisible": true, "areSetPlaysVisible": false, "lineup": {"formation": "4-3-3", "playerPositions": [{ "playerId": "user-id-string-1", "position": "ST" }]} },
-      "defense": { "summary": "string", "isLineupVisible": true, "areSetPlaysVisible": false, "lineup": {"formation": "5-4-1", "playerPositions": []} },
-      "other": { "summary": "string", "isLineupVisible": true, "areSetPlaysVisible": false, "lineup": {"formation": "4-4-2", "playerPositions": []} }
+  "opponentAnalysis": {
+    "general": { "summary": "string", "isLineupVisible": true, "areSetPlaysVisible": false, "lineup": {"formation": "4-3-3", "playerPositions": [{ "playerId": "user-id-string-1", "position": "GK" }, { "playerId": "user-id-string-2", "position": "RB" }]} },
+    "offense": { "summary": "string", "isLineupVisible": true, "areSetPlaysVisible": false, "lineup": {"formation": "4-3-3", "playerPositions": [{ "playerId": "user-id-string-1", "position": "ST" }]} },
+    "defense": { "summary": "string", "isLineupVisible": true, "areSetPlaysVisible": false, "lineup": {"formation": "5-4-1", "playerPositions": []} },
+    "other": { "summary": "string", "isLineupVisible": true, "areSetPlaysVisible": false, "lineup": {"formation": "4-4-2", "playerPositions": []} }
+  },
+  "teamLineup": {
+    "planName": "string",
+    "generalTactics": { "summary": "string", "attachedMedia": [] },
+    "lineup": {
+      "formation": "4-3-3",
+      "playerPositions": [{ "playerId": "string", "position": "GK" }]
     },
-    "teamLineup": {
-      "planName": "string",
-      "generalTactics": { "summary": "string", "attachedMedia": [] },
-      "lineup": {
-        "formation": "4-3-3",
-        "playerPositions": [{ "playerId": "string", "position": "GK" }]
-      },
-      "plannedExchanges": {
-        "isEnabled": true,
-        "substitutions": [{ "playerInId": "string", "playerOutId": "string", "minute": 65 }]
-      },
-      "publishingSettings": {
-        "isEnabled": false,
-        "publishInternallyMinutesBefore": 240,
-        "publishPubliclyMinutesBefore": 60
-      }
+    "plannedExchanges": {
+      "isEnabled": true,
+      "substitutions": [{ "playerInId": "string", "playerOutId": "string", "minute": 65 }]
     },
-    "offenseTactics": {
-      "planName": "string",
-      "general": { "summary": "string", "isLineupVisible": true, "areSetPlaysVisible": false, "lineup": {"formation": "4-3-3", "playerPositions": [{ "playerId": "user-id-string-1", "position": "RW" }]} },
-      "buildUp": { "summary": "string", "isLineupVisible": true, "areSetPlaysVisible": false, "lineup": {"formation": "4-3-3", "playerPositions": []} },
-      "attack": { "summary": "string", "isLineupVisible": true, "areSetPlaysVisible": false, "lineup": {"formation": "4-3-3", "playerPositions": []} },
-      "finishing": { "summary": "string", "isLineupVisible": true, "areSetPlaysVisible": false, "lineup": {"formation": "4-3-3", "playerPositions": []} }
-    },
-    "defenseTactics": {
-      "planName": "string",
-      "general": { "summary": "string", "isLineupVisible": true, "areSetPlaysVisible": false, "lineup": {"formation": "4-3-3", "playerPositions": []} },
-      "highBlock": { "summary": "string", "isLineupVisible": true, "areSetPlaysVisible": false, "lineup": {"formation": "4-3-3", "playerPositions": []} },
-      "midBlock": { "summary": "string", "isLineupVisible": true, "areSetPlaysVisible": false, "lineup": {"formation": "4-3-3", "playerPositions": []} },
-      "lowBlock": { "summary": "string", "isLineupVisible": true, "areSetPlaysVisible": false, "lineup": {"formation": "4-3-3", "playerPositions": []} }
-    },
-    "otherTactics": {
-      "planName": "string",
-      "summary": "string",
-      "isLineupVisible": true,
-      "areSetPlaysVisible": false,
-      "lineup": { "formation": "4-3-3", "playerPositions": [] }
+    "publishingSettings": {
+      "isEnabled": false,
+      "publishInternallyMinutesBefore": 240,
+      "publishPubliclyMinutesBefore": 60
     }
+  },
+  "offenseTactics": {
+    "planName": "string",
+    "general": { "summary": "string", "isLineupVisible": true, "areSetPlaysVisible": false, "lineup": {"formation": "4-3-3", "playerPositions": [{ "playerId": "user-id-string-1", "position": "RW" }]} },
+    "buildUp": { "summary": "string", "isLineupVisible": true, "areSetPlaysVisible": false, "lineup": {"formation": "4-3-3", "playerPositions": []} },
+    "attack": { "summary": "string", "isLineupVisible": true, "areSetPlaysVisible": false, "lineup": {"formation": "4-3-3", "playerPositions": []} },
+    "finishing": { "summary": "string", "isLineupVisible": true, "areSetPlaysVisible": false, "lineup": {"formation": "4-3-3", "playerPositions": []} }
+  },
+  "defenseTactics": {
+    "planName": "string",
+    "general": { "summary": "string", "isLineupVisible": true, "areSetPlaysVisible": false, "lineup": {"formation": "4-3-3", "playerPositions": []} },
+    "highBlock": { "summary": "string", "isLineupVisible": true, "areSetPlaysVisible": false, "lineup": {"formation": "4-3-3", "playerPositions": []} },
+    "midBlock": { "summary": "string", "isLineupVisible": true, "areSetPlaysVisible": false, "lineup": {"formation": "4-3-3", "playerPositions": []} },
+    "lowBlock": { "summary": "string", "isLineupVisible": true, "areSetPlaysVisible": false, "lineup": {"formation": "4-3-3", "playerPositions": []} }
+  },
+  "otherTactics": {
+    "planName": "string",
+    "summary": "string",
+    "isLineupVisible": true,
+    "areSetPlaysVisible": false,
+    "lineup": { "formation": "4-3-3", "playerPositions": [] }
   }
 }`}
                             response={`{
