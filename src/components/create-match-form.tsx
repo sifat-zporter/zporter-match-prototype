@@ -95,7 +95,7 @@ export function CreateMatchForm({ onMatchCreated, initialData = null, isUpdateMo
   const [categories, setCategories] = useState<MatchCategory[]>([]);
   const [formats, setFormats] = useState<MatchFormat[]>([]);
   const [contests, setContests] = useState<MatchContest[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isDropdownDataLoading, setIsDropdownDataLoading] = useState(true);
 
   // State for team search
   const [homeSearchQuery, setHomeSearchQuery] = useState("");
@@ -113,35 +113,36 @@ export function CreateMatchForm({ onMatchCreated, initialData = null, isUpdateMo
   const form = useForm<z.infer<typeof createMatchSchema>>({
     resolver: zodResolver(createMatchSchema),
     defaultValues: {
-      homeTeamId: initialData?.homeTeam.id || "",
-      awayTeamId: initialData?.awayTeam.id || "",
-      matchDate: initialData?.matchDate ? new Date(initialData.matchDate) : new Date(),
-      matchStartTime: initialData?.startTime || "16:00",
-      matchLocation: initialData?.location.name || "Sollentunavallen",
-      matchArena: initialData?.userGeneratedData?.eventDetails.matchArena || "Main Pitch",
-      categoryId: initialData?.userGeneratedData?.eventDetails.categoryId || "",
-      formatId: initialData?.userGeneratedData?.eventDetails.formatId || "",
-      matchType: initialData?.userGeneratedData?.eventDetails.matchType || "HOME",
-      matchPeriod: initialData?.scheduleDetails?.numberOfPeriods || 2,
-      matchTime: initialData?.scheduleDetails?.periodTime || 45,
-      matchPause: initialData?.scheduleDetails?.pauseTime || 15,
-      matchHeadLine: initialData?.eventDetails?.headline || "Match Zporter Cup 2023",
-      description: initialData?.eventDetails?.description || 'Match against FC Barcelona U15 starts at 16.00.',
-      gatheringTime: initialData?.eventDetails?.gatheringTime ? new Date(initialData.eventDetails.gatheringTime) : new Date(),
-      fullDayScheduling: initialData?.eventDetails?.fullDayScheduling || false,
-      endTime: initialData?.eventDetails?.endTime ? new Date(initialData.eventDetails.endTime) : new Date(),
-      isRecurring: initialData?.eventDetails?.isRecurring || false,
-      notificationMinutesBefore: initialData?.eventDetails?.notificationMinutesBefore || 60,
-      markAsOccupied: initialData?.eventDetails?.markAsOccupied || true,
-      isPrivate: initialData?.eventDetails?.isPrivate || false,
-      contestId: initialData?.settings?.contestId || "",
+      homeTeamId: "",
+      awayTeamId: "",
+      matchDate: new Date(),
+      matchStartTime: "16:00",
+      matchLocation: "Sollentunavallen",
+      matchArena: "Main Pitch",
+      categoryId: "",
+      formatId: "",
+      matchType: "HOME",
+      matchPeriod: 2,
+      matchTime: 45,
+      matchPause: 15,
+      matchHeadLine: "Match Zporter Cup 2023",
+      description: 'Match against FC Barcelona U15 starts at 16.00.',
+      gatheringTime: new Date(),
+      fullDayScheduling: false,
+      endTime: new Date(),
+      isRecurring: false,
+      notificationMinutesBefore: 60,
+      markAsOccupied: true,
+      isPrivate: false,
+      contestId: "",
     },
   });
 
+  // Effect to fetch dropdown data
   useEffect(() => {
     async function fetchDropdownData() {
       try {
-        setIsLoading(true);
+        setIsDropdownDataLoading(true);
         const [catData, formatData, contestData] = await Promise.all([
           apiClient<MatchCategory[]>("/match-category"),
           apiClient<MatchFormat[]>("/match-format"),
@@ -150,42 +151,6 @@ export function CreateMatchForm({ onMatchCreated, initialData = null, isUpdateMo
         setCategories(catData.filter(c => c.name));
         setFormats(formatData.filter(f => f.name));
         setContests(contestData.filter(c => c.name));
-
-        if (isUpdateMode && initialData) {
-            const details = initialData.userGeneratedData?.eventDetails;
-            const schedule = initialData.scheduleDetails;
-            const settings = initialData.settings;
-
-            form.reset({
-                homeTeamId: initialData.homeTeam.id,
-                awayTeamId: initialData.awayTeam.id,
-                categoryId: details?.categoryId || "",
-                formatId: details?.formatId || "",
-                contestId: settings?.contestId || "",
-                matchDate: initialData.matchDate ? new Date(initialData.matchDate) : new Date(),
-                matchStartTime: initialData.startTime,
-                matchType: details?.matchType || "HOME",
-                matchPeriod: schedule?.numberOfPeriods || 2,
-                matchTime: schedule?.periodTime || 45,
-                matchPause: schedule?.pauseTime || 15,
-                matchHeadLine: initialData.eventDetails?.headline || "",
-                matchLocation: initialData.location.name,
-                matchArena: details?.matchArena || "",
-                description: initialData.eventDetails?.description || "",
-                gatheringTime: initialData.eventDetails?.gatheringTime ? new Date(initialData.eventDetails.gatheringTime) : new Date(),
-                fullDayScheduling: initialData.eventDetails?.fullDayScheduling || false,
-                endTime: initialData.eventDetails?.endTime ? new Date(initialData.eventDetails.endTime) : new Date(),
-                isRecurring: initialData.eventDetails?.isRecurring || false,
-                recurringUntil: initialData.eventDetails?.recurringUntil,
-                notificationMinutesBefore: initialData.eventDetails?.notificationMinutesBefore || 60,
-                markAsOccupied: initialData.eventDetails?.markAsOccupied || false,
-                isPrivate: initialData.eventDetails?.isPrivate || false,
-            });
-
-            setSelectedHomeTeam({ id: initialData.homeTeam.id, name: initialData.homeTeam.name, logoUrl: initialData.homeTeam.logoUrl });
-            setSelectedAwayTeam({ id: initialData.awayTeam.id, name: initialData.awayTeam.name, logoUrl: initialData.awayTeam.logoUrl });
-        }
-
       } catch (error) {
         toast({
           variant: "destructive",
@@ -193,11 +158,50 @@ export function CreateMatchForm({ onMatchCreated, initialData = null, isUpdateMo
           description: "Failed to load required data. Please try again.",
         });
       } finally {
-        setIsLoading(false);
+        setIsDropdownDataLoading(false);
       }
     }
     fetchDropdownData();
-  }, [toast, initialData, isUpdateMode, form]);
+  }, [toast]);
+
+  // Effect to reset form when in update mode and all data is ready
+  useEffect(() => {
+    if (isUpdateMode && initialData && !isDropdownDataLoading) {
+        const details = initialData.userGeneratedData?.eventDetails;
+        const schedule = initialData.scheduleDetails;
+        const settings = initialData.settings;
+
+        form.reset({
+            homeTeamId: initialData.homeTeam.id,
+            awayTeamId: initialData.awayTeam.id,
+            categoryId: details?.categoryId || "",
+            formatId: details?.formatId || "",
+            contestId: settings?.contestId || "",
+            matchDate: initialData.matchDate ? new Date(initialData.matchDate) : new Date(),
+            matchStartTime: initialData.startTime,
+            matchType: details?.matchType || "HOME",
+            matchPeriod: schedule?.numberOfPeriods || 2,
+            matchTime: schedule?.periodTime || 45,
+            matchPause: schedule?.pauseTime || 15,
+            matchHeadLine: initialData.eventDetails?.headline || "",
+            matchLocation: initialData.location.name,
+            matchArena: details?.matchArena || "",
+            description: initialData.eventDetails?.description || "",
+            gatheringTime: initialData.eventDetails?.gatheringTime ? new Date(initialData.eventDetails.gatheringTime) : new Date(),
+            fullDayScheduling: initialData.eventDetails?.fullDayScheduling || false,
+            endTime: initialData.eventDetails?.endTime ? new Date(initialData.eventDetails.endTime) : new Date(),
+            isRecurring: initialData.eventDetails?.isRecurring || false,
+            recurringUntil: initialData.eventDetails?.recurringUntil,
+            notificationMinutesBefore: initialData.eventDetails?.notificationMinutesBefore || 60,
+            markAsOccupied: initialData.eventDetails?.markAsOccupied || false,
+            isPrivate: initialData.eventDetails?.isPrivate || false,
+        });
+
+        setSelectedHomeTeam({ id: initialData.homeTeam.id, name: initialData.homeTeam.name, logoUrl: initialData.homeTeam.logoUrl });
+        setSelectedAwayTeam({ id: initialData.awayTeam.id, name: initialData.awayTeam.name, logoUrl: initialData.awayTeam.logoUrl });
+    }
+  }, [initialData, isUpdateMode, isDropdownDataLoading, form]);
+
 
   const searchTeams = useCallback(async (query: string, setSearchResults: React.Dispatch<React.SetStateAction<TeamDto[]>>, setIsLoading: React.Dispatch<React.SetStateAction<boolean>>) => {
     if (query.length < 2) {
@@ -307,7 +311,7 @@ export function CreateMatchForm({ onMatchCreated, initialData = null, isUpdateMo
     }
   }
 
-  if (isLoading) {
+  if (isDropdownDataLoading) {
     return <div className="flex items-center justify-center h-64"><Loader2 className="w-8 h-8 animate-spin text-muted-foreground" /></div>;
   }
 
