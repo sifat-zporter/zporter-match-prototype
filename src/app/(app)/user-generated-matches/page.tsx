@@ -132,7 +132,7 @@ export default function UserGeneratedMatchesPage() {
                         method="GET"
                         response={`{
   "pagination": {
-    "total": 2,
+    "total": 3,
     "limit": "100",
     "offset": 0,
     "page": 1,
@@ -142,6 +142,8 @@ export default function UserGeneratedMatchesPage() {
     {
       "id": "match-1757261521844",
       "source": "user-generated",
+      "sourceId": null,
+      "createdBy": "4uc8OAiLTLZXAxNFa96fNW0pcDH3",
       "status": "draft",
       "createdAt": "2025-09-07T16:12:01.844Z",
       "updatedAt": "2025-09-07T16:12:01.844Z",
@@ -149,9 +151,41 @@ export default function UserGeneratedMatchesPage() {
       "description": "Match against FC Barcelona U15 starts at 16.00.",
       "startDate": { "_seconds": 1757239200, "_nanoseconds": 0 },
       "endDate": { "_seconds": 1757241900, "_nanoseconds": 0 },
-      "homeTeam": { "id": "xjW4II6khRys9SFDTunP", "name": "Home Team", "logoUrl": "" },
-      "awayTeam": { "id": "fYv81QZ1K7ya7SUYqHoZ", "name": "Away Team", "logoUrl": "" },
-      "venue": { "name": "Sollentunavallen" },
+      "timezone": "Asia/Dhaka",
+      "duration": 45,
+      "homeTeam": {
+        "id": "xjW4II6khRys9SFDTunP", "name": "Home Team", "logoUrl": "", "players": []
+      },
+      "awayTeam": {
+        "id": "fYv81QZ1K7ya7SUYqHoZ", "name": "Away Team", "logoUrl": "", "players": []
+      },
+      "competition": {
+        "id": "AyN2qV3i5OBmuwFz5Bsw", "name": "Friendly Match", "type": "friendly"
+      },
+      "scores": {
+        "home": 0, "away": 0, "homePeriod1": 0, "awayPeriod1": 0, "homePeriod2": 0,
+        "awayPeriod2": 0, "homeExtraTime": 0, "awayExtraTime": 0, "homePenalties": 0,
+        "awayPenalties": 0, "winner": null
+      },
+      "venue": {
+        "id": null, "name": "Sollentunavallen", "city": "", "country": "",
+        "coordinates": { "lat": 0, "lng": 0 }
+      },
+      "userGeneratedData": {
+        "eventDetails": {
+          "homeTeamId": "xjW4II6khRys9SFDTunP", "awayTeamId": "fYv81QZ1K7ya7SUYqHoZ",
+          "categoryId": "BI96ZmQxBakw1hw2Lz3H", "formatId": "LAcQoRc2Rdn2UuqZABQd",
+          "matchDate": "2025-09-07", "matchStartTime": "16:00", "matchType": "HOME",
+          "matchPeriod": 2, "matchTime": 45, "matchPause": 15,
+          "matchHeadLine": "Match Zporter Cup 2023", "matchLocation": "Sollentunavallen",
+          "matchArena": "Main Pitch", "contestId": "AyN2qV3i5OBmuwFz5Bsw",
+          "description": "Match against FC Barcelona U15 starts at 16.00.",
+          "gatheringTime": "2025-09-07T16:11:46.586Z", "fullDayScheduling": false,
+          "endTime": "2025-09-07T16:11:46.586Z", "isRecurring": false,
+          "notificationMinutesBefore": 60, "markAsOccupied": true, "isPrivate": false
+        }
+      },
+      "liveLog": { "events": [], "stats": { "goals": { "home": 0, "away": 0 } } },
       "matchDate": "2025-09-07",
       "matchStartTime": "16:00"
     }
