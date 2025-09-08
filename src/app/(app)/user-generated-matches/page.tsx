@@ -149,45 +149,196 @@ export default function UserGeneratedMatchesPage() {
       "updatedAt": "2025-09-07T16:12:01.844Z",
       "name": "Match Zporter Cup 2023",
       "description": "Match against FC Barcelona U15 starts at 16.00.",
-      "startDate": { "_seconds": 1757239200, "_nanoseconds": 0 },
-      "endDate": { "_seconds": 1757241900, "_nanoseconds": 0 },
+      "startDate": {
+        "_seconds": 1757239200,
+        "_nanoseconds": 0
+      },
+      "endDate": {
+        "_seconds": 1757241900,
+        "_nanoseconds": 0
+      },
       "timezone": "Asia/Dhaka",
       "duration": 45,
       "homeTeam": {
-        "id": "xjW4II6khRys9SFDTunP", "name": "Home Team", "logoUrl": "", "players": []
+        "id": "xjW4II6khRys9SFDTunP",
+        "source": "user-generated",
+        "sourceId": null,
+        "name": "Home Team",
+        "shortName": "HT",
+        "code": "HT",
+        "logoUrl": "",
+        "country": "",
+        "founded": null,
+        "isNational": false,
+        "venue": null,
+        "players": []
       },
       "awayTeam": {
-        "id": "fYv81QZ1K7ya7SUYqHoZ", "name": "Away Team", "logoUrl": "", "players": []
+        "id": "fYv81QZ1K7ya7SUYqHoZ",
+        "source": "user-generated",
+        "sourceId": null,
+        "name": "Away Team",
+        "shortName": "AT",
+        "code": "AT",
+        "logoUrl": "",
+        "country": "",
+        "founded": null,
+        "isNational": false,
+        "venue": null,
+        "players": []
       },
       "competition": {
-        "id": "AyN2qV3i5OBmuwFz5Bsw", "name": "Friendly Match", "type": "friendly"
+        "id": "AyN2qV3i5OBmuwFz5Bsw",
+        "source": "user-generated",
+        "sourceId": null,
+        "name": "Friendly Match",
+        "shortName": "Friendly",
+        "type": "friendly",
+        "country": "",
+        "logoUrl": "",
+        "tier": 0
       },
+      "season": null,
+      "stage": null,
+      "round": null,
       "scores": {
-        "home": 0, "away": 0, "homePeriod1": 0, "awayPeriod1": 0, "homePeriod2": 0,
-        "awayPeriod2": 0, "homeExtraTime": 0, "awayExtraTime": 0, "homePenalties": 0,
-        "awayPenalties": 0, "winner": null
+        "home": 0,
+        "away": 0,
+        "homePeriod1": 0,
+        "awayPeriod1": 0,
+        "homePeriod2": 0,
+        "awayPeriod2": 0,
+        "homeExtraTime": 0,
+        "awayExtraTime": 0,
+        "homePenalties": 0,
+        "awayPenalties": 0,
+        "winner": null
       },
       "venue": {
-        "id": null, "name": "Sollentunavallen", "city": "", "country": "",
-        "coordinates": { "lat": 0, "lng": 0 }
-      },
-      "userGeneratedData": {
-        "eventDetails": {
-          "homeTeamId": "xjW4II6khRys9SFDTunP", "awayTeamId": "fYv81QZ1K7ya7SUYqHoZ",
-          "categoryId": "BI96ZmQxBakw1hw2Lz3H", "formatId": "LAcQoRc2Rdn2UuqZABQd",
-          "matchDate": "2025-09-07", "matchStartTime": "16:00", "matchType": "HOME",
-          "matchPeriod": 2, "matchTime": 45, "matchPause": 15,
-          "matchHeadLine": "Match Zporter Cup 2023", "matchLocation": "Sollentunavallen",
-          "matchArena": "Main Pitch", "contestId": "AyN2qV3i5OBmuwFz5Bsw",
-          "description": "Match against FC Barcelona U15 starts at 16.00.",
-          "gatheringTime": "2025-09-07T16:11:46.586Z", "fullDayScheduling": false,
-          "endTime": "2025-09-07T16:11:46.586Z", "isRecurring": false,
-          "notificationMinutesBefore": 60, "markAsOccupied": true, "isPrivate": false
+        "id": null,
+        "sourceId": null,
+        "name": "Sollentunavallen",
+        "city": "",
+        "country": "",
+        "capacity": 0,
+        "surface": "",
+        "coordinates": {
+          "lat": 0,
+          "lng": 0
         }
       },
-      "liveLog": { "events": [], "stats": { "goals": { "home": 0, "away": 0 } } },
+      "referee": null,
+      "assistantReferees": [],
+      "fourthOfficial": null,
+      "attendance": 0,
+      "weather": {
+        "temperature": 0,
+        "humidity": 0,
+        "windSpeed": 0,
+        "description": ""
+      },
+      "featuredPlayers": [],
+      "isFeatured": false,
+      "isPrivate": false,
+      "likes": 0,
+      "followers": 0,
+      "sportmonksData": {
+        "raw": null,
+        "lastChanged": null,
+        "hasLineup": false,
+        "hasEvents": false,
+        "hasStats": false,
+        "live": false
+      },
+      "userGeneratedData": {
+        "notes": [],
+        "reviews": [],
+        "invites": [],
+        "tacticalPlan": null,
+        "eventDetails": {
+          "homeTeamId": "xjW4II6khRys9SFDTunP",
+          "awayTeamId": "fYv81QZ1K7ya7SUYqHoZ",
+          "categoryId": "BI96ZmQxBakw1hw2Lz3H",
+          "formatId": "LAcQoRc2Rdn2UuqZABQd",
+          "matchDate": "2025-09-07",
+          "matchStartTime": "16:00",
+          "matchType": "HOME",
+          "matchPeriod": 2,
+          "matchTime": 45,
+          "matchPause": 15,
+          "matchHeadLine": "Match Zporter Cup 2023",
+          "matchLocation": "Sollentunavallen",
+          "matchArena": "Main Pitch",
+          "contestId": "AyN2qV3i5OBmuwFz5Bsw",
+          "description": "Match against FC Barcelona U15 starts at 16.00.",
+          "gatheringTime": "2025-09-07T16:11:46.586Z",
+          "fullDayScheduling": false,
+          "endTime": "2025-09-07T16:11:46.586Z",
+          "isRecurring": false,
+          "notificationMinutesBefore": 60,
+          "markAsOccupied": true,
+          "isPrivate": false,
+          "yourTeamName": "Drake Team",
+          "opponentTeamName": "123123123"
+        },
+        "scheduleDetails": null,
+        "settings": {
+          "isNotificationOn": false,
+          "notificationSendBefore": 60,
+          "isOccupied": false,
+          "isPrivate": false
+        }
+      },
+      "liveLog": {
+        "events": [],
+        "stats": {
+          "goals": { "home": 0, "away": 0 },
+          "shots": { "home": 0, "away": 0 },
+          "shotsOnGoal": { "home": 0, "away": 0 },
+          "shotsOffGoal": { "home": 0, "away": 0 },
+          "shotsBlocked": { "home": 0, "away": 0 },
+          "penalties": { "home": 0, "away": 0 },
+          "corners": { "home": 0, "away": 0 },
+          "freeKicks": { "home": 0, "away": 0 },
+          "goalKicks": { "home": 0, "away": 0 },
+          "throwIns": { "home": 0, "away": 0 },
+          "offsides": { "home": 0, "away": 0 },
+          "yellowCards": { "home": 0, "away": 0 },
+          "redCards": { "home": 0, "away": 0 },
+          "possession": { "home": 0, "away": 0 },
+          "possessionMinutes": { "home": 0, "away": 0 },
+          "passesOn": { "home": 0, "away": 0 },
+          "passesOff": { "home": 0, "away": 0 },
+          "wonBalls": { "home": 0, "away": 0 },
+          "fouls": { "home": 0, "away": 0 }
+        },
+        "isActive": false
+      },
+      "tags": [],
+      "popularity": 0.08872756251964731,
+      "version": 1,
+      "homeTeamId": "xjW4II6khRys9SFDTunP",
+      "awayTeamId": "fYv81QZ1K7ya7SUYqHoZ",
+      "categoryId": "BI96ZmQxBakw1hw2Lz3H",
+      "formatId": "LAcQoRc2Rdn2UuqZABQd",
       "matchDate": "2025-09-07",
-      "matchStartTime": "16:00"
+      "matchStartTime": "16:00",
+      "matchType": "HOME",
+      "matchPeriod": 2,
+      "matchTime": 45,
+      "matchPause": 15,
+      "matchHeadLine": "Match Zporter Cup 2023",
+      "matchLocation": "Sollentunavallen",
+      "matchArena": "Main Pitch",
+      "contestId": "AyN2qV3i5OBmuwFz5Bsw",
+      "gatheringTime": "2025-09-07T16:11:46.586Z",
+      "fullDayScheduling": false,
+      "endTime": "2025-09-07T16:11:46.586Z",
+      "isRecurring": false,
+      "notificationMinutesBefore": 60,
+      "markAsOccupied": true,
+      "yourTeamName": "Drake Team",
+      "opponentTeamName": "123123123"
     }
   ]
 }`}
