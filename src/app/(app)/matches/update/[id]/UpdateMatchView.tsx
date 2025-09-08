@@ -60,6 +60,15 @@ export default function UpdateMatchView({ matchId }: { matchId: string }) {
         try {
             setIsLoading(true);
             const fetchedMatchEntity = await apiClient<MatchEntity>(`/matches/${matchId}`);
+            
+            // Step 1: Toast the fetched match data
+            const categoryId = fetchedMatchEntity.userGeneratedData?.eventDetails?.categoryId;
+            toast({
+                title: "Step 1: Match Data Fetched",
+                description: `Successfully fetched match. Category ID is: ${categoryId || 'Not Found'}`,
+                duration: 3000,
+            });
+
             const transformedMatch = transformMatchEntityToMatch(fetchedMatchEntity);
             setMatch(transformedMatch);
         } catch (error) {
