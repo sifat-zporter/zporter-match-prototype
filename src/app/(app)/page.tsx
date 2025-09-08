@@ -16,6 +16,7 @@ import type { Match, Cup } from "@/lib/data";
 import { apiClient } from "@/lib/api-client";
 import { format, parse } from "date-fns";
 import type { GetMatchesResponse, MatchListItem } from "@/lib/models";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // --- Data Transformation Layer ---
 
@@ -95,10 +96,15 @@ function groupMatchesIntoCups(matches: Match[]): Cup[] {
 
 
 export default function MatchesHubPage() {
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [matches, setMatches] = useState<Match[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Set the initial date only on the client side to avoid hydration mismatch
+    setSelectedDate(new Date());
+  }, []);
 
   useEffect(() => {
     async function getMatchesForDate(date: Date) {
@@ -120,8 +126,10 @@ export default function MatchesHubPage() {
         setIsLoading(false);
       }
     }
-
-    getMatchesForDate(selectedDate);
+    
+    if (selectedDate) {
+      getMatchesForDate(selectedDate);
+    }
   }, [selectedDate]);
   
   const playerMatches = matches.filter(m => m.featuredPlayers && m.featuredPlayers.length > 0);
@@ -183,18 +191,30 @@ export default function MatchesHubPage() {
                           </SheetTrigger>
                       </div>
                    </div>
-                   <DateNavigator selectedDate={selectedDate} onDateChange={setSelectedDate} />
+                   {selectedDate ? (
+                     <DateNavigator selectedDate={selectedDate} onDateChange={setSelectedDate} />
+                   ) : (
+                     <Skeleton className="h-[52px] w-full" />
+                   )}
                    {renderContent(<PlayerMatchesList matches={playerMatches} />)}
                 </TabsContent>
                 <TabsContent value="teams">
                    <div className="pt-4 space-y-4">
-                    <DateNavigator selectedDate={selectedDate} onDateChange={setSelectedDate} />
+                    {selectedDate ? (
+                      <DateNavigator selectedDate={selectedDate} onDateChange={setSelectedDate} />
+                    ) : (
+                      <Skeleton className="h-[52px] w-full" />
+                    )}
                     {renderContent(<MatchesList matches={matches} />)}
                   </div>
                 </TabsContent>
                  <TabsContent value="series">
                    <div className="pt-4 space-y-4">
-                    <DateNavigator selectedDate={selectedDate} onDateChange={setSelectedDate} />
+                    {selectedDate ? (
+                      <DateNavigator selectedDate={selectedDate} onDateChange={setSelectedDate} />
+                    ) : (
+                      <Skeleton className="h-[52px] w-full" />
+                    )}
                     {renderContent(<SeriesMatchesList matches={matches} />)}
                   </div>
                 </TabsContent>
@@ -209,7 +229,11 @@ export default function MatchesHubPage() {
                           </SheetTrigger>
                       </div>
                    </div>
-                    <DateNavigator selectedDate={selectedDate} onDateChange={setSelectedDate} />
+                    {selectedDate ? (
+                      <DateNavigator selectedDate={selectedDate} onDateChange={setSelectedDate} />
+                    ) : (
+                      <Skeleton className="h-[52px] w-full" />
+                    )}
                     {renderContent(<CupMatchesList cups={cups} />)}
                 </TabsContent>
               </Tabs>
