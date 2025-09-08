@@ -151,23 +151,32 @@ export function CreateMatchForm({ onMatchCreated, initialData = null, isUpdateMo
         setFormats(formatData.filter(f => f.name));
         setContests(contestData.filter(c => c.name));
 
-        if (initialData) {
+        if (initialData && initialData.userGeneratedData?.eventDetails) {
+            const details = initialData.userGeneratedData.eventDetails;
             form.reset({
-                ...initialData.eventDetails,
-                ...initialData.scheduleDetails,
-                ...initialData.settings,
-                homeTeamId: initialData.homeTeam.id,
-                awayTeamId: initialData.awayTeam.id,
-                matchDate: parseISO(initialData.matchDate),
-                matchStartTime: initialData.startTime,
-                matchPeriod: initialData.scheduleDetails.numberOfPeriods,
-                matchTime: initialData.scheduleDetails.periodTime,
-                matchPause: initialData.scheduleDetails.pauseTime,
-                matchHeadLine: initialData.eventDetails.headline,
-                matchLocation: initialData.location.name,
-                matchArena: initialData.location.address, // Assuming address is arena
-                gatheringTime: parseISO(initialData.eventDetails.gatheringTime!),
-                endTime: parseISO(initialData.eventDetails.endTime!),
+                homeTeamId: details.homeTeamId || initialData.homeTeam.id,
+                awayTeamId: details.awayTeamId || initialData.awayTeam.id,
+                categoryId: details.categoryId,
+                formatId: details.formatId,
+                matchDate: new Date(details.matchDate),
+                matchStartTime: details.matchStartTime,
+                matchType: details.matchType,
+                matchPeriod: details.matchPeriod,
+                matchTime: details.matchTime,
+                matchPause: details.matchPause,
+                matchHeadLine: details.matchHeadLine,
+                matchLocation: details.matchLocation,
+                matchArena: details.matchArena,
+                contestId: details.contestId,
+                description: details.description,
+                gatheringTime: new Date(details.gatheringTime),
+                fullDayScheduling: details.fullDayScheduling,
+                endTime: new Date(details.endTime),
+                isRecurring: details.isRecurring,
+                recurringUntil: details.recurringUntil,
+                notificationMinutesBefore: details.notificationMinutesBefore,
+                markAsOccupied: details.markAsOccupied,
+                isPrivate: details.isPrivate,
             });
             setSelectedHomeTeam(initialData.homeTeam);
             setSelectedAwayTeam(initialData.awayTeam);

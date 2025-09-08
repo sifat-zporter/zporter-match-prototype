@@ -14,6 +14,41 @@ import type { Match } from "@/lib/data";
 import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { apiClient } from "@/lib/api-client";
+import type { MatchEntity } from "@/lib/models";
+
+// Helper to transform the detailed API entity into the simplified frontend Match type
+function transformMatchEntityToMatch(entity: MatchEntity): Match {
+    // This is a simplified transformation. A real app might need more complex logic.
+    return {
+        id: entity.id,
+        status: entity.status,
+        homeTeam: { 
+            id: entity.homeTeam.id, 
+            name: entity.homeTeam.name, 
+            logoUrl: entity.homeTeam.logoUrl || 'https://placehold.co/40x40.png' 
+        },
+        awayTeam: { 
+            id: entity.awayTeam.id, 
+            name: entity.awayTeam.name, 
+            logoUrl: entity.awayTeam.logoUrl || 'https://placehold.co/40x40.png' 
+        },
+        matchDate: entity.matchDate,
+        startTime: entity.matchStartTime,
+        location: { name: entity.venue?.name || 'N/A', address: '' },
+        score: entity.scores,
+        // Mocked or default values for fields not directly in the MatchEntity
+        events: [],
+        notes: entity.userGeneratedData?.notes || [],
+        reviews: entity.userGeneratedData?.reviews || [],
+        userGeneratedData: entity.userGeneratedData,
+        eventDetails: entity.userGeneratedData?.eventDetails,
+        scheduleDetails: entity.userGeneratedData?.scheduleDetails,
+        settings: entity.userGeneratedData?.settings,
+        createdAt: entity.createdAt,
+        updatedAt: entity.updatedAt,
+    } as Match;
+}
+
 
 // This is the client-side view component.
 export default function UpdateMatchView({ matchId }: { matchId: string }) {
@@ -24,8 +59,9 @@ export default function UpdateMatchView({ matchId }: { matchId: string }) {
     const fetchMatch = useCallback(async () => {
         try {
             setIsLoading(true);
-            const fetchedMatch = await apiClient<Match>(`/matches/${matchId}`);
-            setMatch(fetchedMatch);
+            const fetchedMatchEntity = await apiClient<MatchEntity>(`/matches/${matchId}`);
+            const transformedMatch = transformMatchEntityToMatch(fetchedMatchEntity);
+            setMatch(transformedMatch);
         } catch (error) {
             console.error("Failed to fetch match for update:", error);
             toast({

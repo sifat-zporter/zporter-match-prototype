@@ -101,6 +101,9 @@ export type Match = {
     comment: string;
     createdAt: string;
   }>;
+  userGeneratedData?: {
+    eventDetails: any;
+  };
   eventDetails: {
     headline?: string;
     description?: string;
