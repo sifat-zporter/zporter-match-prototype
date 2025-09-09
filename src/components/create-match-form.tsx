@@ -164,42 +164,43 @@ export function CreateMatchForm({ onMatchCreated, initialData = null, isUpdateMo
     fetchDropdownData();
   }, [toast]);
 
-  // Effect to reset form when in update mode and all data is ready
+  // Effect to reset form when in update mode and all dropdown data is ready
   useEffect(() => {
     if (isUpdateMode && initialData && !isDropdownDataLoading) {
         const details = initialData.userGeneratedData?.eventDetails;
         const schedule = initialData.userGeneratedData?.scheduleDetails;
-        
+        const settings = initialData.userGeneratedData?.settings;
+
         form.reset({
             homeTeamId: initialData.homeTeam.id,
             awayTeamId: initialData.awayTeam.id,
             categoryId: details?.categoryId || "",
             formatId: details?.formatId || "",
             contestId: details?.contestId || "",
-            matchDate: initialData.matchDate ? new Date(initialData.matchDate) : new Date(),
-            matchStartTime: initialData.startTime,
+            matchDate: details?.matchDate ? parseISO(details.matchDate) : new Date(),
+            matchStartTime: details?.matchStartTime || "00:00",
             matchType: details?.matchType || "HOME",
-            matchPeriod: schedule?.numberOfPeriods || 2,
-            matchTime: schedule?.periodTime || 45,
-            matchPause: schedule?.pauseTime || 15,
+            matchPeriod: details?.matchPeriod || 2,
+            matchTime: details?.matchTime || 45,
+            matchPause: details?.matchPause || 15,
             matchHeadLine: details?.matchHeadLine || "",
-            matchLocation: initialData.location.name,
+            matchLocation: details?.matchLocation || "N/A",
             matchArena: details?.matchArena || "",
             description: initialData.description || "",
-            gatheringTime: details?.gatheringTime ? new Date(details.gatheringTime) : new Date(),
+            gatheringTime: initialData.startDate ? parseISO(initialData.startDate) : new Date(),
             fullDayScheduling: schedule?.matchIsAllDay || false,
-            endTime: schedule?.matchEnd ? new Date(schedule.matchEnd) : new Date(),
+            endTime: initialData.endDate ? parseISO(initialData.endDate) : new Date(),
             isRecurring: schedule?.matchRecurringType !== 'DOES_NOT_REPEAT',
             recurringUntil: schedule?.recurringUntil,
-            notificationMinutesBefore: initialData.settings?.notificationSendBefore || 60,
-            markAsOccupied: initialData.settings?.isOccupied || false,
-            isPrivate: initialData.settings?.isPrivate || false,
+            notificationMinutesBefore: settings?.notificationSendBefore || 60,
+            markAsOccupied: settings?.isOccupied || false,
+            isPrivate: settings?.isPrivate || false,
         });
 
         setSelectedHomeTeam({ id: initialData.homeTeam.id, name: initialData.homeTeam.name, logoUrl: initialData.homeTeam.logoUrl });
         setSelectedAwayTeam({ id: initialData.awayTeam.id, name: initialData.awayTeam.name, logoUrl: initialData.awayTeam.logoUrl });
     }
-  }, [initialData, isUpdateMode, isDropdownDataLoading, form, categories, toast]);
+  }, [initialData, isUpdateMode, isDropdownDataLoading, form]);
 
 
   const searchTeams = useCallback(async (query: string, setSearchResults: React.Dispatch<React.SetStateAction<TeamDto[]>>, setIsLoading: React.Dispatch<React.SetStateAction<boolean>>) => {
@@ -264,6 +265,8 @@ export function CreateMatchForm({ onMatchCreated, initialData = null, isUpdateMo
         return;
       }
 
+      // This payload is used for both create and update
+      // For PATCH, only changed fields are sent, but for simplicity here we send all.
       const payload: CreateMatchDto = {
         ...values,
         yourTeamName: selectedHomeTeam.name,
@@ -286,7 +289,7 @@ export function CreateMatchForm({ onMatchCreated, initialData = null, isUpdateMo
          });
       }
 
-
+      // A more robust transformation might be needed, but this covers the basics
       const transformedMatch: Match = {
         id: newMatchResponse.id,
         homeTeam: { id: newMatchResponse.homeTeam.id, name: newMatchResponse.homeTeam.name, logoUrl: newMatchResponse.homeTeam.logoUrl || 'https://placehold.co/40x40.png' },
@@ -295,7 +298,7 @@ export function CreateMatchForm({ onMatchCreated, initialData = null, isUpdateMo
         startTime: format(new Date(newMatchResponse.startDate), 'HH:mm'),
         location: { name: newMatchResponse.venue.name, address: '' },
         status: newMatchResponse.status,
-        ...newMatchResponse.userGeneratedData.eventDetails,
+        ...newMatchResponse
       } as Match; 
 
       onMatchCreated(transformedMatch);
@@ -793,7 +796,6 @@ export function CreateMatchForm({ onMatchCreated, initialData = null, isUpdateMo
                         description="Called on component mount to populate the 'Category' dropdown."
                         endpoint="/match-category"
                         method="GET"
-                        notes="This endpoint populates the options available in the 'Category' select field."
                         response={`[
   {
     "id": "string",
@@ -810,7 +812,6 @@ export function CreateMatchForm({ onMatchCreated, initialData = null, isUpdateMo
                         description="Called on component mount to populate the 'Format' dropdown."
                         endpoint="/match-format"
                         method="GET"
-                        notes="This endpoint populates the options available in the 'Format' select field."
                         response={`[
   {
     "id": "string",
@@ -828,7 +829,6 @@ export function CreateMatchForm({ onMatchCreated, initialData = null, isUpdateMo
                         description="Called on component mount to populate the 'Ev. Contest' dropdown."
                         endpoint="/match-contests"
                         method="GET"
-                        notes="This endpoint populates the options available in the 'Ev. Contest' select field."
                         response={`[
   {
     "id": "string",
@@ -845,10 +845,10 @@ export function CreateMatchForm({ onMatchCreated, initialData = null, isUpdateMo
                     />
                      <ApiDocumentationViewer
                         title="Create Match Draft"
-                        description="Called when the 'Save Draft & Continue' button is clicked. It creates the initial match record."
+                        description="Called when the 'Save Draft & Continue' button is clicked in 'Create' mode. It creates the initial match record."
                         endpoint="/matches"
                         method="POST"
-                        notes="This is the first and most critical step. The 'id' returned in the response is required to save data in all other tabs (Invites, Plan, Notes, etc.)."
+                        notes="This is the first and most critical step for creating a new match. The 'id' returned in the response is required to save data in all other tabs (Invites, Plan, Notes, etc.)."
                         requestPayload={`{
   "homeTeamId": "string",
   "awayTeamId": "string",
@@ -876,256 +876,51 @@ export function CreateMatchForm({ onMatchCreated, initialData = null, isUpdateMo
 }`}
                         response={`
 {
-  "id": "match-1757157909618",
+  "id": "new-match-id",
   "source": "user-generated",
-  "sourceId": null,
-  "createdBy": "4uc8OAiLTLZXAxNFa96fNW0pcDH3",
   "status": "draft",
   "createdAt": "2025-09-06T11:25:09.618Z",
   "updatedAt": "2025-09-06T11:25:09.618Z",
   "name": "Match Zporter Cup 2023",
-  "description": "Match against FC Barcelona U15 starts at 16.00.",
-  "startDate": "2025-09-06T10:00:00.000Z",
-  "endDate": "2025-09-06T10:45:00.000Z",
-  "timezone": "Asia/Dhaka",
-  "duration": 45,
-  "homeTeam": {
-    "id": "xjW4II6khRys9SFDTunP",
-    "source": "user-generated",
-    "sourceId": null,
-    "name": "Home Team",
-    "shortName": "HT",
-    "code": "HT",
-    "logoUrl": "",
-    "country": "",
-    "founded": null,
-    "isNational": false,
-    "venue": null,
-    "players": []
-  },
-  "awayTeam": {
-    "id": "fYv81QZ1K7ya7SUYqHoZ",
-    "source": "user-generated",
-    "sourceId": null,
-    "name": "Away Team",
-    "shortName": "AT",
-    "code": "AT",
-    "logoUrl": "",
-    "country": "",
-    "founded": null,
-    "isNational": false,
-    "venue": null,
-    "players": []
-  },
-  "competition": {
-    "id": "AyN2qV3i5OBmuwFz5Bsw",
-    "source": "user-generated",
-    "sourceId": null,
-    "name": "Friendly Match",
-    "shortName": "Friendly",
-    "type": "friendly",
-    "country": "",
-    "logoUrl": "",
-    "tier": 0
-  },
-  "season": null,
-  "stage": null,
-  "round": null,
-  "scores": {
-    "home": 0,
-    "away": 0,
-    "homePeriod1": 0,
-    "awayPeriod1": 0,
-    "homePeriod2": 0,
-    "awayPeriod2": 0,
-    "homeExtraTime": 0,
-    "awayExtraTime": 0,
-    "homePenalties": 0,
-    "awayPenalties": 0,
-    "winner": null
-  },
-  "venue": {
-    "id": null,
-    "sourceId": null,
-    "name": "Sollentunavallen",
-    "city": "",
-    "country": "",
-    "capacity": 0,
-    "surface": "",
-    "coordinates": {
-      "lat": 0,
-      "lng": 0
-    }
-  },
-  "referee": null,
-  "assistantReferees": [],
-  "fourthOfficial": null,
-  "attendance": 0,
-  "weather": {
-    "temperature": 0,
-    "humidity": 0,
-    "windSpeed": 0,
-    "description": ""
-  },
-  "featuredPlayers": [],
-  "isFeatured": false,
-  "isPrivate": false,
-  "likes": 0,
-  "followers": 0,
-  "sportmonksData": {
-    "raw": null,
-    "lastChanged": null,
-    "hasLineup": false,
-    "hasEvents": false,
-    "hasStats": false,
-    "live": false
-  },
+  "homeTeam": { "id": "...", "name": "Home Team", ... },
+  "awayTeam": { "id": "...", "name": "Away Team", ... },
   "userGeneratedData": {
-    "notes": [],
-    "reviews": [],
-    "invites": [],
-    "tacticalPlan": null,
     "eventDetails": {
-      "homeTeamId": "xjW4II6khRys9SFDTunP",
-      "awayTeamId": "fYv81QZ1K7ya7SUYqHoZ",
-      "categoryId": "BI96ZmQxBakw1hw2Lz3H",
-      "formatId": "LAcQoRc2Rdn2UuqZABQd",
       "matchDate": "2025-09-06",
       "matchStartTime": "16:00",
-      "matchType": "HOME",
-      "matchPeriod": 2,
-      "matchTime": 45,
-      "matchPause": 15,
-      "matchHeadLine": "Match Zporter Cup 2023",
-      "matchLocation": "Sollentunavallen",
-      "matchArena": "Main Pitch",
-      "contestId": "AyN2qV3i5OBmuwFz5Bsw",
-      "description": "Match against FC Barcelona U15 starts at 16.00.",
-      "gatheringTime": "2025-09-06T11:23:34.208Z",
-      "fullDayScheduling": false,
-      "endTime": "2025-09-06T11:23:34.208Z",
-      "isRecurring": false,
-      "notificationMinutesBefore": 60,
-      "markAsOccupied": true,
-      "isPrivate": false,
-      "yourTeamName": "Drake Team",
-      "opponentTeamName": "123123123"
-    },
-    "scheduleDetails": null,
-    "settings": {
-      "isNotificationOn": false,
-      "notificationSendBefore": 60,
-      "isOccupied": false,
-      "isPrivate": false
+       ...
     }
   },
-  "liveLog": {
-    "events": [],
-    "stats": {
-      "goals": {
-        "home": 0,
-        "away": 0
-      },
-      "shots": {
-        "home": 0,
-        "away": 0
-      },
-      "shotsOnGoal": {
-        "home": 0,
-        "away": 0
-      },
-      "shotsOffGoal": {
-        "home": 0,
-        "away": 0
-      },
-      "shotsBlocked": {
-        "home": 0,
-        "away": 0
-      },
-      "penalties": {
-        "home": 0,
-        "away": 0
-      },
-      "corners": {
-        "home": 0,
-        "away": 0
-      },
-      "freeKicks": {
-        "home": 0,
-        "away": 0
-      },
-      "goalKicks": {
-        "home": 0,
-        "away": 0
-      },
-      "throwIns": {
-        "home": 0,
-        "away": 0
-      },
-      "offsides": {
-        "home": 0,
-        "away": 0
-      },
-      "yellowCards": {
-        "home": 0,
-        "away": 0
-      },
-      "redCards": {
-        "home": 0,
-        "away": 0
-      },
-      "possession": {
-        "home": 0,
-        "away": 0
-      },
-      "possessionMinutes": {
-        "home": 0,
-        "away": 0
-      },
-      "passesOn": {
-        "home": 0,
-        "away": 0
-      },
-      "passesOff": {
-        "home": 0,
-        "away": 0
-      },
-      "wonBalls": {
-        "home": 0,
-        "away": 0
-      },
-      "fouls": {
-        "home": 0,
-        "away": 0
-      }
-    },
-    "isActive": false
+  ... // other fields
+}`}
+                    />
+                    <ApiDocumentationViewer
+                        title="Update Match Details"
+                        description="Called when the 'Update Match' button is clicked in 'Update' mode. Performs a partial update."
+                        endpoint="/matches/{id}"
+                        method="PATCH"
+                        notes="You only need to send the fields you want to change. The API will respond with the full, updated match object."
+                        requestPayload={`{
+  "matchHeadLine": "The Grand Final: Titans vs. Giants",
+  "matchDate": "2025-09-21",
+  "matchStartTime": "20:00",
+  "isPrivate": true
+  // ... any other fields from the create payload are also valid
+}`}
+                        response={`
+{
+  "id": "match-12345",
+  "source": "user-generated",
+  "status": "scheduled",
+  "updatedAt": "2025-09-16T14:20:10.555Z",
+  "name": "The Grand Final: Titans vs. Giants",
+  "userGeneratedData": {
+    "eventDetails": {
+      "matchHeadLine": "The Grand Final: Titans vs. Giants"
+      // ... all other event details
+    }
   },
-  "tags": [],
-  "popularity": 0.9863049359178344,
-  "version": 1,
-  "homeTeamId": "xjW4II6khRys9SFDTunP",
-  "awayTeamId": "fYv81QZ1K7ya7SUYqHoZ",
-  "categoryId": "BI96ZmQxBakw1hw2Lz3H",
-  "formatId": "LAcQoRc2Rdn2UuqZABQd",
-  "matchDate": "2025-09-06",
-  "matchStartTime": "16:00",
-  "matchType": "HOME",
-  "matchPeriod": 2,
-  "matchTime": 45,
-  "matchPause": 15,
-  "matchHeadLine": "Match Zporter Cup 2023",
-  "matchLocation": "Sollentunavallen",
-  "matchArena": "Main Pitch",
-  "contestId": "AyN2qV3i5OBmuwFz5Bsw",
-  "gatheringTime": "2025-09-06T11:23:34.208Z",
-  "fullDayScheduling": false,
-  "endTime": "2025-09-06T11:23:34.208Z",
-  "isRecurring": false,
-  "notificationMinutesBefore": 60,
-  "markAsOccupied": true,
-  "yourTeamName": "Drake Team",
-  "opponentTeamName": "123123123"
+  ... // The full, updated EnhancedMatchDto object
 }`}
                     />
                 </AccordionContent>
@@ -1134,3 +929,5 @@ export function CreateMatchForm({ onMatchCreated, initialData = null, isUpdateMo
     </div>
   )
 }
+
+    
