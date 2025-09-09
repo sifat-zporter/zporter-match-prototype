@@ -90,6 +90,19 @@ interface CreateMatchFormProps {
   isUpdateMode?: boolean;
 }
 
+// Helper to safely create a Date object from Firestore's timestamp
+const getDateFromTimestamp = (timestamp: any): Date | null => {
+    if (timestamp && typeof timestamp === 'object' && '_seconds' in timestamp) {
+        return new Date(timestamp._seconds * 1000);
+    }
+    if (typeof timestamp === 'string') {
+        return parseISO(timestamp);
+    }
+    // Return null for invalid or missing timestamps
+    return null;
+};
+
+
 export function CreateMatchForm({ onMatchCreated, initialData = null, isUpdateMode = false }: CreateMatchFormProps) {
   const { toast } = useToast();
   const [categories, setCategories] = useState<MatchCategory[]>([]);
@@ -171,6 +184,10 @@ export function CreateMatchForm({ onMatchCreated, initialData = null, isUpdateMo
         const schedule = initialData.userGeneratedData?.scheduleDetails;
         const settings = initialData.userGeneratedData?.settings;
 
+        // Correctly parse startDate and endDate
+        const gatheringTimeDate = getDateFromTimestamp(initialData.startDate);
+        const endTimeDate = getDateFromTimestamp(initialData.endDate);
+
         form.reset({
             homeTeamId: initialData.homeTeam.id,
             awayTeamId: initialData.awayTeam.id,
@@ -187,9 +204,9 @@ export function CreateMatchForm({ onMatchCreated, initialData = null, isUpdateMo
             matchLocation: details?.matchLocation || "N/A",
             matchArena: details?.matchArena || "",
             description: initialData.description || "",
-            gatheringTime: initialData.startDate ? parseISO(initialData.startDate) : new Date(),
+            gatheringTime: gatheringTimeDate || new Date(),
             fullDayScheduling: schedule?.matchIsAllDay || false,
-            endTime: initialData.endDate ? parseISO(initialData.endDate) : new Date(),
+            endTime: endTimeDate || new Date(),
             isRecurring: schedule?.matchRecurringType !== 'DOES_NOT_REPEAT',
             recurringUntil: schedule?.recurringUntil,
             notificationMinutesBefore: settings?.notificationSendBefore || 60,
@@ -292,15 +309,6 @@ export function CreateMatchForm({ onMatchCreated, initialData = null, isUpdateMo
             body: payload,
          });
       }
-
-      // Helper to safely create a Date object from Firestore's timestamp
-      const getDateFromTimestamp = (timestamp: any): Date => {
-        if (timestamp && typeof timestamp === 'object' && '_seconds' in timestamp) {
-          return new Date(timestamp._seconds * 1000);
-        }
-        // Fallback for ISO strings or other formats
-        return new Date(timestamp);
-      }
       
       const startDate = getDateFromTimestamp(newMatchResponse.startDate);
 
@@ -309,8 +317,8 @@ export function CreateMatchForm({ onMatchCreated, initialData = null, isUpdateMo
         id: newMatchResponse.id,
         homeTeam: { id: newMatchResponse.homeTeam.id, name: newMatchResponse.homeTeam.name, logoUrl: newMatchResponse.homeTeam.logoUrl || 'https://placehold.co/40x40.png' },
         awayTeam: { id: newMatchResponse.awayTeam.id, name: newMatchResponse.awayTeam.name, logoUrl: newMatchResponse.awayTeam.logoUrl || 'https://placehold.co/40x40.png' },
-        matchDate: format(startDate, 'yyyy-MM-dd'),
-        startTime: format(startDate, 'HH:mm'),
+        matchDate: startDate ? format(startDate, 'yyyy-MM-dd') : '',
+        startTime: startDate ? format(startDate, 'HH:mm') : '',
         location: { name: newMatchResponse.venue.name, address: '' },
         status: newMatchResponse.status,
         ...newMatchResponse
@@ -469,7 +477,7 @@ export function CreateMatchForm({ onMatchCreated, initialData = null, isUpdateMo
                 render={({ field }) => (
                     <FormItem>
                     <FormLabel>Periods</FormLabel>
-                    <Select onValueChange={field.onChange} value={String(field.value)}>
+                    <Select onValueChange={(value) => field.onChange(Number(value))} value={String(field.value)}>
                         <FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl>
                         <SelectContent>
                             <SelectItem value="1">1</SelectItem>
@@ -486,7 +494,7 @@ export function CreateMatchForm({ onMatchCreated, initialData = null, isUpdateMo
                 render={({ field }) => (
                     <FormItem>
                     <FormLabel>Time</FormLabel>
-                    <Select onValueChange={field.onChange} value={String(field.value)}>
+                    <Select onValueChange={(value) => field.onChange(Number(value))} value={String(field.value)}>
                         <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                         <SelectContent>
                         {[...Array(60).keys()].map(i => <SelectItem key={i+1} value={String(i+1)}>{i+1} m</SelectItem>)}
@@ -501,7 +509,7 @@ export function CreateMatchForm({ onMatchCreated, initialData = null, isUpdateMo
                 render={({ field }) => (
                     <FormItem>
                     <FormLabel>Pause</FormLabel>
-                        <Select onValueChange={field.onChange} value={String(field.value)}>
+                        <Select onValueChange={(value) => field.onChange(Number(value))} value={String(field.value)}>
                             <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                             <SelectContent>
                             {[...Array(30).keys()].map(i => <SelectItem key={i+1} value={String(i+1)}>{i+1} m</SelectItem>)}
@@ -743,7 +751,7 @@ export function CreateMatchForm({ onMatchCreated, initialData = null, isUpdateMo
                 name="notificationMinutesBefore"
                 render={({ field }) => (
                     <FormItem className="w-1/2">
-                    <Select onValueChange={field.onChange} value={String(field.value)}>
+                    <Select onValueChange={(value) => field.onChange(Number(value))} value={String(field.value)}>
                         <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                         <SelectContent>
                             <SelectItem value="15">15 min before</SelectItem>
@@ -910,8 +918,8 @@ export function CreateMatchForm({ onMatchCreated, initialData = null, isUpdateMo
 }`}
                     />
                     <ApiDocumentationViewer
-                        title="Update Match Details"
-                        description="Called when the 'Update Match' button is clicked in 'Update' mode. Performs a partial update."
+                        title="Update Match Details (Event Tab)"
+                        description="Called when the 'Update Match' button is clicked. Performs a partial update on the core event details."
                         endpoint="/matches/{id}"
                         method="PATCH"
                         notes="You only need to send the fields you want to change. The API will respond with the full, updated match object."
@@ -944,3 +952,5 @@ export function CreateMatchForm({ onMatchCreated, initialData = null, isUpdateMo
     </div>
   )
 }
+
+    
