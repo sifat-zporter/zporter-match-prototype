@@ -4,7 +4,7 @@
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { format, parseISO } from "date-fns";
+import { format, parse, parseISO } from "date-fns";
 import { Calendar as CalendarIcon, Clock, Search, MapPin, Loader2, Camera, Video, Link as LinkIcon, Info, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -74,9 +74,9 @@ const createMatchSchema = z.object({
   matchArena: z.string().min(1, "Arena is required."),
   contestId: z.string().optional(),
   description: z.string().optional(),
-  gatheringTime: z.date(),
+  gatheringTime: z.date().optional(),
   fullDayScheduling: z.boolean().default(false),
-  endTime: z.date(),
+  endTime: z.date().optional(),
   isRecurring: z.boolean().default(false),
   recurringUntil: z.string().optional(),
   notificationMinutesBefore: z.coerce.number().int().default(60),
@@ -177,7 +177,7 @@ export function CreateMatchForm({ onMatchCreated, initialData = null, isUpdateMo
             categoryId: details?.categoryId || "",
             formatId: details?.formatId || "",
             contestId: details?.contestId || "",
-            matchDate: details?.matchDate ? parseISO(details.matchDate) : new Date(),
+            matchDate: details?.matchDate ? parse(details.matchDate, 'yyyy-MM-dd', new Date()) : new Date(),
             matchStartTime: details?.matchStartTime || "00:00",
             matchType: details?.matchType || "HOME",
             matchPeriod: details?.matchPeriod || 2,
@@ -197,8 +197,12 @@ export function CreateMatchForm({ onMatchCreated, initialData = null, isUpdateMo
             isPrivate: settings?.isPrivate || false,
         });
 
-        setSelectedHomeTeam({ id: initialData.homeTeam.id, name: initialData.homeTeam.name, logoUrl: initialData.homeTeam.logoUrl });
-        setSelectedAwayTeam({ id: initialData.awayTeam.id, name: initialData.awayTeam.name, logoUrl: initialData.awayTeam.logoUrl });
+        if (initialData.homeTeam) {
+            setSelectedHomeTeam({ id: initialData.homeTeam.id, name: initialData.homeTeam.name, logoUrl: initialData.homeTeam.logoUrl });
+        }
+        if (initialData.awayTeam) {
+            setSelectedAwayTeam({ id: initialData.awayTeam.id, name: initialData.awayTeam.name, logoUrl: initialData.awayTeam.logoUrl });
+        }
     }
   }, [initialData, isUpdateMode, isDropdownDataLoading, form]);
 
@@ -267,16 +271,16 @@ export function CreateMatchForm({ onMatchCreated, initialData = null, isUpdateMo
 
       // This payload is used for both create and update
       // For PATCH, only changed fields are sent, but for simplicity here we send all.
-      const payload: CreateMatchDto = {
+      const payload = {
         ...values,
         yourTeamName: selectedHomeTeam.name,
         opponentTeamName: selectedAwayTeam.name,
         matchDate: format(values.matchDate, 'yyyy-MM-dd'),
-        gatheringTime: values.gatheringTime.toISOString(),
-        endTime: values.endTime.toISOString(),
+        gatheringTime: values.gatheringTime?.toISOString(),
+        endTime: values.endTime?.toISOString(),
       };
       
-      let newMatchResponse: MatchEntity;
+      let newMatchResponse: any; // Use 'any' to handle the Firestore timestamp object
       if (isUpdateMode && initialData) {
          newMatchResponse = await apiClient<MatchEntity>(`/matches/${initialData.id}`, {
             method: 'PATCH',
@@ -289,13 +293,24 @@ export function CreateMatchForm({ onMatchCreated, initialData = null, isUpdateMo
          });
       }
 
+      // Helper to safely create a Date object from Firestore's timestamp
+      const getDateFromTimestamp = (timestamp: any): Date => {
+        if (timestamp && typeof timestamp === 'object' && '_seconds' in timestamp) {
+          return new Date(timestamp._seconds * 1000);
+        }
+        // Fallback for ISO strings or other formats
+        return new Date(timestamp);
+      }
+      
+      const startDate = getDateFromTimestamp(newMatchResponse.startDate);
+
       // A more robust transformation might be needed, but this covers the basics
       const transformedMatch: Match = {
         id: newMatchResponse.id,
         homeTeam: { id: newMatchResponse.homeTeam.id, name: newMatchResponse.homeTeam.name, logoUrl: newMatchResponse.homeTeam.logoUrl || 'https://placehold.co/40x40.png' },
         awayTeam: { id: newMatchResponse.awayTeam.id, name: newMatchResponse.awayTeam.name, logoUrl: newMatchResponse.awayTeam.logoUrl || 'https://placehold.co/40x40.png' },
-        matchDate: format(new Date(newMatchResponse.startDate), 'yyyy-MM-dd'),
-        startTime: format(new Date(newMatchResponse.startDate), 'HH:mm'),
+        matchDate: format(startDate, 'yyyy-MM-dd'),
+        startTime: format(startDate, 'HH:mm'),
         location: { name: newMatchResponse.venue.name, address: '' },
         status: newMatchResponse.status,
         ...newMatchResponse
@@ -929,5 +944,3 @@ export function CreateMatchForm({ onMatchCreated, initialData = null, isUpdateMo
     </div>
   )
 }
-
-    
