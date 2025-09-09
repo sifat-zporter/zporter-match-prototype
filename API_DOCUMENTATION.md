@@ -42,8 +42,8 @@ This is the payload sent when the user saves the initial details.
   "matchDate": "string (YYYY-MM-DD)",
   "startTime": "string (HH:MM)",
   "location": "string",
-  "category": "Friendly | Cup | League | Other",
-  "format": "11v11 | 9v9 | 8v8 | 7v7 | 5v5 | 3v3 | 2v2 | 1v1 | Futsal | Futnet | Panna | Teqball | Other",
+  "category": "Friendly | Cup | League | Tournament | Scrimmage | Other",
+  "format": "11v11 | 9v9 | 8v8 | 7v7 | 5v5 | 3v3 | 2v2 | 1v1 | Futsal | Futnet | Panna | Teqball | Indoor | Beach Soccer | Other",
   "contestId": "string" (optional),
   "numberOfPeriods": "number",
   "periodTime": "number",
@@ -291,52 +291,278 @@ Returns a comprehensive match object containing all associated data like notes, 
 
 ```json
 {
-  "id": "string",
-  "homeTeam": { "id": "string", "name": "string", "logoUrl": "string" },
-  "awayTeam": { "id": "string", "name": "string", "logoUrl": "string" },
-  "matchDate": "string (YYYY-MM-DD)",
-  "startTime": "string (HH:MM)",
-  "location": {
-    "name": "string",
-    "address": "string",
-    "coordinates": { "latitude": "number", "longitude": "number" }
+  "id": "match-12345",
+  "source": "user-generated",
+  "sourceId": null,
+  "createdBy": "user-a",
+  "status": "scheduled",
+  "createdAt": "2025-09-01T10:00:00.000Z",
+  "updatedAt": "2025-09-08T12:30:00.000Z",
+  "lastSyncedAt": "2025-09-08T12:30:00.000Z",
+  "name": "Grand Final: Titans vs Giants",
+  "description": "The most anticipated match of the season, deciding the champion of the Zporter Premier League.",
+  "startDate": "2025-09-15T18:00:00.000Z",
+  "endDate": "2025-09-15T20:00:00.000Z",
+  "timezone": "Europe/Stockholm",
+  "duration": 120,
+  "homeTeam": {
+    "id": "team-home-123",
+    "source": "user-generated",
+    "sourceId": null,
+    "name": "Titans",
+    "shortName": "TTN",
+    "code": "TTN",
+    "logoUrl": "https://example.com/logos/titans.png",
+    "country": "Sweden",
+    "founded": 1901,
+    "isNational": false,
+    "venue": { "name": "Zporter Arena" },
+    "players": [
+      {
+        "id": "player-1",
+        "name": "John Doe",
+        "avatarUrl": "https://example.com/avatars/player-1.png",
+        "position": "Forward"
+      }
+    ]
   },
-  "status": "string",
-  "score": { "home": "number", "away": "number" },
-  "events": [
-    { "type": "string", "timestamp": "string (ISO 8601)", "description": "string" }
+  "awayTeam": {
+    "id": "team-away-456",
+    "source": "user-generated",
+    "sourceId": null,
+    "name": "Giants",
+    "shortName": "GNT",
+    "code": "GNT",
+    "logoUrl": "https://example.com/logos/giants.png",
+    "country": "Sweden",
+    "founded": 1905,
+    "isNational": false,
+    "venue": { "name": "Giants Stadium" },
+    "players": [
+      {
+        "id": "player-2",
+        "name": "Jane Smith",
+        "avatarUrl": "https://example.com/avatars/player-2.png",
+        "position": "Midfielder"
+      }
+    ]
+  },
+  "competition": {
+    "id": "league-5",
+    "source": "user-generated",
+    "sourceId": null,
+    "name": "Zporter Premier League",
+    "shortName": "ZPL",
+    "type": "league",
+    "country": "Sweden",
+    "logoUrl": "https://example.com/logos/zpl.png",
+    "tier": 1
+  },
+  "season": { "id": "season-2025", "name": "2025/2026" },
+  "stage": { "id": "stage-final", "name": "Finals" },
+  "round": { "id": "round-1", "name": "Final" },
+  "scores": {
+    "home": 0,
+    "away": 0,
+    "homePeriod1": 0,
+    "awayPeriod1": 0,
+    "homePeriod2": 0,
+    "awayExtraTime": 0,
+    "awayExtraTime": 0,
+    "homePenalties": 0,
+    "awayPenalties": 0,
+    "winner": null
+  },
+  "venue": {
+    "id": "venue-1",
+    "sourceId": null,
+    "name": "Zporter Arena",
+    "city": "Stockholm",
+    "country": "Sweden",
+    "capacity": 50000,
+    "surface": "grass",
+    "coordinates": { "lat": 59.3293, "lng": 18.0686 }
+  },
+  "referee": { "id": "ref-1", "name": "Niels Nielsen", "nationality": "Denmark" },
+  "assistantReferees": [
+    { "id": "ref-2", "name": "Benny Anderson", "nationality": "Sweden" },
+    { "id": "ref-3", "name": "Bjorn Ulvaeus", "nationality": "Sweden" }
   ],
-  "notes": [
-    { "id": "string", "author": "string", "content": "string", "createdAt": "string (ISO 8601)" }
+  "fourthOfficial": { "id": "ref-4", "name": "Agnetha Fältskog", "nationality": "Sweden" },
+  "attendance": 48593,
+  "weather": {
+    "temperature": 15,
+    "humidity": 70,
+    "windSpeed": 5,
+    "description": "Cloudy"
+  },
+  "featuredPlayers": [
+    {
+      "id": "player-1",
+      "name": "John Doe",
+      "avatarUrl": "https://example.com/avatars/player-1.png",
+      "position": "Forward"
+    }
   ],
-  "reviews": [
-    { "id": "string", "author": "string", "rating": "number", "comment": "string", "createdAt": "string (ISO 8601)" }
+  "isFeatured": true,
+  "isPrivate": false,
+  "likes": 1200,
+  "followers": 5000,
+  "sportmonksData": {
+    "raw": null,
+    "lastChanged": null,
+    "hasLineup": false,
+    "hasEvents": false,
+    "hasStats": false,
+    "live": false
+  },
+  "userGeneratedData": {
+    "notes": [
+      {
+        "noteId": "note-1662415200000",
+        "authorId": "user-coach-1",
+        "text": "Giants are weak on their left flank. We should focus our attacks there.",
+        "createdAt": "2025-09-05T14:00:00.000Z"
+      }
+    ],
+    "reviews": [
+      {
+        "reviewId": "review-1662415200000",
+        "authorId": "user-scout-1",
+        "reviewType": "post-match",
+        "ztarOfTheMatchPlayerId": "player-1",
+        "overallMatchReview": "A hard-fought victory. Our defense was solid.",
+        "teamRating": 8.5,
+        "playerReviews": [
+          {
+            "playerId": "player-1",
+            "rating": 9,
+            "comment": "Scored the winning goal, exceptional performance."
+          },
+          {
+            "playerId": "player-3",
+            "rating": 7.5,
+            "comment": "Solid in defense, made some crucial tackles."
+          }
+        ]
+      }
+    ],
+    "invites": [
+        {
+            "inviteId": "invite-1",
+            "inviteeId": "user-guest-1",
+            "status": "pending",
+            "role": "spectator"
+        }
+    ],
+    "tacticalPlan": {
+      "opponentAnalysis": { "strengths": ["Strong midfield"], "weaknesses": ["Slow defense"] },
+      "teamLineup": { "formation": "4-3-3", "players": ["player-1", "player-2", "player-3"] },
+      "offenseTactics": { "strategy": "High press and quick counters" },
+      "defenseTactics": { "strategy": "Zonal marking" },
+      "otherTactics": { "notes": "Focus on set pieces" }
+    },
+    "eventDetails": {
+      "categoryId": "some-category-id",
+      "formatId": "some-format-id",
+      "contestId": "some-contest-id",
+      "matchType": "HOME",
+      "matchDate": "2025-09-15",
+      "matchStartTime": "18:00",
+      "matchPeriod": 2,
+      "matchTime": 45,
+      "matchPause": 15,
+      "homeTeamId": "team-home-123",
+      "awayTeamId": "team-away-456",
+      "matchHeadLine": "Grand Final: Titans vs Giants",
+      "matchLocation": "Zporter Arena",
+      "matchArena": "Main Arena"
+    },
+    "scheduleDetails": {
+      "matchIsAllDay": false,
+      "matchEnd": "2025-09-15",
+      "matchEndTime": "20:00",
+      "matchRecurringType": "DOES_NOT_REPEAT"
+    },
+    "settings": {
+      "isNotificationOn": true,
+      "notificationSendBefore": 60,
+      "isOccupied": false,
+      "isPrivate": false
+    }
+  },
+  "liveLog": {
+    "events": [],
+    "stats": {
+      "goals": { "home": 0, "away": 0 },
+      "shots": { "home": 0, "away": 0 },
+      "shotsOnGoal": { "home": 0, "away": 0 },
+      "shotsOffGoal": { "home": 0, "away": 0 },
+      "shotsBlocked": { "home": 0, "away": 0 },
+      "penalties": { "home": 0, "away": 0 },
+      "corners": { "home": 0, "away": 0 },
+      "freeKicks": { "home": 0, "away": 0 },
+      "goalKicks": { "home": 0, "away": 0 },
+      "throwIns": { "home": 0, "away": 0 },
+      "offsides": { "home": 0, "away": 0 },
+      "yellowCards": { "home": 0, "away": 0 },
+      "redCards": { "home": 0, "away": 0 },
+      "possession": { "home": 0, "away": 0 },
+      "possessionMinutes": { "home": 0, "away": 0 },
+      "passesOn": { "home": 0, "away": 0 },
+      "passesOff": { "home": 0, "away": 0 },
+      "wonBalls": { "home": 0, "away": 0 },
+      "fouls": { "home": 0, "away": 0 }
+    },
+    "isActive": false
+  },
+  "tags": ["final", "derby", "zpl"],
+  "popularity": 0.95,
+  "version": 1,
+  "teamForm": {
+    "home": ["W", "W", "D", "L", "W"],
+    "away": ["L", "W", "W", "D", "W"]
+  },
+  "pastMeetings": [
+    {
+      "id": "match-9876",
+      "date": "10/03/2025",
+      "homeTeam": "Giants",
+      "awayTeam": "Titans",
+      "homeScore": 1,
+      "awayScore": 1
+    },
+    {
+      "id": "match-5432",
+      "date": "22/09/2024",
+      "homeTeam": "Titans",
+      "awayTeam": "Giants",
+      "homeScore": 2,
+      "awayScore": 0
+    }
   ],
-  "eventDetails": {
-    "headline": "string",
-    "description": "string",
-    "gatheringTime": "string (ISO 8601)",
-    "fullDayScheduling": "boolean",
-    "endTime": "string (ISO 8601)",
-    "isRecurring": "boolean",
-    "recurringUntil": "string (YYYY-MM-DD)",
-    "notificationMinutesBefore": "number",
-    "markAsOccupied": "boolean",
-    "isPrivate": "boolean"
-  },
-  "scheduleDetails": {
-    "numberOfPeriods": "number",
-    "periodTime": "number",
-    "pauseTime": "number"
-  },
-  "settings": {
-    "category": "string",
-    "format": "string",
-    "contestId": "string",
-    "isNeutral": "boolean"
-  },
-  "createdAt": "string (ISO 8601)",
-  "updatedAt": "string (ISO 8601)"
+  "standings": [
+    {
+      "team": {
+        "id": "team-home-123",
+        "name": "Titans",
+        "logoUrl": "https://example.com/logos/titans.png"
+      },
+      "pld": 25,
+      "gd": 30,
+      "pts": 65
+    },
+    {
+      "team": {
+        "id": "team-away-456",
+        "name": "Giants",
+        "logoUrl": "https://example.com/logos/giants.png"
+      },
+      "pld": 25,
+      "gd": 25,
+      "pts": 62
+    }
+  ]
 }
 ```
 
