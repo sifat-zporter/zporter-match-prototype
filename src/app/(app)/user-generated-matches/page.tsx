@@ -320,6 +320,11 @@ export default function UserGeneratedMatchesPage() {
     "hasStats": false,
     "live": false
   },
+  "invitedUserIds": [
+    "user1",
+    "user2",
+    "referee1"
+  ],
   "userGeneratedData": {
     "notes": [
       {
@@ -351,14 +356,18 @@ export default function UserGeneratedMatchesPage() {
         ]
       }
     ],
-    "invites": [
-        {
-            "inviteId": "invite-1",
-            "inviteeId": "user-guest-1",
-            "status": "pending",
-            "role": "spectator"
-        }
-    ],
+    "invites": {
+      "Home": {
+        "usersInvited": [ "user1", "user2" ],
+        "inviteDaysBefore": 3,
+        "reminderDaysBefore": 1
+      },
+      "Referees": {
+        "usersInvited": [ "referee1" ],
+        "inviteDaysBefore": 5,
+        "reminderDaysBefore": 2
+      }
+    },
     "tacticalPlan": {
       "opponentAnalysis": { "strengths": ["Strong midfield"], "weaknesses": ["Slow defense"] },
       "teamLineup": { "formation": "4-3-3", "players": ["player-1", "player-2", "player-3"] },

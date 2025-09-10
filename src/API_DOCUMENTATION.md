@@ -287,7 +287,7 @@ Returns the created review object.
 
 #### Success Response (`200 OK`)
 
-Returns a comprehensive match object containing all associated data.
+Returns a comprehensive match object containing all associated data like notes, reviews, and detailed settings.
 
 ```json
 {
@@ -298,6 +298,7 @@ Returns a comprehensive match object containing all associated data.
   "status": "scheduled",
   "createdAt": "2025-09-01T10:00:00.000Z",
   "updatedAt": "2025-09-08T12:30:00.000Z",
+  "lastSyncedAt": "2025-09-08T12:30:00.000Z",
   "name": "Grand Final: Titans vs Giants",
   "description": "The most anticipated match of the season, deciding the champion of the Zporter Premier League.",
   "startDate": "2025-09-15T18:00:00.000Z",
@@ -415,6 +416,11 @@ Returns a comprehensive match object containing all associated data.
     "hasStats": false,
     "live": false
   },
+  "invitedUserIds": [
+    "user1",
+    "user2",
+    "referee1"
+  ],
   "userGeneratedData": {
     "notes": [
       {
@@ -446,14 +452,18 @@ Returns a comprehensive match object containing all associated data.
         ]
       }
     ],
-    "invites": [
-        {
-            "inviteId": "invite-1",
-            "inviteeId": "user-guest-1",
-            "status": "pending",
-            "role": "spectator"
-        }
-    ],
+    "invites": {
+      "Home": {
+        "usersInvited": [ "user1", "user2" ],
+        "inviteDaysBefore": 3,
+        "reminderDaysBefore": 1
+      },
+      "Referees": {
+        "usersInvited": [ "referee1" ],
+        "inviteDaysBefore": 5,
+        "reminderDaysBefore": 2
+      }
+    },
     "tacticalPlan": {
       "opponentAnalysis": { "strengths": ["Strong midfield"], "weaknesses": ["Slow defense"] },
       "teamLineup": { "formation": "4-3-3", "players": ["player-1", "player-2", "player-3"] },
