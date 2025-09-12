@@ -1,4 +1,3 @@
-
 /**
  * @fileoverview This file contains the TypeScript type definitions for the API request
  * and response models used throughout the Zporter application, based on the new API documentation.
@@ -257,13 +256,24 @@ export type LogMatchEventResponse = {
 export type MatchEntity = {
     id: string;
     status: string;
-    startDate: string; // ISO
+    startDate: { _seconds: number, _nanoseconds: number } | string;
+    endDate: { _seconds: number, _nanoseconds: number } | string;
     homeTeam: { id: string; name: string; logoUrl: string };
     awayTeam: { id: string; name: string; logoUrl: string };
     venue: { name: string };
     userGeneratedData: {
         eventDetails: any; // Contains the original DTO
+        scheduleDetails: any;
+        settings: any;
+        invites?: {
+            [groupName: string]: {
+                usersInvited: string[];
+                inviteDaysBefore: number;
+                reminderDaysBefore: number;
+            }
+        };
     };
+    invitedUserIds?: string[];
     [key: string]: any; // Allow for other fields from the large response object
 };
 
@@ -384,18 +394,20 @@ export type InviteUserSearchResult = {
 
 /**
  * @model UserDto
- * @description Represents a user object from GET /users/:id
+ * @description Represents a user object from GET /users/:id or the search-potential-invitees endpoint
  */
 export type UserDto = {
   userId: string;
   username: string;
-  profile: {
+  fullName: string;
+  faceImage: string;
+  profile?: {
     firstName: string;
     lastName: string;
     gender?: string;
     city?: string;
   };
-  media: {
+  media?: {
     faceImage: string | null;
   };
   playerCareer?: {

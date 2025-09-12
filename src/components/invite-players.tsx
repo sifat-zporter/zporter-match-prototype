@@ -1,4 +1,3 @@
-
 // src/components/invite-players.tsx
 "use client";
 
@@ -8,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Search, Info, Loader2, Plus, ArrowUpDown, ListFilter, ChevronUp, ChevronDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiClient } from "@/lib/api-client";
-import type { Invite, CreateInviteDto, TeamRef, InviteUserSearchResult, InvitationRole, MatchEntity } from "@/lib/models";
+import type { Invite, CreateInviteDto, TeamRef, InviteUserSearchResult, InvitationRole, MatchEntity, UserDto } from "@/lib/models";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
 import { ApiDocumentationViewer } from "./api-documentation-viewer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
@@ -87,8 +86,16 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
             const groupInvites = matchData.userGeneratedData?.invites?.[activeTab];
             if (groupInvites && groupInvites.usersInvited) {
                 setSelectedUserIds(new Set(groupInvites.usersInvited));
+                 if (groupInvites.inviteDaysBefore > 0 || groupInvites.reminderDaysBefore > 0) {
+                    setIsSchedulingEnabled(true);
+                    setInviteDays(groupInvites.inviteDaysBefore);
+                    setReminderDays(groupInvites.reminderDaysBefore);
+                } else {
+                    setIsSchedulingEnabled(false);
+                }
             } else {
                  setSelectedUserIds(new Set());
+                 setIsSchedulingEnabled(false);
             }
 
         } catch (error) {
@@ -104,24 +111,41 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
         
         try {
             const params = new URLSearchParams();
-            const roleMap: { [key: string]: string } = {
-                'Home': 'PLAYER',
-                'Away': 'PLAYER',
-                'Referees': 'REFEREE',
-                'Hosts': 'HOST'
-            };
-
-            if (query) {
-                params.append('name', query);
-            } else if (roleMap[tab]) {
-                params.append('role', roleMap[tab]);
-                if (tab === 'Home') params.append('teamId', homeTeam.id);
-                if (tab === 'Away') params.append('teamId', awayTeam.id);
+            
+            // Player Search Logic
+            if (tab === 'Home' || tab === 'Away') {
+                params.append('role', 'PLAYER');
+                const teamId = tab === 'Home' ? homeTeam.id : awayTeam.id;
+                if (!teamId) {
+                    toast({ variant: "destructive", title: "Missing Team ID", description: `Cannot search for players without a team ID for ${tab}.` });
+                    setIsLoading(false);
+                    return;
+                }
+                params.append('teamId', teamId);
+                if (query) {
+                    params.append('name', query);
+                }
+            // Global User Search Logic
+            } else if (query) {
+                 params.append('name', query);
+            } else {
+                // Don't search if there's no query for non-player tabs
+                setIsLoading(false);
+                return;
             }
            
-            const data = await apiClient<InviteUserSearchResult[]>(`/matches/${matchId}/invites/search-users?${params.toString()}`);
+            const data = await apiClient<UserDto[]>(`/matches/${matchId}/invites/search-potential-invitees?${params.toString()}`);
             
-            const uniqueUsers = data.filter((user, index, self) =>
+            // Transform the detailed UserDto to the simpler InviteUserSearchResult
+            const transformedResults = data.map(user => ({
+                userId: user.userId,
+                name: user.fullName,
+                username: user.username,
+                faceImage: user.faceImage,
+                type: user.type,
+            }));
+
+            const uniqueUsers = transformedResults.filter((user, index, self) =>
                 index === self.findIndex((u) => u.userId === user.userId)
             );
             
@@ -315,17 +339,20 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
                         <ApiDocumentationViewer
                             title="2. Search for Users to Invite"
                             description="Searches for users to add to an invite list. Can filter by team, role, or name."
-                            endpoint="/matches/:matchId/invites/search-users"
+                            endpoint="/matches/:matchId/invites/search-potential-invitees"
                             method="GET"
-                            notes="Example: /matches/your-match-id/invites/search-users?teamId=your-team-id&role=PLAYER"
+                            notes="Search Logic: To find PLAYERS, you must provide role=PLAYER and a teamId. To find other users (Referees, Hosts), search by name."
                             response={`[
-    {
-        "userId": "user-id-abc",
-        "name": "John Player",
-        "username": "johnplayer",
-        "faceImage": "https://example.com/avatar.jpg",
-        "type": "PLAYER"
-    }
+  {
+    "userId": "54f2d8bf-fae2-4d48-ad06-40db0f7bf804",
+    "fullName": "Andrei Teodorescu",
+    "faceImage": "https://lh3.googleusercontent.com/...",
+    "type": "PLAYER",
+    "username": "AndTeo850520",
+    "age": 40,
+    "gender": "MALE",
+    "... and other user fields"
+  }
 ]`}
                         />
                     </AccordionContent>
