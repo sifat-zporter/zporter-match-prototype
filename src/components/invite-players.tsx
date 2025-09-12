@@ -189,16 +189,19 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
     const handleSave = async () => {
         setIsSubmitting(true);
         
+        // Construct the payload as per the new API specification
         const payload = {
-            [activeTab]: {
-                usersInvited: Array.from(selectedUserIds),
-                inviteDaysBefore: isSchedulingEnabled ? inviteDays : 0,
-                reminderDaysBefore: isSchedulingEnabled ? reminderDays : 0,
+            invites: {
+                [activeTab]: {
+                    usersInvited: Array.from(selectedUserIds),
+                    inviteDaysBefore: isSchedulingEnabled ? inviteDays : 0,
+                    reminderDaysBefore: isSchedulingEnabled ? reminderDays : 0,
+                }
             }
         };
 
         try {
-            const response = await apiClient(`/matches/${matchId}/invites`, { 
+            await apiClient(`/matches/${matchId}/invites`, { 
                 method: 'PATCH', 
                 body: payload 
             });
@@ -316,24 +319,26 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
                     <AccordionContent className="space-y-4 pt-4">
                          <ApiDocumentationViewer
                             title="1. Bulk Update Match Invites"
-                            description="Updates invitation settings for multiple groups (Home, Away, Referees, etc.) in a single call. This replaces all previous invites for the specified groups."
+                            description="Updates invitation settings for a specific group (Home, Away, etc.). This call overwrites the existing settings for the specified group."
                             endpoint="/matches/:matchId/invites"
                             method="PATCH"
                             requestPayload={`{
-  "Home": {
-    "usersInvited": [ "user_id_1", "user_id_2" ],
-    "inviteDaysBefore": 3,
-    "reminderDaysBefore": 1
-  },
-  "Referees": {
-    "usersInvited": [ "referee_id_1" ],
-    "inviteDaysBefore": 5,
-    "reminderDaysBefore": 2
+  "invites": {
+    "Home": {
+      "usersInvited": ["user_id_1", "user_id_2"],
+      "inviteDaysBefore": 7,
+      "reminderDaysBefore": 2
+    },
+    "Referees": {
+      "usersInvited": ["referee_id_1"],
+      "inviteDaysBefore": 10,
+      "reminderDaysBefore": 3
+    }
   }
 }`}
                             response={`{
-  "message": "Successfully updated invites for 3 users.",
-  "updatedUserIds": [ "user_id_1", "user_id_2", "referee_id_1" ]
+  "success": true,
+  "updatedMatchId": "match-1662902400000"
 }`}
                         />
                         <ApiDocumentationViewer
