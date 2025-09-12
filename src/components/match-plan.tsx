@@ -11,7 +11,7 @@ import { Button } from "./ui/button";
 import { Plus, Camera, Video, Loader2, ListFilter, Mic, ChevronUp, ChevronDown, X, UserPlus, Info } from "lucide-react";
 import { Switch } from "./ui/switch";
 import { apiClient } from "@/lib/api-client";
-import type { MatchPlanPayload, Invite, UserDto } from "@/lib/models";
+import type { MatchPlanPayload, Invite, UserDto, MatchEntity } from "@/lib/models";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "./ui/card";
 import { Label } from "./ui/label";
@@ -157,26 +157,34 @@ export function MatchPlan({ matchId }: { matchId: string }) {
         const fetchInvitedPlayers = async () => {
             if (!matchId) return;
             try {
-                const invites = await apiClient<Invite[]>(`/matches/${matchId}/invites`);
+                // Step 1: Fetch the main match object
+                const matchData = await apiClient<MatchEntity>(`/matches/${matchId}`);
                 
-                const playerPromises = invites
-                    .filter(invite => invite.inviteeId)
-                    .map(async (invite) => {
-                        try {
-                            const user = await apiClient<UserDto>(`/users/${invite.inviteeId}`);
-                            return {
-                                id: user.userId,
-                                name: `${user.profile.firstName} ${user.profile.lastName}`,
-                                avatarUrl: user.media.faceImage || `https://picsum.photos/seed/${user.userId}/40/40`,
-                                number: user.playerCareer?.shirtNumber || Math.floor(Math.random() * 99) + 1,
-                                zporterId: user.username,
-                                role: user.type,
-                            };
-                        } catch (error) {
-                            console.error(`Failed to fetch details for user ${invite.inviteeId}`, error);
-                            return null;
-                        }
-                    });
+                // Step 2: Get the list of invited user IDs
+                const invitedIds = matchData.invitedUserIds || [];
+
+                if (invitedIds.length === 0) {
+                    setInvitedPlayers([]);
+                    return;
+                }
+                
+                // Step 3: Fetch details for each invited user
+                const playerPromises = invitedIds.map(async (userId) => {
+                    try {
+                        const user = await apiClient<UserDto>(`/users/${userId}`);
+                        return {
+                            id: user.userId,
+                            name: user.fullName || `${user.profile?.firstName} ${user.profile?.lastName}`,
+                            avatarUrl: user.faceImage || user.media?.faceImage || `https://picsum.photos/seed/${user.userId}/40/40`,
+                            number: user.playerCareer?.shirtNumber || Math.floor(Math.random() * 99) + 1,
+                            zporterId: user.username,
+                            role: user.type, // Role from the user object itself
+                        };
+                    } catch (error) {
+                        console.error(`Failed to fetch details for user ${userId}`, error);
+                        return null; // Return null for failed requests
+                    }
+                });
 
                 const players = (await Promise.all(playerPromises)).filter(Boolean) as Player[];
                 setInvitedPlayers(players);
@@ -678,39 +686,28 @@ export function MatchPlan({ matchId }: { matchId: string }) {
                     </AccordionTrigger>
                     <AccordionContent className="space-y-4 pt-4">
                         <ApiDocumentationViewer
-                            title="1. Fetch Invited Players"
-                            description="Called when the 'Line Up' tab loads to get the list of players who can be placed in the formation. This returns a list of invite objects."
-                            endpoint="/matches/:id/invites"
+                            title="1. Fetch Match Details (to get Player IDs)"
+                            description="To build a lineup, you first need to know who has been invited. This is done by fetching the main match object, which contains the list of all invited user IDs."
+                            endpoint="/matches/{matchId}"
                             method="GET"
-                            response={`[
-  {
-    "id": "invite-id-string",
-    "matchId": "match-id-string",
-    "inviteeId": "user-id-string-to-fetch",
-    "role": "PLAYER_HOME",
-    "status": "SCHEDULED"
-  }
-]`}
+                            response={`{
+  "id": "match-123",
+  "invitedUserIds": ["user-id-1", "user-id-2", "user-id-3"],
+  // ...other match data
+}`}
                         />
                         <ApiDocumentationViewer
                             title="2. Fetch Player Details"
-                            description="For each invite object from the previous step, this endpoint is called using the 'inviteeId' to get the player's full details for display (name, avatar, etc.)."
-                            endpoint="/users/:id"
+                            description="For each ID from the 'invitedUserIds' array, this endpoint is called to get the player's full details for display (name, avatar, etc.)."
+                            endpoint="/users/{id}"
                             method="GET"
                             response={`{
-  "userId": "string",
-  "username": "string",
-  "profile": {
-    "firstName": "string",
-    "lastName": "string"
-  },
-  "media": {
-    "faceImage": "string (URL) | null"
-  },
-  "playerCareer": {
-    "shirtNumber": "number"
-  },
-  "type": "PLAYER | COACH"
+  "userId": "user-id-1",
+  "username": "playerone",
+  "fullName": "Player One",
+  "faceImage": "https://example.com/avatar.png",
+  "playerCareer": { "shirtNumber": 10 },
+  "type": "PLAYER"
 }`}
                         />
                          <ApiDocumentationViewer
@@ -742,27 +739,7 @@ export function MatchPlan({ matchId }: { matchId: string }) {
       "publishPubliclyMinutesBefore": 60
     }
   },
-  "offenseTactics": {
-    "planName": "string",
-    "general": { "summary": "string", "isLineupVisible": true, "areSetPlaysVisible": false, "lineup": {"formation": "4-3-3", "playerPositions": [{ "playerId": "user-id-string-1", "position": "RW" }]} },
-    "buildUp": { "summary": "string", "isLineupVisible": true, "areSetPlaysVisible": false, "lineup": {"formation": "4-3-3", "playerPositions": []} },
-    "attack": { "summary": "string", "isLineupVisible": true, "areSetPlaysVisible": false, "lineup": {"formation": "4-3-3", "playerPositions": []} },
-    "finishing": { "summary": "string", "isLineupVisible": true, "areSetPlaysVisible": false, "lineup": {"formation": "4-3-3", "playerPositions": []} }
-  },
-  "defenseTactics": {
-    "planName": "string",
-    "general": { "summary": "string", "isLineupVisible": true, "areSetPlaysVisible": false, "lineup": {"formation": "4-3-3", "playerPositions": []} },
-    "highBlock": { "summary": "string", "isLineupVisible": true, "areSetPlaysVisible": false, "lineup": {"formation": "4-3-3", "playerPositions": []} },
-    "midBlock": { "summary": "string", "isLineupVisible": true, "areSetPlaysVisible": false, "lineup": {"formation": "4-3-3", "playerPositions": []} },
-    "lowBlock": { "summary": "string", "isLineupVisible": true, "areSetPlaysVisible": false, "lineup": {"formation": "4-3-3", "playerPositions": []} }
-  },
-  "otherTactics": {
-    "planName": "string",
-    "summary": "string",
-    "isLineupVisible": true,
-    "areSetPlaysVisible": false,
-    "lineup": { "formation": "4-3-3", "playerPositions": [] }
-  }
+  // ... offenseTactics, defenseTactics, otherTactics
 }`}
                             response={`{
   "id": "match-id-string",
@@ -783,4 +760,3 @@ export function MatchPlan({ matchId }: { matchId: string }) {
         </div>
     );
 }
-
