@@ -108,6 +108,16 @@ export default function MatchesHubPage() {
 
   useEffect(() => {
     async function getMatchesForDate(date: Date) {
+      // Check for auth token before fetching
+      const token = localStorage.getItem("zporter-id-token");
+      if (!token) {
+        setIsLoading(false);
+        setMatches([]);
+        // Optionally set an error to guide the user to log in
+        // setError("Please log in to view matches."); 
+        return;
+      }
+
       setIsLoading(true);
       setError(null);
       try {
