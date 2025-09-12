@@ -17,10 +17,30 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { format, parse } from "date-fns";
+import { format } from "date-fns";
 import Link from "next/link";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ApiDocumentationViewer } from "@/components/api-documentation-viewer";
+
+// Helper function to safely format the date
+const formatMatchDate = (dateString: string | null | undefined): string => {
+    if (!dateString) {
+        return "Date not available";
+    }
+    try {
+        // new Date() can handle both 'YYYY-MM-DD' and ISO strings
+        const date = new Date(dateString);
+        // Check if the date is valid
+        if (isNaN(date.getTime())) {
+            return "Invalid Date";
+        }
+        return format(date, "PPP");
+    } catch (error) {
+        console.error("Error formatting date:", dateString, error);
+        return "Invalid Date";
+    }
+};
+
 
 export default function UserGeneratedMatchesPage() {
   const { toast } = useToast();
@@ -33,7 +53,7 @@ export default function UserGeneratedMatchesPage() {
       const response = await apiClient<GetMatchesResponse>("/matches", {
         params: { limit: 100 }
       });
-      // Add a more robust filter to ensure match objects are valid and have the required properties.
+      // A more robust filter to ensure match objects are valid and have the required properties.
       const validMatches = (response.matches || []).filter(match => match && match.id && match.matchDate);
       setMatches(validMatches);
     } catch (error) {
@@ -94,7 +114,7 @@ export default function UserGeneratedMatchesPage() {
                         {match.homeTeam.name} vs {match.awayTeam.name}
                       </TableCell>
                       <TableCell>
-                        {format(parse(match.matchDate, 'yyyy-MM-dd', new Date()), "PPP")} at {match.matchStartTime}
+                        {`${formatMatchDate(match.matchDate)} at ${match.matchStartTime || 'N/A'}`}
                       </TableCell>
                       <TableCell>{match.venue?.name || 'N/A'}</TableCell>
                       <TableCell>
