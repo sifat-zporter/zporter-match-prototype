@@ -189,7 +189,6 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
     const handleSave = async () => {
         setIsSubmitting(true);
         
-        // Construct the payload as per the new API specification
         const payload = {
             invites: {
                 [activeTab]: {
@@ -328,11 +327,6 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
       "usersInvited": ["user_id_1", "user_id_2"],
       "inviteDaysBefore": 7,
       "reminderDaysBefore": 2
-    },
-    "Referees": {
-      "usersInvited": ["referee_id_1"],
-      "inviteDaysBefore": 10,
-      "reminderDaysBefore": 3
     }
   }
 }`}
@@ -342,9 +336,9 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
 }`}
                         />
                         <ApiDocumentationViewer
-                            title="2. Search for Users to Invite"
+                            title="2. Search for Potential Invitees"
                             description="Searches for users to add to an invite list. Can filter by team, role, or name."
-                            endpoint="/matches/:matchId/invites/search-potential-invitees"
+                            endpoint="/matches/{matchId}/invites/search-potential-invitees"
                             method="GET"
                             notes="Search Logic: To find PLAYERS, you must provide role=PLAYER and a teamId. To find other users (Referees, Hosts), search by name."
                             response={`[
@@ -356,7 +350,10 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
     "username": "AndTeo850520",
     "age": 40,
     "gender": "MALE",
-    "... and other user fields"
+    "isFriend": false,
+    "isTeammates": false,
+    "isFollowed": false,
+    "clubName": "N/A"
   }
 ]`}
                         />

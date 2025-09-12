@@ -286,8 +286,8 @@ export function MatchNotes({ matchId, initialNotes = [] }: MatchNotesProps) {
     "isStarred": true,
     "isReply": false,
     "parentNoteId": null,
-    "createdAt": "2024-09-01T10:00:00Z",
-    "updatedAt": "2024-09-01T10:00:00Z"
+    "createdAt": "2025-09-01T10:00:00Z",
+    "updatedAt": "2025-09-01T10:00:00Z"
   },
   {
     "id": "note-id-456",
@@ -296,8 +296,8 @@ export function MatchNotes({ matchId, initialNotes = [] }: MatchNotesProps) {
     "isStarred": false,
     "isReply": true,
     "parentNoteId": "note-id-123",
-    "createdAt": "2024-09-01T10:05:00Z",
-    "updatedAt": "2024-09-01T10:05:00Z"
+    "createdAt": "2025-09-01T10:05:00Z",
+    "updatedAt": "2025-09-01T10:05:00Z"
   }
 ]`}
                         />
@@ -319,8 +319,8 @@ export function MatchNotes({ matchId, initialNotes = [] }: MatchNotesProps) {
   "isStarred": false,
   "isReply": false,
   "parentNoteId": null,
-  "createdAt": "2024-09-01T11:00:00Z",
-  "updatedAt": "2024-09-01T11:00:00Z"
+  "createdAt": "2025-09-01T11:00:00Z",
+  "updatedAt": "2025-09-01T11:00:00Z"
 }`}
                         />
                          <ApiDocumentationViewer
@@ -339,8 +339,8 @@ export function MatchNotes({ matchId, initialNotes = [] }: MatchNotesProps) {
   "isStarred": true,
   "isReply": false,
   "parentNoteId": null,
-  "createdAt": "2024-09-01T10:00:00Z",
-  "updatedAt": "2024-09-01T11:30:00Z"
+  "createdAt": "2025-09-01T10:00:00Z",
+  "updatedAt": "2025-09-01T11:30:00Z"
 }`}
                         />
                          <ApiDocumentationViewer

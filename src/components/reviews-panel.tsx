@@ -1,4 +1,5 @@
 
+
 // src/components/reviews-panel.tsx
 "use client";
 
@@ -294,8 +295,8 @@ export function ReviewsPanel({ match }: { match: Match }) {
                             endpoint="/matches/{matchId}/reviews"
                             method="POST"
                             requestPayload={`{
-  "subjectId": "user-id-of-player-or-team",
-  "reviewType": "PlayerPerformance",
+  "subjectId": "team-id-string",
+  "reviewType": "TeamPerformance",
   "ztarOfTheMatchPlayerId": "player-user-id-abc",
   "overallMatchReview": "A fantastic display of skill and teamwork.",
   "teamRating": 5,
@@ -311,39 +312,14 @@ export function ReviewsPanel({ match }: { match: Match }) {
       "comment": "Solid defensive work."
     }
   ],
-  "tacticalRatings": {
-    "attack": 5, "defence": 4, "technique": 5, "intelligence": 4, "physical": 5
-  },
-  "mentalRatings": {
-    "attitude": 5, "composure": 5, "concentration": 4, "determination": 5, "teamWork": 5
-  },
-  "comment": "Overall, a very positive performance.",
-  "isShared": true
+  "comment": "Overall, a very positive performance."
 }`}
                             response={`{
   "id": "review-xyz-789",
   "matchId": "match-abc-123",
   "reviewerId": "current-user-id",
-  "subjectId": "user-id-of-player-or-team",
-  "reviewType": "PlayerPerformance",
-  "ztarOfTheMatchPlayerId": "player-user-id-abc",
-  "overallMatchReview": "A fantastic display of skill and teamwork.",
-  "teamRating": 5,
-  "playerReviews": [
-    {
-      "playerId": "player-user-id-abc",
-      "rating": 5,
-      "comment": "Scored the winning goal."
-    }
-  ],
-  "tacticalRatings": {
-    "attack": 5, "defence": 4, "technique": 5, "intelligence": 4, "physical": 5
-  },
-  "mentalRatings": {
-    "attitude": 5, "composure": 5, "concentration": 4, "determination": 5, "teamWork": 5
-  },
-  "comment": "Overall, a very positive performance.",
-  "isShared": true,
+  "subjectId": "team-id-string",
+  "reviewType": "TeamPerformance",
   "createdAt": "2025-09-07T10:00:00.000Z",
   "updatedAt": "2025-09-07T10:00:00.000Z"
 }`}
@@ -358,8 +334,8 @@ export function ReviewsPanel({ match }: { match: Match }) {
     "id": "review-xyz-789",
     "matchId": "match-abc-123",
     "reviewerId": "user-id-of-reviewer-1",
-    "subjectId": "user-id-of-player-or-team",
-    "reviewType": "PlayerPerformance",
+    "subjectId": "team-id-string",
+    "reviewType": "TeamPerformance",
     "ztarOfTheMatchPlayerId": "player-user-id-abc",
     "overallMatchReview": "A fantastic display of skill and teamwork.",
     "teamRating": 5,
@@ -370,10 +346,7 @@ export function ReviewsPanel({ match }: { match: Match }) {
         "comment": "Scored the winning goal."
       }
     ],
-    "tacticalRatings": { "attack": 5, "defence": 4, "technique": 5, "intelligence": 4, "physical": 5 },
-    "mentalRatings": { "attitude": 5, "composure": 5, "concentration": 4, "determination": 5, "teamWork": 5 },
-    "comment": "Overall, a very positive performance.",
-    "isShared": true,
+    "comment": "Overall, a very positive performance from the team.",
     "createdAt": "2025-09-07T10:00:00.000Z",
     "updatedAt": "2025-09-07T10:00:00.000Z"
   }
@@ -388,8 +361,8 @@ export function ReviewsPanel({ match }: { match: Match }) {
   "id": "review-xyz-789",
   "matchId": "match-abc-123",
   "reviewerId": "user-id-of-reviewer-1",
-  "subjectId": "user-id-of-player-or-team",
-  "reviewType": "PlayerPerformance",
+  "subjectId": "team-id-string",
+  "reviewType": "TeamPerformance",
   "ztarOfTheMatchPlayerId": "player-user-id-abc",
   "overallMatchReview": "A fantastic display of skill and teamwork.",
   "teamRating": 5,
@@ -400,10 +373,7 @@ export function ReviewsPanel({ match }: { match: Match }) {
       "comment": "Scored the winning goal."
     }
   ],
-  "tacticalRatings": { "attack": 5, "defence": 4, "technique": 5, "intelligence": 4, "physical": 5 },
-  "mentalRatings": { "attitude": 5, "composure": 5, "concentration": 4, "determination": 5, "teamWork": 5 },
-  "comment": "Overall, a very positive performance.",
-  "isShared": true,
+  "comment": "Overall, a very positive performance from the team.",
   "createdAt": "2025-09-07T10:00:00.000Z",
   "updatedAt": "2025-09-07T10:15:00.000Z"
 }`}
@@ -415,29 +385,15 @@ export function ReviewsPanel({ match }: { match: Match }) {
                             method="PATCH"
                             requestPayload={`{
   "overallMatchReview": "An updated and more detailed review of the performance.",
-  "teamRating": 4,
-  "isShared": false
+  "teamRating": 4
 }`}
                             response={`{
   "id": "review-xyz-789",
   "matchId": "match-abc-123",
   "reviewerId": "current-user-id",
-  "subjectId": "user-id-of-player-or-team",
-  "reviewType": "PlayerPerformance",
-  "ztarOfTheMatchPlayerId": "player-user-id-abc",
+  "subjectId": "team-id-string",
   "overallMatchReview": "An updated and more detailed review of the performance.",
   "teamRating": 4,
-  "playerReviews": [
-    {
-      "playerId": "player-user-id-abc",
-      "rating": 5,
-      "comment": "Scored the winning goal."
-    }
-  ],
-  "tacticalRatings": { "attack": 5, "defence": 4, "technique": 5, "intelligence": 4, "physical": 5 },
-  "mentalRatings": { "attitude": 5, "composure": 5, "concentration": 4, "determination": 5, "teamWork": 5 },
-  "comment": "Overall, a very positive performance from the team.",
-  "isShared": false,
   "createdAt": "2025-09-07T10:00:00.000Z",
   "updatedAt": "2025-09-07T10:20:00.000Z"
 }`}

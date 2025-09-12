@@ -1,4 +1,5 @@
 
+
 // src/components/match-plan.tsx
 "use client";
 
@@ -693,7 +694,12 @@ export function MatchPlan({ matchId }: { matchId: string }) {
                             response={`{
   "id": "match-123",
   "invitedUserIds": ["user-id-1", "user-id-2", "user-id-3"],
-  // ...other match data
+  "userGeneratedData": {
+    "invites": {
+      "Home": { "usersInvited": ["user-id-1", "user-id-2"] },
+      "Referees": { "usersInvited": ["user-id-3"] }
+    }
+  }
 }`}
                         />
                         <ApiDocumentationViewer
@@ -717,35 +723,39 @@ export function MatchPlan({ matchId }: { matchId: string }) {
                             method="PATCH"
                             requestPayload={`{
   "opponentAnalysis": {
-    "general": { "summary": "string", "isLineupVisible": true, "areSetPlaysVisible": false, "lineup": {"formation": "4-3-3", "playerPositions": [{ "playerId": "user-id-string-1", "position": "GK" }, { "playerId": "user-id-string-2", "position": "RB" }]} },
-    "offense": { "summary": "string", "isLineupVisible": true, "areSetPlaysVisible": false, "lineup": {"formation": "4-3-3", "playerPositions": [{ "playerId": "user-id-string-1", "position": "ST" }]} },
-    "defense": { "summary": "string", "isLineupVisible": true, "areSetPlaysVisible": false, "lineup": {"formation": "5-4-1", "playerPositions": []} },
-    "other": { "summary": "string", "isLineupVisible": true, "areSetPlaysVisible": false, "lineup": {"formation": "4-4-2", "playerPositions": []} }
+    "general": { "summary": "They are fast on the counter.", "isLineupVisible": true, "areSetPlaysVisible": false, "lineup": {"formation": "4-3-3", "playerPositions": []} },
+    "offense": { "summary": "Focus on long balls.", "isLineupVisible": true, "areSetPlaysVisible": false, "lineup": {"formation": "4-3-3", "playerPositions": []} },
+    "defense": { "summary": "Press high on their defenders.", "isLineupVisible": true, "areSetPlaysVisible": false, "lineup": {"formation": "5-4-1", "playerPositions": []} },
+    "other": { "summary": "Watch out for their number 10.", "isLineupVisible": false, "areSetPlaysVisible": false, "lineup": {"formation": "4-4-2", "playerPositions": []} }
   },
   "teamLineup": {
-    "planName": "string",
-    "generalTactics": { "summary": "string", "attachedMedia": [] },
+    "planName": "Plan A",
+    "generalTactics": { "summary": "Play our usual passing game.", "attachedMedia": [] },
     "lineup": {
       "formation": "4-3-3",
-      "playerPositions": [{ "playerId": "string", "position": "GK" }]
+      "playerPositions": [{ "playerId": "user-id-1", "position": "GK" }, { "playerId": "user-id-2", "position": "RB" }]
     },
     "plannedExchanges": {
       "isEnabled": true,
-      "substitutions": [{ "playerInId": "string", "playerOutId": "string", "minute": 65 }]
+      "substitutions": [{ "playerInId": "user-id-3", "playerOutId": "user-id-2", "minute": 65 }]
     },
     "publishingSettings": {
-      "isEnabled": false,
+      "isEnabled": true,
       "publishInternallyMinutesBefore": 240,
       "publishPubliclyMinutesBefore": 60
     }
-  },
-  // ... offenseTactics, defenseTactics, otherTactics
+  }
 }`}
                             response={`{
-  "id": "match-id-string",
-  "updatedAt": "string (ISO 8601)",
+  "id": "match-123",
+  "updatedAt": "2025-09-08T12:00:00.000Z",
   "status": "draft",
-  "...other match fields"
+  "userGeneratedData": {
+    "tacticalPlan": {
+      "opponentAnalysis": { "strengths": [], "weaknesses": [] },
+      "teamLineup": { "formation": "4-3-3", "players": [] }
+    }
+  }
 }`}
                         />
                     </AccordionContent>

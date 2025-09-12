@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import { useForm } from "react-hook-form";
@@ -90,15 +91,19 @@ interface CreateMatchFormProps {
   isUpdateMode?: boolean;
 }
 
-// Helper to safely create a Date object from Firestore's timestamp
+// Helper to safely create a Date object from Firestore's timestamp or an ISO string
 const getDateFromTimestamp = (timestamp: any): Date | null => {
+    if (!timestamp) return null;
     if (timestamp && typeof timestamp === 'object' && '_seconds' in timestamp) {
         return new Date(timestamp._seconds * 1000);
     }
     if (typeof timestamp === 'string') {
-        return parseISO(timestamp);
+        try {
+            return parseISO(timestamp);
+        } catch (e) {
+            return null; // Invalid ISO string
+        }
     }
-    // Return null for invalid or missing timestamps
     return null;
 };
 
@@ -807,10 +812,16 @@ export function CreateMatchForm({ onMatchCreated, initialData = null, isUpdateMo
                         notes="This dynamic search populates the team selection dropdowns. The clubId is currently hardcoded to 'phL7vvhFwA3K3jrmN3ha'."
                         response={`[
   {
-    "teamId": "string",
-    "teamName": "string",
-    "logoUrl": "string (URL)",
-    "clubId": "string"
+    "teamId": "xjW4II6khRys9SFDTunP",
+    "teamName": "Team Alpha",
+    "logoUrl": "https://example.com/logos/alpha.png",
+    "clubId": "phL7vvhFwA3K3jrmN3ha"
+  },
+  {
+    "teamId": "fYv81QZ1K7ya7SUYqHoZ",
+    "teamName": "Team Beta",
+    "logoUrl": "https://example.com/logos/beta.png",
+    "clubId": "phL7vvhFwA3K3jrmN3ha"
   }
 ]`}
                     />
@@ -821,12 +832,12 @@ export function CreateMatchForm({ onMatchCreated, initialData = null, isUpdateMo
                         method="GET"
                         response={`[
   {
-    "id": "string",
-    "name": "string",
-    "description": "string",
+    "id": "BI96ZmQxBakw1hw2Lz3H",
+    "name": "Friendly Match",
+    "description": "A non-competitive match for practice.",
     "isActive": true,
-    "createdAt": "string (ISO 8601)",
-    "updatedAt": "string (ISO 8601)"
+    "createdAt": "2025-01-01T12:00:00.000Z",
+    "updatedAt": "2025-01-01T12:00:00.000Z"
   }
 ]`}
                     />
@@ -837,13 +848,13 @@ export function CreateMatchForm({ onMatchCreated, initialData = null, isUpdateMo
                         method="GET"
                         response={`[
   {
-    "id": "string",
-    "name": "string",
-    "playerCount": "number",
-    "description": "string",
+    "id": "LAcQoRc2Rdn2UuqZABQd",
+    "name": "11v11",
+    "playerCount": 11,
+    "description": "Standard 11-a-side match format.",
     "isActive": true,
-    "createdAt": "string (ISO 8601)",
-    "updatedAt": "string (ISO 8601)"
+    "createdAt": "2025-01-01T12:00:00.000Z",
+    "updatedAt": "2025-01-01T12:00:00.000Z"
   }
 ]`}
                     />
@@ -854,15 +865,15 @@ export function CreateMatchForm({ onMatchCreated, initialData = null, isUpdateMo
                         method="GET"
                         response={`[
   {
-    "id": "string",
-    "name": "string",
-    "season": "string",
-    "type": "LEAGUE | CUP | TOURNAMENT",
-    "logoUrl": "string",
-    "participatingTeams": ["string"],
+    "id": "AyN2qV3i5OBmuwFz5Bsw",
+    "name": "Zporter Youth Cup",
+    "season": "2025",
+    "type": "CUP",
+    "logoUrl": "https://example.com/logos/zporter-cup.png",
+    "participatingTeams": ["xjW4II6khRys9SFDTunP"],
     "isActive": true,
-    "createdAt": "string (ISO 8601)",
-    "updatedAt": "string (ISO 8601)"
+    "createdAt": "2025-01-01T12:00:00.000Z",
+    "updatedAt": "2025-01-01T12:00:00.000Z"
   }
 ]`}
                     />
@@ -873,48 +884,51 @@ export function CreateMatchForm({ onMatchCreated, initialData = null, isUpdateMo
                         method="POST"
                         notes="This is the first and most critical step for creating a new match. The 'id' returned in the response is required to save data in all other tabs (Invites, Plan, Notes, etc.)."
                         requestPayload={`{
-  "homeTeamId": "string",
-  "awayTeamId": "string",
-  "categoryId": "string",
-  "formatId": "string",
-  "matchDate": "string (YYYY-MM-DD)",
-  "matchStartTime": "string (HH:MM)",
-  "matchType": "HOME | AWAY",
-  "matchPeriod": "number",
-  "matchTime": "number",
-  "matchPause": "number",
-  "matchHeadLine": "string",
-  "matchLocation": "string",
-  "matchArena": "string",
-  "contestId": "string" (optional),
-  "description": "string" (optional),
-  "gatheringTime": "string (ISO 8601)",
-  "fullDayScheduling": "boolean",
-  "endTime": "string (ISO 8601)",
-  "isRecurring": "boolean",
-  "recurringUntil": "string (YYYY-MM-DD)" (optional),
-  "notificationMinutesBefore": "number",
-  "markAsOccupied": "boolean",
-  "isPrivate": "boolean"
+  "homeTeamId": "xjW4II6khRys9SFDTunP",
+  "awayTeamId": "fYv81QZ1K7ya7SUYqHoZ",
+  "categoryId": "BI96ZmQxBakw1hw2Lz3H",
+  "formatId": "LAcQoRc2Rdn2UuqZABQd",
+  "matchDate": "2025-09-07",
+  "matchStartTime": "16:00",
+  "matchType": "HOME",
+  "matchPeriod": 2,
+  "matchTime": 45,
+  "matchPause": 15,
+  "matchHeadLine": "Match Zporter Cup 2023",
+  "matchLocation": "Sollentunavallen",
+  "matchArena": "Main Pitch",
+  "contestId": "AyN2qV3i5OBmuwFz5Bsw",
+  "description": "Match against FC Barcelona U15 starts at 16.00.",
+  "gatheringTime": "2025-09-07T14:00:00.000Z",
+  "fullDayScheduling": false,
+  "endTime": "2025-09-07T18:00:00.000Z",
+  "isRecurring": false,
+  "notificationMinutesBefore": 60,
+  "markAsOccupied": true,
+  "isPrivate": false
 }`}
-                        response={`
-{
-  "id": "new-match-id",
+                        response={`{
+  "id": "match-1757374871784",
   "source": "user-generated",
   "status": "draft",
-  "createdAt": "2025-09-06T11:25:09.618Z",
-  "updatedAt": "2025-09-06T11:25:09.618Z",
+  "createdAt": "2025-09-08T10:21:11.784Z",
+  "updatedAt": "2025-09-08T10:21:11.784Z",
   "name": "Match Zporter Cup 2023",
-  "homeTeam": { "id": "...", "name": "Home Team", ... },
-  "awayTeam": { "id": "...", "name": "Away Team", ... },
+  "homeTeam": {
+    "id": "xjW4II6khRys9SFDTunP",
+    "name": "Home Team Name"
+  },
+  "awayTeam": {
+    "id": "fYv81QZ1K7ya7SUYqHoZ",
+    "name": "Away Team Name"
+  },
   "userGeneratedData": {
     "eventDetails": {
-      "matchDate": "2025-09-06",
+      "matchDate": "2025-09-07",
       "matchStartTime": "16:00",
-       ...
+      "matchHeadLine": "Match Zporter Cup 2023"
     }
-  },
-  ... // other fields
+  }
 }`}
                     />
                     <ApiDocumentationViewer
@@ -928,22 +942,23 @@ export function CreateMatchForm({ onMatchCreated, initialData = null, isUpdateMo
   "matchDate": "2025-09-21",
   "matchStartTime": "20:00",
   "isPrivate": true
-  // ... any other fields from the create payload are also valid
 }`}
-                        response={`
-{
-  "id": "match-12345",
+                        response={`{
+  "id": "match-1757374871784",
   "source": "user-generated",
   "status": "scheduled",
-  "updatedAt": "2025-09-16T14:20:10.555Z",
+  "updatedAt": "2025-09-08T11:00:00.000Z",
   "name": "The Grand Final: Titans vs. Giants",
   "userGeneratedData": {
     "eventDetails": {
-      "matchHeadLine": "The Grand Final: Titans vs. Giants"
-      // ... all other event details
+      "matchHeadLine": "The Grand Final: Titans vs. Giants",
+      "matchDate": "2025-09-21",
+      "matchStartTime": "20:00"
+    },
+    "settings": {
+      "isPrivate": true
     }
-  },
-  ... // The full, updated EnhancedMatchDto object
+  }
 }`}
                     />
                 </AccordionContent>
