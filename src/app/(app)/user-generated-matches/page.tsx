@@ -17,7 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { format } from "date-fns";
+import { format, parse } from "date-fns";
 import Link from "next/link";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ApiDocumentationViewer } from "@/components/api-documentation-viewer";
@@ -93,7 +93,7 @@ export default function UserGeneratedMatchesPage() {
                         {match.homeTeam.name} vs {match.awayTeam.name}
                       </TableCell>
                       <TableCell>
-                        {format(new Date(match.matchDate), "PPP")} at {match.matchStartTime}
+                        {format(parse(match.matchDate, 'yyyy-MM-dd', new Date()), "PPP")} at {match.matchStartTime}
                       </TableCell>
                       <TableCell>{match.venue?.name || 'N/A'}</TableCell>
                       <TableCell>
