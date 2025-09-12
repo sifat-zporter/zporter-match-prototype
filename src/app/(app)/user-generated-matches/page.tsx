@@ -34,7 +34,8 @@ export default function UserGeneratedMatchesPage() {
       const response = await apiClient<GetMatchesResponse>("/matches", {
         params: { limit: 100 }
       });
-      setMatches(response.matches || []);
+      // Filter out any null or undefined match objects from the response
+      setMatches((response.matches || []).filter(Boolean));
     } catch (error) {
       toast({
         variant: "destructive",
