@@ -30,19 +30,19 @@ export default function UserGeneratedMatchesPage() {
   const fetchMatches = async () => {
     try {
       setIsLoading(true);
-      // Assuming user-generated matches can be filtered, or we just get all for now
       const response = await apiClient<GetMatchesResponse>("/matches", {
         params: { limit: 100 }
       });
-      // Filter out any null or undefined match objects from the response
-      setMatches((response.matches || []).filter(Boolean));
+      // Add a more robust filter to ensure match objects are valid and have the required properties.
+      const validMatches = (response.matches || []).filter(match => match && match.id && match.matchDate);
+      setMatches(validMatches);
     } catch (error) {
       toast({
         variant: "destructive",
         title: "Error",
         description: "Failed to fetch matches.",
       });
-      setMatches([]); // Ensure matches is an array on error
+      setMatches([]);
     } finally {
       setIsLoading(false);
     }
