@@ -4,10 +4,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Info, Loader2, Plus, ArrowUpDown, ListFilter, X } from "lucide-react";
+import { Search, Info, Loader2, Plus, ArrowUpDown, ListFilter } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiClient } from "@/lib/api-client";
-import type { AwayInvitation, TeamSearchResult, MatchEntity } from "@/lib/models";
+import type { AwayInvitation, TeamSearchResult, MatchEntity, InvitationStatus } from "@/lib/models";
 import { ScrollArea } from "./ui/scroll-area";
 import { Label } from "./ui/label";
 import { Separator } from "./ui/separator";
@@ -106,11 +106,17 @@ export function AwayTeamInvites({ matchId, awayTeamId }: AwayTeamInvitesProps) {
         setInvitedTeams(prev => prev.filter(t => t.teamId !== teamId));
     };
 
-    const handleSetPrimary = (teamId: string) => {
-        setInvitedTeams(prev => prev.map(t => ({
-            ...t,
-            status: t.teamId === teamId ? 'PRIMARY_PENDING' : 'BACKUP_PENDING'
-        })));
+    const handleStatusChange = (teamId: string, newStatus: InvitationStatus) => {
+        setInvitedTeams(prev => {
+            // If setting a team to primary, ensure no other team is primary
+            if (newStatus === 'PRIMARY_PENDING' || newStatus === 'ACCEPTED') {
+                return prev.map(t => ({
+                    ...t,
+                    status: t.teamId === teamId ? newStatus : (t.status === 'PRIMARY_PENDING' || t.status === 'ACCEPTED' ? 'BACKUP_PENDING' : t.status)
+                }));
+            }
+            return prev.map(t => t.teamId === teamId ? { ...t, status: newStatus } : t);
+        });
     };
 
     const handleSave = async () => {
@@ -166,8 +172,7 @@ export function AwayTeamInvites({ matchId, awayTeamId }: AwayTeamInvitesProps) {
                            <AwayTeamListItem 
                              key={team.teamId}
                              team={team}
-                             isPrimary={primaryTeam?.teamId === team.teamId}
-                             onSetPrimary={() => handleSetPrimary(team.teamId)}
+                             onStatusChange={(newStatus) => handleStatusChange(team.teamId, newStatus)}
                              onRemove={() => handleRemoveTeam(team.teamId)}
                            />
                         ))

@@ -8,6 +8,7 @@
 export type TeamRef = {
   id: string;
   name: string;
+  logoUrl?: string; // Optional logo for display
 };
 
 export type LocationDto = {
@@ -72,8 +73,8 @@ export type CreateMatchDto = {
   gatheringTime: string; // ISO 8601
   fullDayScheduling: boolean;
   endTime: string; // ISO 8601
-  isRecurring: boolean;
-  recurringUntil?: string; // "YYYY-MM-DD"
+  matchRecurringType?: "DAILY" | "WEEKLY" | "BI_WEEKLY" | "MONTHLY" | "YEARLY" | "DOES_NOT_REPEAT";
+  matchRecurringUntil?: string; // "YYYY-MM-DD"
   notificationMinutesBefore: number;
   markAsOccupied: boolean;
   isPrivate: boolean;
@@ -266,11 +267,7 @@ export type MatchEntity = {
         scheduleDetails: any;
         settings: any;
         invites?: {
-            [groupName: string]: {
-                usersInvited: string[];
-                inviteDaysBefore: number;
-                reminderDaysBefore: number;
-            }
+            [groupName: string]: any; // Can be user invite object or away invitation array
         };
     };
     invitedUserIds?: string[];
@@ -447,6 +444,38 @@ export type Invite = {
   inviteeDetails?: InviteUserSearchResult; // Add this to hold user details
   role: InvitationRole;
 };
+
+/**
+ * @model TeamSearchResult
+ * @description Represents a team found via the invite search endpoint.
+ */
+export type TeamSearchResult = {
+    teamId: string;
+    name: string;
+    logoUrl: string;
+    coachId: string;
+};
+
+/**
+ * @model InvitationStatus
+ * @description The possible statuses for an opponent team invitation.
+ */
+export type InvitationStatus = 'PRIMARY_PENDING' | 'BACKUP_PENDING' | 'ACCEPTED' | 'REJECTED' | 'CANCELED';
+
+/**
+ * @model AwayInvitation
+ * @description Represents an invitation sent to a potential opponent team.
+ */
+export type AwayInvitation = {
+    teamId: string;
+    coachId: string;
+    status: InvitationStatus;
+    teamDetails?: { // This is for frontend display only, not in the backend model
+        name: string;
+        logoUrl: string;
+    };
+};
+
 
 
 // --- Match Plan Models ---
