@@ -78,12 +78,21 @@ const createMatchSchema = z.object({
   gatheringTime: z.date().optional(),
   fullDayScheduling: z.boolean().default(false),
   endTime: z.date().optional(),
-  isRecurring: z.boolean().default(false),
-  recurringUntil: z.string().optional(),
+  matchRecurringType: z.enum(["DOES_NOT_REPEAT", "DAILY", "WEEKLY", "BI_WEEKLY", "MONTHLY", "YEARLY"]).default("DOES_NOT_REPEAT"),
+  matchRecurringUntil: z.date().optional(),
   notificationMinutesBefore: z.coerce.number().int().default(60),
   markAsOccupied: z.boolean().default(true),
   isPrivate: z.boolean().default(false),
+}).refine(data => {
+    if (data.matchRecurringType !== 'DOES_NOT_REPEAT' && !data.matchRecurringUntil) {
+        return false;
+    }
+    return true;
+}, {
+    message: "An end date is required for recurring events.",
+    path: ["matchRecurringUntil"],
 });
+
 
 interface CreateMatchFormProps {
   onMatchCreated: (newMatch: Match) => void;
@@ -148,13 +157,15 @@ export function CreateMatchForm({ onMatchCreated, initialData = null, isUpdateMo
       gatheringTime: new Date(),
       fullDayScheduling: false,
       endTime: new Date(),
-      isRecurring: false,
+      matchRecurringType: 'DOES_NOT_REPEAT',
       notificationMinutesBefore: 60,
       markAsOccupied: true,
       isPrivate: false,
       contestId: "",
     },
   });
+  
+  const recurringType = form.watch('matchRecurringType');
 
   // Effect to fetch dropdown data
   useEffect(() => {
@@ -192,6 +203,7 @@ export function CreateMatchForm({ onMatchCreated, initialData = null, isUpdateMo
         // Correctly parse startDate and endDate
         const gatheringTimeDate = getDateFromTimestamp(initialData.startDate);
         const endTimeDate = getDateFromTimestamp(initialData.endDate);
+        const recurringUntilDate = schedule?.recurringUntil ? parse(schedule.recurringUntil, 'yyyy-MM-dd', new Date()) : undefined;
 
         form.reset({
             homeTeamId: initialData.homeTeam.id,
@@ -212,8 +224,8 @@ export function CreateMatchForm({ onMatchCreated, initialData = null, isUpdateMo
             gatheringTime: gatheringTimeDate || new Date(),
             fullDayScheduling: schedule?.matchIsAllDay || false,
             endTime: endTimeDate || new Date(),
-            isRecurring: schedule?.matchRecurringType !== 'DOES_NOT_REPEAT',
-            recurringUntil: schedule?.recurringUntil,
+            matchRecurringType: schedule?.matchRecurringType || 'DOES_NOT_REPEAT',
+            matchRecurringUntil: recurringUntilDate,
             notificationMinutesBefore: settings?.notificationSendBefore || 60,
             markAsOccupied: settings?.isOccupied || false,
             isPrivate: settings?.isPrivate || false,
@@ -293,14 +305,24 @@ export function CreateMatchForm({ onMatchCreated, initialData = null, isUpdateMo
 
       // This payload is used for both create and update
       // For PATCH, only changed fields are sent, but for simplicity here we send all.
-      const payload = {
+      const payload: any = {
         ...values,
         yourTeamName: selectedHomeTeam.name,
         opponentTeamName: selectedAwayTeam.name,
         matchDate: format(values.matchDate, 'yyyy-MM-dd'),
         gatheringTime: values.gatheringTime?.toISOString(),
         endTime: values.endTime?.toISOString(),
+        matchRecurringUntil: values.matchRecurringUntil ? format(values.matchRecurringUntil, 'yyyy-MM-dd') : undefined,
       };
+
+      // Remove the old isRecurring field if it exists
+      delete payload.isRecurring;
+
+      // Only send recurrence fields if a recurring option is selected
+      if (payload.matchRecurringType === 'DOES_NOT_REPEAT') {
+          delete payload.matchRecurringType;
+          delete payload.matchRecurringUntil;
+      }
       
       let newMatchResponse: any; // Use 'any' to handle the Firestore timestamp object
       if (isUpdateMode && initialData) {
@@ -706,21 +728,59 @@ export function CreateMatchForm({ onMatchCreated, initialData = null, isUpdateMo
                 )}
                 />
             
-
-            <div className="flex items-center justify-between">
-                <FormLabel>Recurring</FormLabel>
-                 <FormField
-                control={form.control}
-                name="isRecurring"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormControl>
-                        <Switch checked={field.value} onCheckedChange={field.onChange} />
-                    </FormControl>
-                    </FormItem>
-                )}
+            <div className="grid grid-cols-2 gap-4">
+                <FormField
+                    control={form.control}
+                    name="matchRecurringType"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Recurring</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                                <FormControl>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select recurrence" />
+                                    </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                    <SelectItem value="DOES_NOT_REPEAT">Once</SelectItem>
+                                    <SelectItem value="DAILY">Daily</SelectItem>
+                                    <SelectItem value="WEEKLY">Weekly</SelectItem>
+                                    <SelectItem value="BI_WEEKLY">Bi-Weekly</SelectItem>
+                                    <SelectItem value="MONTHLY">Monthly</SelectItem>
+                                    <SelectItem value="YEARLY">Yearly</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="matchRecurringUntil"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Until</FormLabel>
+                            <Popover>
+                                <PopoverTrigger asChild disabled={recurringType === 'DOES_NOT_REPEAT'}>
+                                    <FormControl>
+                                        <Button
+                                            variant={"outline"}
+                                            className={cn("w-full justify-between text-left font-normal", !field.value && "text-muted-foreground")}
+                                        >
+                                            {field.value ? format(field.value, "PPP") : <span>-</span>}
+                                            <CalendarIcon className="h-4 w-4 opacity-50" />
+                                        </Button>
+                                    </FormControl>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="start">
+                                    <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
+                                </PopoverContent>
+                            </Popover>
+                            <FormMessage />
+                        </FormItem>
+                    )}
                 />
             </div>
+
             
             <FormField
                 control={form.control}
@@ -879,7 +939,7 @@ export function CreateMatchForm({ onMatchCreated, initialData = null, isUpdateMo
                     />
                      <ApiDocumentationViewer
                         title="Create Match Draft"
-                        description="Called when the 'Save Draft & Continue' button is clicked in 'Create' mode. It creates the initial match record."
+                        description="Called when the 'Save Draft & Continue' button is clicked in 'Create' mode. It creates the initial match record. Includes new recurrence fields."
                         endpoint="/matches"
                         method="POST"
                         notes="This is the first and most critical step for creating a new match. The 'id' returned in the response is required to save data in all other tabs (Invites, Plan, Notes, etc.)."
@@ -902,7 +962,8 @@ export function CreateMatchForm({ onMatchCreated, initialData = null, isUpdateMo
   "gatheringTime": "2025-09-07T14:00:00.000Z",
   "fullDayScheduling": false,
   "endTime": "2025-09-07T18:00:00.000Z",
-  "isRecurring": false,
+  "matchRecurringType": "WEEKLY",
+  "matchRecurringUntil": "2025-09-28",
   "notificationMinutesBefore": 60,
   "markAsOccupied": true,
   "isPrivate": false
@@ -927,21 +988,26 @@ export function CreateMatchForm({ onMatchCreated, initialData = null, isUpdateMo
       "matchDate": "2025-09-07",
       "matchStartTime": "16:00",
       "matchHeadLine": "Match Zporter Cup 2023"
+    },
+     "scheduleDetails": {
+      "matchRecurringType": "WEEKLY",
+      "recurringUntil": "2025-09-28"
     }
   }
 }`}
                     />
                     <ApiDocumentationViewer
                         title="Update Match Details (Event Tab)"
-                        description="Called when the 'Update Match' button is clicked. Performs a partial update on the core event details."
-                        endpoint="/matches/{id}"
+                        description="Called when the 'Update Match' button is clicked. Performs a partial update on the core event details. Now includes recurrence."
+                        endpoint="/matches/{id}?updateScope=series"
                         method="PATCH"
-                        notes="You only need to send the fields you want to change. The API will respond with the full, updated match object."
+                        notes="The 'updateScope' query param is crucial. 'series' updates all recurring events, while 'single' (default) updates only one instance."
                         requestPayload={`{
   "matchHeadLine": "The Grand Final: Titans vs. Giants",
   "matchDate": "2025-09-21",
   "matchStartTime": "20:00",
-  "isPrivate": true
+  "isPrivate": true,
+  "matchRecurringType": "MONTHLY"
 }`}
                         response={`{
   "id": "match-1757374871784",
@@ -957,6 +1023,9 @@ export function CreateMatchForm({ onMatchCreated, initialData = null, isUpdateMo
     },
     "settings": {
       "isPrivate": true
+    },
+     "scheduleDetails": {
+      "matchRecurringType": "MONTHLY"
     }
   }
 }`}
@@ -967,5 +1036,3 @@ export function CreateMatchForm({ onMatchCreated, initialData = null, isUpdateMo
     </div>
   )
 }
-
-    
