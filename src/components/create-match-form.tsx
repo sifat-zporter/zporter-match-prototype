@@ -35,7 +35,7 @@ import { Textarea } from "./ui/textarea";
 import { Switch } from "./ui/switch";
 import { Separator } from "./ui/separator";
 import { apiClient } from "@/lib/api-client";
-import type { CreateMatchDto, MatchCategory, MatchContest, MatchFormat, MatchEntity, TeamDto } from "@/lib/models";
+import type { CreateMatchDto, MatchCategory, MatchContest, MatchFormat, MatchEntity, TeamDto, TeamSearchResult } from "@/lib/models";
 import { useToast } from "@/hooks/use-toast";
 import type { Match } from "@/lib/data";
 import { useEffect, useState, useCallback } from "react";
@@ -127,8 +127,8 @@ export function CreateMatchForm({ onMatchCreated, initialData = null, isUpdateMo
   // State for team search
   const [homeSearchQuery, setHomeSearchQuery] = useState("");
   const [awaySearchQuery, setAwaySearchQuery] = useState("");
-  const [homeSearchResults, setHomeSearchResults] = useState<TeamDto[]>([]);
-  const [awaySearchResults, setAwaySearchResults] = useState<TeamDto[]>([]);
+  const [homeSearchResults, setHomeSearchResults] = useState<TeamSearchResult[]>([]);
+  const [awaySearchResults, setAwaySearchResults] = useState<TeamSearchResult[]>([]);
   const [isHomeSearching, setIsHomeSearching] = useState(false);
   const [isAwaySearching, setIsAwaySearching] = useState(false);
   const [selectedHomeTeam, setSelectedHomeTeam] = useState<TeamDto | null>(null);
@@ -241,24 +241,17 @@ export function CreateMatchForm({ onMatchCreated, initialData = null, isUpdateMo
   }, [initialData, isUpdateMode, isDropdownDataLoading, form]);
 
 
-  const searchTeams = useCallback(async (query: string, setSearchResults: React.Dispatch<React.SetStateAction<TeamDto[]>>, setIsLoading: React.Dispatch<React.SetStateAction<boolean>>) => {
+  const searchTeams = useCallback(async (query: string, setSearchResults: React.Dispatch<React.SetStateAction<TeamSearchResult[]>>, setIsLoading: React.Dispatch<React.SetStateAction<boolean>>) => {
     if (query.length < 2) {
       setSearchResults([]);
       return;
     }
     setIsLoading(true);
     try {
-      const clubId = "phL7vvhFwA3K3jrmN3ha"; // As specified in the instructions
-      const response = await apiClient<TeamDto[]>(`/clubs/teams?limit=10&sorted=asc&clubId=${clubId}&searchQuery=${query}&gender=MALE&userType=PLAYER`);
-      
-      const resultsWithMappedFields = response.map(team => ({
-        id: team.teamId!,
-        name: team.teamName!,
-        logoUrl: team.logoUrl,
-        clubId: team.clubId,
-      }));
-      setSearchResults(resultsWithMappedFields);
-
+      const response = await apiClient<TeamSearchResult[]>(`/matches/search/teams`, {
+        params: { name: query }
+      });
+      setSearchResults(response);
     } catch (error) {
       toast({
         variant: "destructive",
@@ -270,6 +263,7 @@ export function CreateMatchForm({ onMatchCreated, initialData = null, isUpdateMo
     }
   }, [toast]);
 
+
   useEffect(() => {
     searchTeams(debouncedHomeSearch, setHomeSearchResults, setIsHomeSearching);
   }, [debouncedHomeSearch, searchTeams]);
@@ -278,16 +272,16 @@ export function CreateMatchForm({ onMatchCreated, initialData = null, isUpdateMo
     searchTeams(debouncedAwaySearch, setAwaySearchResults, setIsAwaySearching);
   }, [debouncedAwaySearch, searchTeams]);
   
-  const handleSelectHomeTeam = (team: TeamDto) => {
-    setSelectedHomeTeam(team);
-    form.setValue("homeTeamId", team.id);
+  const handleSelectHomeTeam = (team: TeamSearchResult) => {
+    setSelectedHomeTeam({ id: team.teamId, name: team.teamName, logoUrl: team.logo });
+    form.setValue("homeTeamId", team.teamId);
     setHomeSearchQuery("");
     setHomeSearchResults([]);
   };
   
-  const handleSelectAwayTeam = (team: TeamDto) => {
-    setSelectedAwayTeam(team);
-    form.setValue("awayTeamId", team.id);
+  const handleSelectAwayTeam = (team: TeamSearchResult) => {
+    setSelectedAwayTeam({ id: team.teamId, name: team.teamName, logoUrl: team.logo });
+    form.setValue("awayTeamId", team.teamId);
     setAwaySearchQuery("");
     setAwaySearchResults([]);
   };
@@ -577,8 +571,8 @@ export function CreateMatchForm({ onMatchCreated, initialData = null, isUpdateMo
                                     {isHomeSearching && <div className="p-2 text-sm text-center">Searching...</div>}
                                     <CommandEmpty>No team found.</CommandEmpty>
                                     {homeSearchResults.map(team => (
-                                        <CommandItem key={team.id} onSelect={() => handleSelectHomeTeam(team)}>
-                                            {team.name}
+                                        <CommandItem key={team.teamId} onSelect={() => handleSelectHomeTeam(team)}>
+                                            {team.teamName}
                                         </CommandItem>
                                     ))}
                                 </CommandList>
@@ -619,8 +613,8 @@ export function CreateMatchForm({ onMatchCreated, initialData = null, isUpdateMo
                                     {isAwaySearching && <div className="p-2 text-sm text-center">Searching...</div>}
                                     <CommandEmpty>No team found.</CommandEmpty>
                                     {awaySearchResults.map(team => (
-                                        <CommandItem key={team.id} onSelect={() => handleSelectAwayTeam(team)}>
-                                            {team.name}
+                                        <CommandItem key={team.teamId} onSelect={() => handleSelectAwayTeam(team)}>
+                                            {team.teamName}
                                         </CommandItem>
                                     ))}
                                 </CommandList>
@@ -866,22 +860,16 @@ export function CreateMatchForm({ onMatchCreated, initialData = null, isUpdateMo
                 <AccordionContent className="space-y-4 pt-4">
                      <ApiDocumentationViewer
                         title="Search Teams by Name"
-                        description="Called when the user types in the 'Your Team' or 'Opponent' fields. Requires clubId and other parameters."
-                        endpoint="/clubs/teams?limit=10&sorted=asc&clubId={clubId}&searchQuery={query}&gender=MALE&userType=PLAYER"
+                        description="Called when the user types in the 'Your Team' or 'Opponent' fields. This is a simplified endpoint for finding teams."
+                        endpoint="/matches/search/teams?name={query}"
                         method="GET"
-                        notes="This dynamic search populates the team selection dropdowns. The clubId is currently hardcoded to 'phL7vvhFwA3K3jrmN3ha'."
                         response={`[
   {
-    "teamId": "xjW4II6khRys9SFDTunP",
-    "teamName": "Team Alpha",
-    "logoUrl": "https://example.com/logos/alpha.png",
-    "clubId": "phL7vvhFwA3K3jrmN3ha"
-  },
-  {
-    "teamId": "fYv81QZ1K7ya7SUYqHoZ",
-    "teamName": "Team Beta",
-    "logoUrl": "https://example.com/logos/beta.png",
-    "clubId": "phL7vvhFwA3K3jrmN3ha"
+    "teamId": "team-alpha-123",
+    "teamName": "Alpha Tigers",
+    "logo": "https://example.com/logos/alpha.png",
+    "ownerId": "user-owner-456",
+    "coachId": "user-coach-789"
   }
 ]`}
                     />

@@ -447,14 +447,16 @@ export type Invite = {
 
 /**
  * @model TeamSearchResult
- * @description Represents a team found via the invite search endpoint.
+ * @description Represents a team found via the dedicated team search endpoint.
  */
 export type TeamSearchResult = {
     teamId: string;
-    name: string;
-    logoUrl: string;
+    teamName: string;
+    logo: string;
+    ownerId: string;
     coachId: string;
 };
+
 
 /**
  * @model InvitationStatus
@@ -472,7 +474,7 @@ export type AwayInvitation = {
     status: InvitationStatus;
     teamDetails?: { // This is for frontend display only, not in the backend model
         name: string;
-        logoUrl: string;
+        logoUrl?: string;
     };
 };
 

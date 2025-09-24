@@ -111,31 +111,31 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
         setSearchResults([]);
         
         try {
-            const params = new URLSearchParams();
+            const params: Record<string, string> = {};
             
             // Player Search Logic
-            if (tab === 'Home') {
-                params.append('role', 'PLAYER');
-                const teamId = homeTeam.id;
+            if (tab === 'Home' || tab === 'Away') {
+                params.role = 'PLAYER';
+                const teamId = tab === 'Home' ? homeTeam.id : awayTeam.id;
                 if (!teamId) {
                     toast({ variant: "destructive", title: "Missing Team ID", description: `Cannot search for players without a team ID for ${tab}.` });
                     setIsLoading(false);
                     return;
                 }
-                params.append('teamId', teamId);
+                params.teamId = teamId;
                 if (query) {
-                    params.append('name', query);
+                    params.name = query;
                 }
             // Global User Search Logic
             } else if (query) {
-                 params.append('name', query);
+                 params.name = query;
             } else {
                 // Don't search if there's no query for non-player tabs
                 setIsLoading(false);
                 return;
             }
            
-            const data = await apiClient<UserDto[]>(`/matches/${matchId}/invites/search-potential-invitees?${params.toString()}`);
+            const data = await apiClient<UserDto[]>(`/matches/${matchId}/invites/search-potential-invitees`, { params });
             
             // Transform the detailed UserDto to the simpler InviteUserSearchResult
             const transformedResults = data.map(user => ({
@@ -156,7 +156,8 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
         } finally {
             setIsLoading(false);
         }
-    }, [matchId, homeTeam.id, toast]);
+    }, [matchId, homeTeam.id, awayTeam.id, toast]);
+
 
     useEffect(() => {
         fetchInvitedUsers();
@@ -365,12 +366,12 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
                             endpoint="/matches/{matchId}/invites/search-potential-invitees"
                             method="GET"
                             notes="Search Logic: To find PLAYERS, you must provide role=PLAYER and a teamId. To find TEAMS, provide searchType=team. To find other users, search by name."
-                            response={`// Example for searchType=team&name=Tigers
+                            response={`// Example for ?searchType=team&name=Tigers
 [
   {
     "teamId": "team-tigers-789",
-    "name": "Tigers FC",
-    "logoUrl": "https://example.com/logos/tigers.png",
+    "teamName": "Tigers FC",
+    "logo": "https://example.com/logos/tigers.png",
     "coachId": "user-coach-jane-doe"
   }
 ]

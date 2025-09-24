@@ -71,8 +71,8 @@ export function AwayTeamInvites({ matchId, awayTeamId }: AwayTeamInvitesProps) {
         }
         setIsLoadingSearch(true);
         try {
-            const results = await apiClient<TeamSearchResult[]>(`/matches/${matchId}/invites/search-potential-invitees`, {
-                params: { searchType: 'team', name: query }
+            const results = await apiClient<TeamSearchResult[]>(`/matches/search/teams`, {
+                params: { name: query }
             });
             setSearchResults(results);
         } catch (error) {
@@ -80,7 +80,7 @@ export function AwayTeamInvites({ matchId, awayTeamId }: AwayTeamInvitesProps) {
         } finally {
             setIsLoadingSearch(false);
         }
-    }, [matchId, toast]);
+    }, [toast]);
 
     useEffect(() => {
         handleSearchTeams(debouncedSearch);
@@ -95,7 +95,7 @@ export function AwayTeamInvites({ matchId, awayTeamId }: AwayTeamInvitesProps) {
             teamId: team.teamId,
             coachId: team.coachId,
             status: 'BACKUP_PENDING',
-            teamDetails: { name: team.name, logoUrl: team.logoUrl }
+            teamDetails: { name: team.teamName, logoUrl: team.logo }
         };
         setInvitedTeams(prev => [...prev, newInvitation]);
         setSearchQuery('');
@@ -205,7 +205,7 @@ export function AwayTeamInvites({ matchId, awayTeamId }: AwayTeamInvitesProps) {
                                 <CommandEmpty>No team found, <Button variant="link" className="p-0 h-auto">add new Team</Button></CommandEmpty>
                                 {searchResults.map(team => (
                                     <CommandItem key={team.teamId} onSelect={() => handleAddTeam(team)}>
-                                        {team.name}
+                                        {team.teamName}
                                     </CommandItem>
                                 ))}
                             </CommandList>
