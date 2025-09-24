@@ -6,25 +6,21 @@ import { DateNavigator } from "@/components/date-navigator";
 import MatchesList from "@/components/matches-list";
 import { PlayerMatchesList } from "@/components/player-matches-list";
 import { Button } from "@/components/ui/button";
-import { Search, MessageSquare, Bell, MapPin, ListFilter, ArrowUpDown, Loader2 } from "lucide-react";
+import { Search, MessageSquare, Bell, MapPin, ListFilter, ArrowUpDown, Loader2, Plus } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SeriesMatchesList } from "@/components/series-matches-list";
 import { CupMatchesList } from "@/components/cup-matches-list";
-import { Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle, SheetClose } from "@/components/ui/sheet";
+import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet";
 import { FilterSheet } from "@/components/filter-sheet";
 import type { Match, Cup } from "@/lib/data";
 import { apiClient } from "@/lib/api-client";
 import { format, parse } from "date-fns";
-import type { GetMatchesResponse, MatchListItem } from "@/lib/models";
+import type { GetMatchesResponse, MatchListItem, MatchPlayer, GetMatchPlayersResponse } from "@/lib/models";
 import { Skeleton } from "@/components/ui/skeleton";
+import Link from "next/link";
 
-// --- Data Transformation Layer ---
+// --- Data Transformation Layer for General Matches ---
 
-/**
- * Maps the raw API match object to the frontend Match type.
- * @param apiMatch - The match object from the backend API.
- * @returns A Match object formatted for the frontend.
- */
 function transformApiMatchToFrontendMatch(apiMatch: MatchListItem): Match {
   const matchDate = parse(apiMatch.matchDate, 'yyyy-MM-dd', new Date());
 
@@ -46,9 +42,9 @@ function transformApiMatchToFrontendMatch(apiMatch: MatchListItem): Match {
     },
     scores: apiMatch.score || { home: 0, away: 0 },
     league: {
-      id: `league-${apiMatch.id}`, // Placeholder
-      name: 'Competition Name', // Placeholder
-      logoUrl: 'https://placehold.co/24x24.png', // Placeholder
+      id: `league-${apiMatch.id}`,
+      name: 'Competition Name',
+      logoUrl: 'https://placehold.co/24x24.png',
     },
     stadium: apiMatch.location.name,
     featuredPlayers: apiMatch.featuredPlayer ? [{
@@ -56,7 +52,6 @@ function transformApiMatchToFrontendMatch(apiMatch: MatchListItem): Match {
       name: apiMatch.featuredPlayer.name,
       avatarUrl: apiMatch.featuredPlayer.imageUrl,
     }] : [],
-    // Default values for fields not yet in API response
     events: [],
     stats: {} as any, 
     notes: [],
@@ -83,7 +78,7 @@ function groupMatchesIntoCups(matches: Match[]): Cup[] {
         id: match.league.id,
         name: match.league.name,
         logoUrl: match.league.logoUrl,
-        metadata: 'SE, Male, 2007', // Placeholder metadata
+        metadata: 'SE, Male, 2007',
         matches: []
       };
     }
@@ -98,51 +93,52 @@ function groupMatchesIntoCups(matches: Match[]): Cup[] {
 export default function MatchesHubPage() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [matches, setMatches] = useState<Match[]>([]);
+  const [playerMatches, setPlayerMatches] = useState<MatchPlayer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Set the initial date only on the client side to avoid hydration mismatch
     setSelectedDate(new Date());
   }, []);
 
   useEffect(() => {
-    async function getMatchesForDate(date: Date) {
-      // Check for auth token before fetching
+    async function fetchDataForDate(date: Date) {
       const token = localStorage.getItem("zporter-id-token");
       if (!token) {
         setIsLoading(false);
         setMatches([]);
-        // Optionally set an error to guide the user to log in
-        // setError("Please log in to view matches."); 
+        setPlayerMatches([]);
         return;
       }
 
       setIsLoading(true);
       setError(null);
+      const dateString = format(date, 'yyyy-MM-dd');
+
       try {
-        const dateString = format(date, 'yyyy-MM-dd');
-        // Using the new API response structure
-        const response = await apiClient<GetMatchesResponse>('/matches', {
-          params: { date: dateString, limit: 50 }
-        });
-        const transformedMatches = (response.matches || []).map(transformApiMatchToFrontendMatch);
+        const [matchesResponse, playerMatchesResponse] = await Promise.all([
+           apiClient<GetMatchesResponse>('/matches', { params: { date: dateString, limit: 50 } }),
+           apiClient<GetMatchPlayersResponse>('/matches/players', { params: { date: dateString } })
+        ]);
+        
+        const transformedMatches = (matchesResponse.matches || []).map(transformApiMatchToFrontendMatch);
         setMatches(transformedMatches);
+        setPlayerMatches(playerMatchesResponse.data || []);
       } catch (error) {
-        console.error("Failed to fetch matches:", error);
-        setError("Failed to load matches. Please try again.");
-        setMatches([]); // Clear matches on error
+        console.error("Failed to fetch matches data:", error);
+        setError("Failed to load match data. Please try again.");
+        setMatches([]);
+        setPlayerMatches([]);
       } finally {
         setIsLoading(false);
       }
     }
     
     if (selectedDate) {
-      getMatchesForDate(selectedDate);
+      fetchDataForDate(selectedDate);
     }
   }, [selectedDate]);
   
-  const playerMatches = matches.filter(m => m.featuredPlayers && m.featuredPlayers.length > 0);
   const cups = groupMatchesIntoCups(matches);
 
   const renderContent = (content: React.ReactNode) => {
@@ -165,7 +161,7 @@ export default function MatchesHubPage() {
 
   return (
     <Sheet>
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col h-full relative">
         <header className="p-4 border-b border-border sticky top-0 bg-background/95 backdrop-blur-sm z-10 space-y-4">
           <div className="flex justify-between items-center">
               <h1 className="text-2xl font-headline font-bold">Matches</h1>
@@ -206,7 +202,7 @@ export default function MatchesHubPage() {
                    ) : (
                      <Skeleton className="h-[52px] w-full" />
                    )}
-                   {renderContent(<PlayerMatchesList matches={playerMatches} />)}
+                   {renderContent(<PlayerMatchesList playerMatches={playerMatches} />)}
                 </TabsContent>
                 <TabsContent value="teams">
                    <div className="pt-4 space-y-4">
@@ -253,8 +249,13 @@ export default function MatchesHubPage() {
         <main className="flex-1 overflow-y-auto p-4 space-y-4">
           {/* Main content is now inside TabsContent */}
         </main>
+
+        <Button asChild size="icon" className="absolute bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-20">
+          <Link href="/matches/create-v2">
+            <Plus className="w-8 h-8" />
+          </Link>
+        </Button>
       </div>
-      <FilterSheet />
     </Sheet>
   );
 }

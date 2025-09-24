@@ -565,3 +565,48 @@ export type MatchPlanPayload = {
   };
   status: string;
 };
+
+// --- Match Players Models ---
+export type MatchPlayer = {
+  matchId: string;
+  startTime: string;
+  player: {
+    id: string;
+    name: string;
+    avatarUrl: string;
+  };
+  playerTeam: {
+    id: string;
+    name: string;
+    logoUrl: string;
+    isHome: boolean;
+    isFollowed: boolean;
+  };
+  opponentTeam: {
+    id: string;
+    name: string;
+    logoUrl: string;
+    isHome: boolean;
+    isFollowed: boolean;
+  };
+  scores: {
+    homeScore: number;
+    awayScore: number;
+  };
+  competition: {
+    name: string;
+    round: string;
+  };
+  venue: {
+    name: string;
+  };
+};
+
+export type GetMatchPlayersResponse = {
+  data: MatchPlayer[];
+  count: number;
+  currentPage: number;
+  nextPage: number | null;
+  pageSize: number;
+  totalPage: number;
+};
