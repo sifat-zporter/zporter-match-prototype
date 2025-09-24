@@ -23,6 +23,7 @@ import {
   Users,
   Trophy,
   List,
+  Newspaper,
 } from "lucide-react";
 import { ZporterLogo } from "@/components/icons";
 import Link from 'next/link';
@@ -46,6 +47,14 @@ export function AppSidebar() {
               <Link href="/">
                 <Home />
                 Matches
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+           <SidebarMenuItem>
+            <SidebarMenuButton asChild isActive={pathname.startsWith('/matches-v2')}>
+              <Link href="/matches-v2">
+                <Newspaper />
+                Matches V2
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
