@@ -93,6 +93,7 @@ function groupMatchesIntoCups(matches: Match[]): Cup[] {
 
 export default function MatchesHubPage() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [activeTab, setActiveTab] = useState("players");
   const [matches, setMatches] = useState<Match[]>([]);
   const [playerMatches, setPlayerMatches] = useState<MatchPlayer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -117,19 +118,18 @@ export default function MatchesHubPage() {
       const dateString = format(date, 'yyyy-MM-dd');
 
       try {
-        // Fetch both sets of data in parallel
-        const [matchesResponse, playerMatchesResponse] = await Promise.all([
-           apiClient<GetMatchesResponse>('/matches', { params: { date: dateString, limit: 50 } }),
-           apiClient<GetMatchPlayersResponse>('/matches/players', { params: { date: dateString } })
-        ]);
-        
-        // Process and set state for team-based matches
-        const transformedMatches = (matchesResponse.matches || []).map(transformApiMatchToFrontendMatch);
-        setMatches(transformedMatches);
-
-        // Process and set state for player-based matches
-        setPlayerMatches(playerMatchesResponse.data || []);
-
+        if (activeTab === 'players') {
+          // Fetch only player matches for the "Players" tab
+          const playerMatchesResponse = await apiClient<GetMatchPlayersResponse>('/matches/players', { params: { date: dateString } });
+          setPlayerMatches(playerMatchesResponse.data || []);
+          setMatches([]); // Clear other match data
+        } else {
+          // Fetch general matches for "Teams", "Series", "Cup" tabs
+          const matchesResponse = await apiClient<GetMatchesResponse>('/matches', { params: { date: dateString, limit: 50 } });
+          const transformedMatches = (matchesResponse.matches || []).map(transformApiMatchToFrontendMatch);
+          setMatches(transformedMatches);
+          setPlayerMatches([]); // Clear player match data
+        }
       } catch (error) {
         console.error("Failed to fetch matches data:", error);
         setError("Failed to load match data. Please try again.");
@@ -143,7 +143,7 @@ export default function MatchesHubPage() {
     if (selectedDate) {
       fetchDataForDate(selectedDate);
     }
-  }, [selectedDate]);
+  }, [selectedDate, activeTab]);
   
   const cups = groupMatchesIntoCups(matches);
 
@@ -185,7 +185,7 @@ export default function MatchesHubPage() {
               <TabsTrigger value="energy" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Energy</TabsTrigger>
             </TabsList>
             <TabsContent value="matches" className="pt-4">
-               <Tabs defaultValue="players" className="w-full">
+               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className="grid w-full grid-cols-4 bg-transparent p-0">
                   <TabsTrigger value="players" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Players</TabsTrigger>
                   <TabsTrigger value="teams" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Teams</TabsTrigger>
