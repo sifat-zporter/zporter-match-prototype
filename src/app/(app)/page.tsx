@@ -99,6 +99,11 @@ export default function MatchesHubPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Add state for pagination
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalPlayers, setTotalPlayers] = useState(0);
+
   useEffect(() => {
     setSelectedDate(new Date());
   }, []);
@@ -120,8 +125,15 @@ export default function MatchesHubPage() {
       try {
         if (activeTab === 'players') {
           // Fetch only player matches for the "Players" tab
-          const playerMatchesResponse = await apiClient<GetMatchPlayersResponse>('/matches/players', { params: { date: dateString } });
+          const playerMatchesResponse = await apiClient<GetMatchPlayersResponse>('/matches/players', { 
+            params: { 
+              date: dateString,
+              page: page,
+              pageSize: pageSize
+            } 
+          });
           setPlayerMatches(playerMatchesResponse.data || []);
+          setTotalPlayers(playerMatchesResponse.count || 0);
           setMatches([]); // Clear other match data
         } else {
           // Fetch general matches for "Teams", "Series", "Cup" tabs
@@ -143,7 +155,7 @@ export default function MatchesHubPage() {
     if (selectedDate) {
       fetchDataForDate(selectedDate);
     }
-  }, [selectedDate, activeTab]);
+  }, [selectedDate, activeTab, page, pageSize]);
   
   const cups = groupMatchesIntoCups(matches);
 
