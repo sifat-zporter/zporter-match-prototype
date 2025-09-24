@@ -117,14 +117,19 @@ export default function MatchesHubPage() {
       const dateString = format(date, 'yyyy-MM-dd');
 
       try {
+        // Fetch both sets of data in parallel
         const [matchesResponse, playerMatchesResponse] = await Promise.all([
            apiClient<GetMatchesResponse>('/matches', { params: { date: dateString, limit: 50 } }),
            apiClient<GetMatchPlayersResponse>('/matches/players', { params: { date: dateString } })
         ]);
         
+        // Process and set state for team-based matches
         const transformedMatches = (matchesResponse.matches || []).map(transformApiMatchToFrontendMatch);
         setMatches(transformedMatches);
+
+        // Process and set state for player-based matches
         setPlayerMatches(playerMatchesResponse.data || []);
+
       } catch (error) {
         console.error("Failed to fetch matches data:", error);
         setError("Failed to load match data. Please try again.");
