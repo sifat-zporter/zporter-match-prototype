@@ -9,7 +9,7 @@ import { Star, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "./ui/button";
-import { format, parseISO } from "date-fns";
+import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { apiClient } from "@/lib/api-client";
 
@@ -52,7 +52,7 @@ export function PlayerMatchListItem({ matchPlayer, isFollowed, onFollowToggle }:
   };
 
 
-  const matchDate = parseISO(matchPlayer.startTime);
+  const matchDate = new Date(matchPlayer.startTime);
   const formattedDate = format(matchDate, 'dd/MM');
   const formattedTime = format(matchDate, 'HH:mm');
 
