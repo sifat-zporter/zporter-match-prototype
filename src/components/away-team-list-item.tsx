@@ -1,7 +1,7 @@
 // src/components/away-team-list-item.tsx
 import type { AwayInvitation, InvitationStatus } from "@/lib/models";
 import Image from "next/image";
-import { ChevronRight, Check, X, Minus } from "lucide-react";
+import { ChevronRight, Check, X, Minus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
