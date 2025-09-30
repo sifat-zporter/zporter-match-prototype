@@ -62,47 +62,49 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
     const [isLoading, setIsLoading] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     
-    // This state now holds the IDs of users already invited for ALL groups
-    const [invitedUserIds, setInvitedUserIds] = useState<Set<string>>(new Set());
-    
-    // This holds the currently selected user IDs for the active tab
-    const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
-    
-    // State for scheduling
-    const [isSchedulingEnabled, setIsSchedulingEnabled] = useState(false);
-    const [inviteDays, setInviteDays] = useState(14);
-    const [reminderDays, setReminderDays] = useState(12);
+    // Holds all user IDs that have been invited across all groups
+    const [overallInvitedUserIds, setOverallInvitedUserIds] = useState<Set<string>>(new Set());
 
+    // Holds the selected user IDs for each tab
+    const [selectionsByTab, setSelectionsByTab] = useState<Record<string, Set<string>>>({});
+
+    // Holds scheduling info for each tab
+    const [schedulingByTab, setSchedulingByTab] = useState<Record<string, { isEnabled: boolean; inviteDays: number; reminderDays: number; }>>({});
+    
     const debouncedSearch = useDebounce(searchQuery, 300);
     
-    // Fetches the entire match object to get the current invite structure
     const fetchInvitedUsers = useCallback(async () => {
-        if (!matchId || activeTab === 'Away') return; // Away tab has its own data fetching
+        if (!matchId) return;
         try {
             const matchData = await apiClient<MatchEntity>(`/matches/${matchId}`);
+            
             const allInvitedIds = new Set(matchData.invitedUserIds || []);
-            setInvitedUserIds(allInvitedIds);
+            setOverallInvitedUserIds(allInvitedIds);
 
-            // Pre-select users for the current tab
-            const groupInvites = matchData.userGeneratedData?.invites?.[activeTab];
-            if (groupInvites && groupInvites.usersInvited) {
-                setSelectedUserIds(new Set(groupInvites.usersInvited));
-                 if (groupInvites.inviteDaysBefore > 0 || groupInvites.reminderDaysBefore > 0) {
-                    setIsSchedulingEnabled(true);
-                    setInviteDays(groupInvites.inviteDaysBefore);
-                    setReminderDays(groupInvites.reminderDaysBefore);
-                } else {
-                    setIsSchedulingEnabled(false);
+            const newSelections: Record<string, Set<string>> = {};
+            const newScheduling: Record<string, any> = {};
+
+            const inviteGroups = matchData.userGeneratedData?.invites || {};
+            
+            ['Home', 'Referees', 'Hosts'].forEach(groupName => {
+                const groupData = inviteGroups[groupName];
+                if (groupData && Array.isArray(groupData.usersInvited)) {
+                    newSelections[groupName] = new Set(groupData.usersInvited);
+                    newScheduling[groupName] = {
+                        isEnabled: (groupData.inviteDaysBefore ?? 0) > 0 || (groupData.reminderDaysBefore ?? 0) > 0,
+                        inviteDays: groupData.inviteDaysBefore ?? 14,
+                        reminderDays: groupData.reminderDaysBefore ?? 12,
+                    };
                 }
-            } else {
-                 setSelectedUserIds(new Set());
-                 setIsSchedulingEnabled(false);
-            }
+            });
+
+            setSelectionsByTab(newSelections);
+            setSchedulingByTab(newScheduling);
 
         } catch (error) {
             toast({ variant: "destructive", title: "Error", description: "Could not fetch existing invites." });
         }
-    }, [matchId, toast, activeTab]);
+    }, [matchId, toast]);
 
 
     const fetchUsers = useCallback(async (tab: string, query: string) => {
@@ -168,35 +170,46 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
     }, [activeTab, debouncedSearch, fetchUsers]);
 
     const handleSelectUser = (userId: string) => {
-        setSelectedUserIds(prev => {
-            const newSet = new Set(prev);
-            if (newSet.has(userId)) {
-                newSet.delete(userId);
+        setSelectionsByTab(prev => {
+            const currentTabSelections = new Set(prev[activeTab] || []);
+            if (currentTabSelections.has(userId)) {
+                currentTabSelections.delete(userId);
             } else {
-                newSet.add(userId);
+                currentTabSelections.add(userId);
             }
-            return newSet;
+            return { ...prev, [activeTab]: currentTabSelections };
         });
     };
     
     const handleSelectAll = (checked: boolean | string) => {
-        if (checked) {
-            const allIds = new Set(searchResults.map(u => u.userId));
-            setSelectedUserIds(allIds);
-        } else {
-            setSelectedUserIds(new Set());
-        }
+        const allResultIds = new Set(searchResults.map(u => u.userId).filter(id => !overallInvitedUserIds.has(id) || selectionsByTab[activeTab]?.has(id)));
+        setSelectionsByTab(prev => ({
+            ...prev,
+            [activeTab]: checked ? allResultIds : new Set()
+        }));
+    };
+
+    const handleSchedulingChange = <K extends keyof (typeof schedulingByTab)[string]>(key: K, value: (typeof schedulingByTab)[string][K]) => {
+        setSchedulingByTab(prev => ({
+            ...prev,
+            [activeTab]: {
+                ...prev[activeTab] || { isEnabled: false, inviteDays: 14, reminderDays: 12 },
+                [key]: value,
+            },
+        }));
     };
     
     const handleSave = async () => {
         setIsSubmitting(true);
+        const currentSelections = selectionsByTab[activeTab] || new Set();
+        const currentScheduling = schedulingByTab[activeTab] || { isEnabled: false, inviteDays: 0, reminderDays: 0 };
         
         const payload = {
             invites: {
                 [activeTab]: {
-                    usersInvited: Array.from(selectedUserIds),
-                    inviteDaysBefore: isSchedulingEnabled ? inviteDays : 0,
-                    reminderDaysBefore: isSchedulingEnabled ? reminderDays : 0,
+                    usersInvited: Array.from(currentSelections),
+                    inviteDaysBefore: currentScheduling.isEnabled ? currentScheduling.inviteDays : 0,
+                    reminderDaysBefore: currentScheduling.isEnabled ? currentScheduling.reminderDays : 0,
                 }
             }
         };
@@ -207,18 +220,21 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
                 body: payload 
             });
             toast({ title: "Invites Updated!", description: `Successfully updated invites for the ${activeTab} group.` });
-            fetchInvitedUsers(); // Refresh invited list
+            fetchInvitedUsers(); // Refresh overall invited list and selections
         } catch (error) {
             toast({ variant: "destructive", title: "Error", description: "Failed to update invitations." });
         } finally {
             setIsSubmitting(false);
         }
     };
+    
+    const currentTabSelections = selectionsByTab[activeTab] || new Set();
+    const currentTabScheduling = schedulingByTab[activeTab] || { isEnabled: false, inviteDays: 14, reminderDays: 12 };
 
     const renderUserInviteTab = () => (
         <div className="p-4 space-y-4">
             <div className="flex justify-between items-center text-sm">
-                <p><span className="text-primary font-semibold">{selectedUserIds.size}</span> Selected</p>
+                <p><span className="text-primary font-semibold">{currentTabSelections.size}</span> Selected</p>
                 <div className="flex items-center gap-2 text-muted-foreground">
                     <Search className="w-4 h-4" />
                     <ArrowUpDown className="w-4 h-4" />
@@ -250,9 +266,9 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
                             <InviteUserListItem 
                                 key={user.userId} 
                                 user={user} 
-                                isChecked={selectedUserIds.has(user.userId)}
+                                isChecked={currentTabSelections.has(user.userId)}
                                 onCheckedChange={() => handleSelectUser(user.userId)}
-                                isInvited={false} // We are now managing selection per tab, not global invites
+                                isInvited={overallInvitedUserIds.has(user.userId) && !currentTabSelections.has(user.userId)}
                             />
                         ))
                     ) : (
@@ -281,16 +297,16 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
                     <Label>Invite scheduling, before match start</Label>
-                    <Switch checked={isSchedulingEnabled} onCheckedChange={setIsSchedulingEnabled} />
+                    <Switch checked={currentTabScheduling.isEnabled} onCheckedChange={(checked) => handleSchedulingChange('isEnabled', checked)} />
                 </div>
                 <div className="flex items-center justify-between">
                     <div>
                         <p className="text-xs text-muted-foreground">Invites</p>
-                        <NumberInput value={inviteDays} setValue={setInviteDays} />
+                        <NumberInput value={currentTabScheduling.inviteDays} setValue={(value) => handleSchedulingChange('inviteDays', value)} />
                     </div>
                     <div>
                         <p className="text-xs text-muted-foreground">Reminder</p>
-                        <NumberInput value={reminderDays} setValue={setReminderDays} />
+                        <NumberInput value={currentTabScheduling.reminderDays} setValue={(value) => handleSchedulingChange('reminderDays', value)} />
                     </div>
                 </div>
             </div>
