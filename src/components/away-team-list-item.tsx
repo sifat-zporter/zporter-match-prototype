@@ -45,16 +45,16 @@ export function AwayTeamListItem({ team, onStatusChange, onRemove }: AwayTeamLis
                 <Button variant="outline" size="icon" className="w-6 h-6 border-red-500 text-red-500 hover:bg-red-500/20 hover:text-red-500" onClick={() => onStatusChange('REJECTED')}>
                     <X className="w-4 h-4" />
                 </Button>
+                 <Button variant="outline" size="icon" className="w-6 h-6 border-destructive text-destructive hover:bg-destructive/20 hover:text-destructive" onClick={onRemove}>
+                    <Trash2 className="w-4 h-4" />
+                </Button>
             </div>
 
              {/* Visible status indicator */}
             <div className={cn("w-6 h-6 rounded-sm border-2 flex items-center justify-center group-hover:opacity-0", currentStatus.color)}>
                 {currentStatus.icon}
             </div>
-
-            <Button variant="ghost" size="icon" className="w-6 h-6 opacity-0 group-hover:opacity-100" onClick={onRemove}>
-                <X className="w-4 h-4 text-destructive" />
-            </Button>
+            
             <ChevronRight className="w-5 h-5 text-muted-foreground" />
         </div>
       </div>

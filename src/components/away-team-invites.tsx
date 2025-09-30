@@ -102,8 +102,21 @@ export function AwayTeamInvites({ matchId, awayTeamId }: AwayTeamInvitesProps) {
         setSearchResults([]);
     };
 
-    const handleRemoveTeam = (teamId: string) => {
-        setInvitedTeams(prev => prev.filter(t => t.teamId !== teamId));
+    const handleRemoveTeam = async (teamId: string) => {
+        try {
+            await apiClient(`/matches/${matchId}/invites`, {
+                method: 'DELETE',
+                body: {
+                    invites: {
+                        Away: [{ teamId: teamId }]
+                    }
+                }
+            });
+            toast({ title: "Invitation Removed", description: "The team invitation has been removed." });
+            setInvitedTeams(prev => prev.filter(t => t.teamId !== teamId));
+        } catch (error) {
+             toast({ variant: "destructive", title: "Error", description: "Failed to remove the invitation." });
+        }
     };
 
     const handleStatusChange = (teamId: string, newStatus: InvitationStatus) => {

@@ -4,7 +4,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Info, Loader2, Plus, ArrowUpDown, ListFilter, ChevronUp, ChevronDown } from "lucide-react";
+import { Search, Info, Loader2, Plus, ArrowUpDown, ListFilter, ChevronUp, ChevronDown, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiClient } from "@/lib/api-client";
 import type { Invite, CreateInviteDto, TeamRef, InviteUserSearchResult, InvitationRole, MatchEntity, UserDto } from "@/lib/models";
@@ -329,49 +329,59 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
                     </AccordionTrigger>
                     <AccordionContent className="space-y-4 pt-4">
                          <ApiDocumentationViewer
-                            title="1. Bulk Update Match Invites"
-                            description="Updates invitation settings for a specific group (Home, Away, etc.). This call overwrites the existing settings for the specified group."
+                            title="1. Add or Update Invites"
+                            description="Atomically adds or updates invitations. For standard roles, it sets the user list. For the 'Away' role, it manages an array of team invitations. This endpoint does not remove invites."
                             endpoint="/matches/:matchId/invites"
                             method="PATCH"
-                            notes="The 'Away' role has a special structure (an array of team invitations), while all other roles use a simpler object with a 'usersInvited' array."
                             requestPayload={`{
   "invites": {
-    "Home": {
-      "usersInvited": ["user_id_1", "user_id_2"],
-      "inviteDaysBefore": 7,
-      "reminderDaysBefore": 2
-    },
     "Away": [
       {
-        "teamId": "team-tigers-789",
-        "coachId": "user-coach-jane-doe",
+        "teamId": "team-opponent-alpha-123",
+        "coachId": "user-coach-of-alpha-456",
         "status": "PRIMARY_PENDING"
-      },
-      {
-        "teamId": "team-eagles-456",
-        "coachId": "user-coach-john-smith",
-        "status": "BACKUP_PENDING"
       }
-    ]
+    ],
+    "Referees": {
+      "usersInvited": ["user-referee-1", "user-referee-2"],
+      "inviteDaysBefore": 7,
+      "reminderDaysBefore": 2
+    }
   }
 }`}
                             response={`{
   "success": true,
-  "updatedMatchId": "match-1662902400000"
+  "updatedMatchId": "match-123"
+}`}
+                        />
+                         <ApiDocumentationViewer
+                            title="2. Remove Invites"
+                            description="Atomically removes specified invitees from a match. For standard roles, provide user IDs. For the 'Away' role, provide team IDs."
+                            endpoint="/matches/:matchId/invites"
+                            method="DELETE"
+                            requestPayload={`{
+  "invites": {
+    "Away": [ { "teamId": "team-opponent-alpha-123" } ],
+    "Referees": { "usersInvited": ["user-referee-1"] }
+  }
+}`}
+                            response={`{
+  "success": true,
+  "updatedMatchId": "match-123"
 }`}
                         />
                         <ApiDocumentationViewer
-                            title="2. Search for Potential Invitees"
-                            description="Searches for users or teams to invite. The 'searchType' query parameter determines the search mode."
+                            title="3. Search for Potential Invitees"
+                            description="Utility to find users or teams to invite."
                             endpoint="/matches/{matchId}/invites/search-potential-invitees"
                             method="GET"
-                            notes="Search Logic: To find PLAYERS, you must provide role=PLAYER and a teamId. To find TEAMS, provide searchType=team. To find other users, search by name."
+                            notes="Search Logic: To find TEAMS, use ?searchType=team&name={query}. To find PLAYERS for a team, use ?role=PLAYER&teamId={id}. To find other USERS, use ?name={query}."
                             response={`// Example for ?searchType=team&name=Tigers
 [
   {
     "teamId": "team-tigers-789",
-    "teamName": "Tigers FC",
-    "logo": "https://example.com/logos/tigers.png",
+    "name": "Tigers FC",
+    "logoUrl": "https://example.com/logos/tigers.png",
     "coachId": "user-coach-jane-doe"
   }
 ]
@@ -379,18 +389,14 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
 // Example for ?name=andrei (user search)
 [
   {
-    "userId": "54f2d8bf-fae2-4d48-ad06-40db0f7bf804",
+    "id": "54f2d8bf-fae2-4d48-ad06-40db0f7bf804",
     "fullName": "Andrei Teodorescu",
-    "faceImage": "https://lh3.googleusercontent.com/...",
-    "type": "PLAYER",
-    "username": "AndTeo850520",
-    "age": 40,
-    "gender": "MALE"
+    "avatar": "https://lh3.googleusercontent.com/..."
   }
 ]`}
                         />
                          <ApiDocumentationViewer
-                            title="3. Confirm Official Opponent"
+                            title="4. Confirm Official Opponent"
                             description="When an opponent's invitation is accepted, this endpoint is called first to lock them in as the official away team on the main match object."
                             endpoint="/matches/{id}"
                             method="PATCH"
