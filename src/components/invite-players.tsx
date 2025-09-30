@@ -4,10 +4,10 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Info, Loader2, Plus, ArrowUpDown, ListFilter, ChevronUp, ChevronDown, Trash2 } from "lucide-react";
+import { Search, Info, Loader2, Plus, ArrowUpDown, ListFilter, ChevronUp, ChevronDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiClient } from "@/lib/api-client";
-import type { Invite, CreateInviteDto, TeamRef, InviteUserSearchResult, InvitationRole, MatchEntity, UserDto } from "@/lib/models";
+import type { Invite, CreateInviteDto, TeamRef, InviteUserSearchResult, InvitationRole, MatchEntity, UserDto, AwayInvitation, TeamSearchResult, InvitationStatus } from "@/lib/models";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
 import { ApiDocumentationViewer } from "./api-documentation-viewer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
@@ -18,7 +18,6 @@ import { Switch } from "./ui/switch";
 import { Separator } from "./ui/separator";
 import { InviteUserListItem } from "./invite-user-list-item";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
-import { startCase } from 'lodash';
 import { AwayTeamInvites } from "./away-team-invites";
 
 // Debounce hook
@@ -62,11 +61,9 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
     const [isLoading, setIsLoading] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     
-    // Holds all user IDs that have been invited across all groups
-    const [overallInvitedUserIds, setOverallInvitedUserIds] = useState<Set<string>>(new Set());
-
     // Holds the selected user IDs for each tab
     const [selectionsByTab, setSelectionsByTab] = useState<Record<string, Set<string>>>({});
+    const [awayTeamInvites, setAwayTeamInvites] = useState<AwayInvitation[]>([]);
 
     // Holds scheduling info for each tab
     const [schedulingByTab, setSchedulingByTab] = useState<Record<string, { isEnabled: boolean; inviteDays: number; reminderDays: number; }>>({});
@@ -78,9 +75,6 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
         try {
             const matchData = await apiClient<MatchEntity>(`/matches/${matchId}`);
             
-            const allInvitedIds = new Set(matchData.invitedUserIds || []);
-            setOverallInvitedUserIds(allInvitedIds);
-
             const newSelections: Record<string, Set<string>> = {};
             const newScheduling: Record<string, any> = {};
 
@@ -90,16 +84,31 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
                 const groupData = inviteGroups[groupName];
                 if (groupData && Array.isArray(groupData.usersInvited)) {
                     newSelections[groupName] = new Set(groupData.usersInvited);
-                    newScheduling[groupName] = {
-                        isEnabled: (groupData.inviteDaysBefore ?? 0) > 0 || (groupData.reminderDaysBefore ?? 0) > 0,
-                        inviteDays: groupData.inviteDaysBefore ?? 14,
-                        reminderDays: groupData.reminderDaysBefore ?? 12,
-                    };
                 }
+                newScheduling[groupName] = {
+                    isEnabled: (groupData?.inviteDaysBefore ?? 0) > 0 || (groupData?.reminderDaysBefore ?? 0) > 0,
+                    inviteDays: groupData?.inviteDaysBefore ?? 14,
+                    reminderDays: groupData?.reminderDaysBefore ?? 12,
+                };
             });
+            
+            const awayInvitesData = inviteGroups['Away'] || [];
+            // Here we would need to fetch team details for each away invite for the UI. For simplicity, we'll mock it if not present.
+             const enrichedAwayInvites = await Promise.all(awayInvitesData.map(async (invite: any) => {
+                 if(invite.teamDetails) return invite;
+                 try {
+                     // This is a hypothetical endpoint, assuming we can get team details by ID
+                     const teamDetails = await apiClient<TeamSearchResult>(`/matches/search/teams?teamId=${invite.teamId}`);
+                     return {...invite, teamDetails: { name: teamDetails.teamName, logoUrl: teamDetails.logo }};
+                 } catch {
+                     return {...invite, teamDetails: { name: `Team ${invite.teamId.substring(0,4)}`, logoUrl: 'https://placehold.co/64x64.png' }};
+                 }
+            }));
+
 
             setSelectionsByTab(newSelections);
             setSchedulingByTab(newScheduling);
+            setAwayTeamInvites(enrichedAwayInvites);
 
         } catch (error) {
             toast({ variant: "destructive", title: "Error", description: "Could not fetch existing invites." });
@@ -182,7 +191,7 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
     };
     
     const handleSelectAll = (checked: boolean | string) => {
-        const allResultIds = new Set(searchResults.map(u => u.userId).filter(id => !overallInvitedUserIds.has(id) || selectionsByTab[activeTab]?.has(id)));
+        const allResultIds = new Set(searchResults.map(u => u.userId));
         setSelectionsByTab(prev => ({
             ...prev,
             [activeTab]: checked ? allResultIds : new Set()
@@ -198,28 +207,67 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
             },
         }));
     };
+
+    const handleAddAwayTeam = (team: TeamSearchResult) => {
+        if (awayTeamInvites.some(t => t.teamId === team.teamId)) {
+            toast({ variant: "default", title: "Team already invited." });
+            return;
+        }
+        const newInvitation: AwayInvitation = {
+            teamId: team.teamId,
+            coachId: team.coachId,
+            status: 'BACKUP_PENDING',
+            teamDetails: { name: team.teamName, logoUrl: team.logo }
+        };
+        setAwayTeamInvites(prev => [...prev, newInvitation]);
+    };
+
+    const handleRemoveAwayTeam = (teamId: string) => {
+        setAwayTeamInvites(prev => prev.filter(t => t.teamId !== teamId));
+    };
+
+    const handleAwayTeamStatusChange = (teamId: string, newStatus: InvitationStatus) => {
+        setAwayTeamInvites(prev => {
+            // If setting a team to primary, ensure no other team is primary
+            if (newStatus === 'PRIMARY_PENDING' || newStatus === 'ACCEPTED') {
+                return prev.map(t => ({
+                    ...t,
+                    status: t.teamId === teamId ? newStatus : (t.status === 'PRIMARY_PENDING' || t.status === 'ACCEPTED' ? 'BACKUP_PENDING' : t.status)
+                }));
+            }
+            return prev.map(t => t.teamId === teamId ? { ...t, status: newStatus } : t);
+        });
+    };
     
     const handleSave = async () => {
         setIsSubmitting(true);
-        const currentSelections = selectionsByTab[activeTab] || new Set();
-        const currentScheduling = schedulingByTab[activeTab] || { isEnabled: false, inviteDays: 0, reminderDays: 0 };
         
-        const payload = {
-            invites: {
-                [activeTab]: {
-                    usersInvited: Array.from(currentSelections),
-                    inviteDaysBefore: currentScheduling.isEnabled ? currentScheduling.inviteDays : 0,
-                    reminderDaysBefore: currentScheduling.isEnabled ? currentScheduling.reminderDays : 0,
-                }
-            }
-        };
+        const payload: { invites: Record<string, any> } = { invites: {} };
 
+        // Prepare payload for user-based invites
+        for (const tabName of ['Home', 'Referees', 'Hosts']) {
+            const selections = selectionsByTab[tabName];
+            const scheduling = schedulingByTab[tabName];
+            if (selections || scheduling) {
+                payload.invites[tabName] = {
+                    usersInvited: selections ? Array.from(selections) : [],
+                    inviteDaysBefore: scheduling?.isEnabled ? scheduling.inviteDays : 0,
+                    reminderDaysBefore: scheduling?.isEnabled ? scheduling.reminderDays : 0,
+                };
+            }
+        }
+        
+        // Prepare payload for away team invites
+        if (awayTeamInvites.length > 0) {
+            payload.invites['Away'] = awayTeamInvites.map(({ teamDetails, ...rest }) => rest);
+        }
+        
         try {
             await apiClient(`/matches/${matchId}/invites`, { 
                 method: 'PATCH', 
                 body: payload 
             });
-            toast({ title: "Invites Updated!", description: `Successfully updated invites for the ${activeTab} group.` });
+            toast({ title: "Invites Updated!", description: `Successfully updated all invitations.` });
             fetchInvitedUsers(); // Refresh overall invited list and selections
         } catch (error) {
             toast({ variant: "destructive", title: "Error", description: "Failed to update invitations." });
@@ -230,6 +278,13 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
     
     const currentTabSelections = selectionsByTab[activeTab] || new Set();
     const currentTabScheduling = schedulingByTab[activeTab] || { isEnabled: false, inviteDays: 14, reminderDays: 12 };
+    
+    const allInvitedUserIds = useMemo(() => {
+        return Object.values(selectionsByTab).reduce((acc, currentSet) => {
+            currentSet.forEach(id => acc.add(id));
+            return acc;
+        }, new Set<string>());
+    }, [selectionsByTab]);
 
     const renderUserInviteTab = () => (
         <div className="p-4 space-y-4">
@@ -268,7 +323,7 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
                                 user={user} 
                                 isChecked={currentTabSelections.has(user.userId)}
                                 onCheckedChange={() => handleSelectUser(user.userId)}
-                                isInvited={overallInvitedUserIds.has(user.userId) && !currentTabSelections.has(user.userId)}
+                                isInvited={allInvitedUserIds.has(user.userId) && !currentTabSelections.has(user.userId)}
                             />
                         ))
                     ) : (
@@ -310,10 +365,6 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
                     </div>
                 </div>
             </div>
-            
-            <Button className="w-full bg-blue-600 hover:bg-blue-700" onClick={handleSave} disabled={isSubmitting}>
-                {isSubmitting ? <Loader2 className="animate-spin" /> : "Save"}
-            </Button>
         </div>
     );
 
@@ -327,14 +378,26 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
                     <TabsTrigger value="Hosts" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Hosts</TabsTrigger>
                 </TabsList>
 
-                {activeTab === 'Away' ? (
-                    <AwayTeamInvites matchId={matchId} awayTeamId={awayTeam.id} />
-                ) : (
-                    renderUserInviteTab()
-                )}
-
+                <TabsContent value="Home">{renderUserInviteTab()}</TabsContent>
+                <TabsContent value="Referees">{renderUserInviteTab()}</TabsContent>
+                <TabsContent value="Hosts">{renderUserInviteTab()}</TabsContent>
+                <TabsContent value="Away">
+                    <AwayTeamInvites 
+                        matchId={matchId} 
+                        invitedTeams={awayTeamInvites}
+                        onAddTeam={handleAddAwayTeam}
+                        onRemoveTeam={handleRemoveAwayTeam}
+                        onStatusChange={handleAwayTeamStatusChange}
+                    />
+                </TabsContent>
             </Tabs>
             
+             <div className="px-4">
+                <Button className="w-full bg-blue-600 hover:bg-blue-700" onClick={handleSave} disabled={isSubmitting}>
+                    {isSubmitting ? <Loader2 className="animate-spin" /> : "Save All Invites"}
+                </Button>
+            </div>
+
             <Accordion type="single" collapsible className="w-full pt-4">
                 <AccordionItem value="api-docs">
                     <AccordionTrigger>
@@ -396,18 +459,18 @@ export function InvitePlayers({ matchId, homeTeam, awayTeam }: InvitePlayersProp
 [
   {
     "teamId": "team-tigers-789",
-    "name": "Tigers FC",
-    "logoUrl": "https://example.com/logos/tigers.png",
-    "coachId": "user-coach-jane-doe"
+    "name": "Super Team",
+    "logoUrl": "url-to-logo",
+    "coachId": "user-coach-789"
   }
 ]
 
 // Example for ?name=andrei (user search)
 [
   {
-    "id": "54f2d8bf-fae2-4d48-ad06-40db0f7bf804",
-    "fullName": "Andrei Teodorescu",
-    "avatar": "https://lh3.googleusercontent.com/..."
+    "id": "user-123",
+    "fullName": "John Doe",
+    "avatar": "url-to-avatar"
   }
 ]`}
                         />
