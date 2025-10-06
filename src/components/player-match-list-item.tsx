@@ -9,7 +9,7 @@ import { Star, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "./ui/button";
-import { format } from "date-fns";
+import { format, isValid } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { apiClient } from "@/lib/api-client";
 
@@ -53,8 +53,10 @@ export function PlayerMatchListItem({ matchPlayer, isFollowed, onFollowToggle }:
 
 
   const matchDate = new Date(matchPlayer.startTime);
-  const formattedDate = format(matchDate, 'dd/MM');
-  const formattedTime = format(matchDate, 'HH:mm');
+  const isDateValid = isValid(matchDate);
+
+  const formattedDate = isDateValid ? format(matchDate, 'dd/MM') : 'N/A';
+  const formattedTime = isDateValid ? format(matchDate, 'HH:mm') : 'N/A';
 
   return (
     <Link href={`/matches/${matchPlayer.matchId}`} className="block bg-card rounded-lg hover:bg-accent transition-colors duration-200">
